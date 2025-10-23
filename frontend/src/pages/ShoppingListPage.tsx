@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ interface ShoppingList {
 }
 
 export default function ShoppingListPage() {
+  const { t, i18n } = useTranslation();
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -67,7 +69,7 @@ export default function ShoppingListPage() {
       <div className="container mx-auto p-4 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement de la liste...</p>
+          <p className="text-muted-foreground">{t('shoppingList.loading')}</p>
         </div>
       </div>
     );
@@ -75,7 +77,7 @@ export default function ShoppingListPage() {
 
   // Group items by category
   const itemsByCategory = shoppingData.items.reduce((acc, item) => {
-    const category = item.category || 'Autres';
+    const category = item.category || t('shoppingList.categories.other');
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -93,10 +95,10 @@ export default function ShoppingListPage() {
         acc[recipeName].push(item);
       });
     } else {
-      if (!acc['Autres']) {
-        acc['Autres'] = [];
+      if (!acc[t('shoppingList.categories.other')]) {
+        acc[t('shoppingList.categories.other')] = [];
       }
-      acc['Autres'].push(item);
+      acc[t('shoppingList.categories.other')].push(item);
     }
     return acc;
   }, {} as Record<string, ShoppingItem[]>);
@@ -105,14 +107,15 @@ export default function ShoppingListPage() {
   const checkedItems = shoppingData.items.filter(item => item.checked).length;
   const progress = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
 
+  // Category order - translatable
   const categoryOrder = [
-    'Viandes',
-    'Poissons',
-    'Fruits et légumes',
-    'Produits laitiers',
-    'Épicerie',
-    'Condiments',
-    'Autres'
+    t('shoppingList.categories.meats'),
+    t('shoppingList.categories.fish'),
+    t('shoppingList.categories.fruitsVegetables'),
+    t('shoppingList.categories.dairy'),
+    t('shoppingList.categories.grocery'),
+    t('shoppingList.categories.condiments'),
+    t('shoppingList.categories.other')
   ];
 
   const sortedCategories = Object.keys(itemsByCategory).sort((a, b) => {
@@ -124,51 +127,56 @@ export default function ShoppingListPage() {
     return aIndex - bIndex;
   });
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
   return (
     <div className="container mx-auto p-4 pb-20">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6 print:hidden">
         <Button variant="ghost" size="sm" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
+          {t('shoppingList.actions.back')}
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <ShoppingCart className="h-6 w-6" />
-            Liste de courses
+            {t('shoppingList.title')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Générée le {new Date(shoppingData.generatedAt).toLocaleDateString('fr-FR', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric'
-            })}
+            {t('shoppingList.generatedOn', { date: formatDate(shoppingData.generatedAt) })}
           </p>
         </div>
         <Button variant="outline" onClick={handlePrint}>
           <Printer className="h-4 w-4 mr-2" />
-          Imprimer
+          {t('shoppingList.actions.print')}
         </Button>
       </div>
 
       {/* Print-only Header */}
       <div className="hidden print:block mb-6">
-        <h1 className="text-2xl font-bold mb-2">Liste de courses</h1>
+        <h1 className="text-2xl font-bold mb-2">{t('shoppingList.title')}</h1>
         <p className="text-sm text-muted-foreground">
-          Générée le {new Date(shoppingData.generatedAt).toLocaleDateString('fr-FR')}
+          {t('shoppingList.generatedOn', { date: formatDate(shoppingData.generatedAt) })}
         </p>
       </div>
 
       {/* Progress Card */}
       <Card className="mb-6 print:hidden">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Progression</CardTitle>
+          <CardTitle className="text-lg">{t('shoppingList.progress.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
-                {checkedItems} sur {totalItems} articles
+                {t('shoppingList.progress.items', { checked: checkedItems, total: totalItems })}
               </span>
               <span className="font-semibold">{progress}%</span>
             </div>
@@ -185,8 +193,8 @@ export default function ShoppingListPage() {
       {/* View Mode Tabs */}
       <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'category' | 'recipe')} className="mb-6 print:hidden">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="category">Par catégorie</TabsTrigger>
-          <TabsTrigger value="recipe">Par recette</TabsTrigger>
+          <TabsTrigger value="category">{t('shoppingList.viewModes.byCategory')}</TabsTrigger>
+          <TabsTrigger value="recipe">{t('shoppingList.viewModes.byRecipe')}</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -199,7 +207,9 @@ export default function ShoppingListPage() {
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span>{category}</span>
                   <Badge variant="secondary">
-                    {itemsByCategory[category].length} article{itemsByCategory[category].length > 1 ? 's' : ''}
+                    {itemsByCategory[category].length === 1
+                      ? t('shoppingList.articles', { count: itemsByCategory[category].length })
+                      : t('shoppingList.articles_plural', { count: itemsByCategory[category].length })}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -223,7 +233,7 @@ export default function ShoppingListPage() {
                         </div>
                         {item.recipeNames && item.recipeNames.length > 0 && (
                           <div className="text-xs text-muted-foreground mt-1">
-                            Pour: {item.recipeNames.join(', ')}
+                            {t('shoppingList.forRecipes', { recipes: item.recipeNames.join(', ') })}
                           </div>
                         )}
                       </div>
@@ -245,7 +255,9 @@ export default function ShoppingListPage() {
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span>{recipeName}</span>
                   <Badge variant="secondary">
-                    {items.length} article{items.length > 1 ? 's' : ''}
+                    {items.length === 1
+                      ? t('shoppingList.articles', { count: items.length })
+                      : t('shoppingList.articles_plural', { count: items.length })}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -268,7 +280,7 @@ export default function ShoppingListPage() {
                           {item.quantity} {item.unit} {item.ingredientName}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          Catégorie: {item.category}
+                          {t('shoppingList.categoryLabel', { category: item.category })}
                         </div>
                       </div>
                     </li>
@@ -303,7 +315,7 @@ export default function ShoppingListPage() {
       {totalItems === 0 && (
         <div className="text-center py-12">
           <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">Aucun article dans la liste</p>
+          <p className="text-muted-foreground">{t('shoppingList.empty')}</p>
         </div>
       )}
     </div>

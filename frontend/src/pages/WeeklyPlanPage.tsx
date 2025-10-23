@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,18 +36,10 @@ interface WeeklyPlan {
   meals: Meal[];
 }
 
-const DAYS_FR = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
-const DAY_NAMES_FR: Record<string, string> = {
-  MONDAY: 'Lundi',
-  TUESDAY: 'Mardi',
-  WEDNESDAY: 'Mercredi',
-  THURSDAY: 'Jeudi',
-  FRIDAY: 'Vendredi',
-  SATURDAY: 'Samedi',
-  SUNDAY: 'Dimanche'
-};
+const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
 export default function WeeklyPlanPage() {
+  const { t } = useTranslation();
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -56,6 +49,20 @@ export default function WeeklyPlanPage() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [newPortions, setNewPortions] = useState(4);
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
+
+  // Day names mapping
+  const getDayName = (day: string): string => {
+    const dayMap: Record<string, string> = {
+      MONDAY: t('days.monday'),
+      TUESDAY: t('days.tuesday'),
+      WEDNESDAY: t('days.wednesday'),
+      THURSDAY: t('days.thursday'),
+      FRIDAY: t('days.friday'),
+      SATURDAY: t('days.saturday'),
+      SUNDAY: t('days.sunday')
+    };
+    return dayMap[day] || day;
+  };
 
   // Fetch weekly plan
   const { data: planData, isLoading: isPlanLoading } = useQuery({
@@ -145,7 +152,7 @@ export default function WeeklyPlanPage() {
   };
 
   const handleValidate = () => {
-    if (window.confirm('Valider ce plan hebdomadaire ? Cela générera la liste de courses.')) {
+    if (window.confirm(t('weeklyPlan.dialogs.validatePlan'))) {
       validateMutation.mutate();
     }
   };
@@ -159,7 +166,7 @@ export default function WeeklyPlanPage() {
       <div className="container mx-auto p-4 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement du plan...</p>
+          <p className="text-muted-foreground">{t('weeklyPlan.loading')}</p>
         </div>
       </div>
     );
@@ -174,11 +181,18 @@ export default function WeeklyPlanPage() {
   const noveltyCount = planData.meals.filter(m => !m.isFavorite).length;
 
   // Organize meals by day
-  const mealsByDay = DAYS_FR.map(day => ({
+  const mealsByDay = DAYS.map(day => ({
     day,
     lunch: planData.meals.find(m => m.dayOfWeek === day && m.mealType === 'LUNCH'),
     dinner: planData.meals.find(m => m.dayOfWeek === day && m.mealType === 'DINNER')
   }));
+
+  const getStatusText = (status: string): string => {
+    if (status === 'DRAFT') return t('weeklyPlan.status.draft');
+    if (status === 'VALIDATED') return t('weeklyPlan.status.validated');
+    if (status === 'ARCHIVED') return t('weeklyPlan.status.archived');
+    return status;
+  };
 
   return (
     <div className="container mx-auto p-4 pb-20">
@@ -186,14 +200,14 @@ export default function WeeklyPlanPage() {
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
+          {t('common.back')}
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold">
-            Semaine {planData.weekNumber} - {planData.year}
+            {t('weeklyPlan.week', { number: planData.weekNumber, year: planData.year })}
           </h1>
           <Badge variant={planData.status === 'VALIDATED' ? 'default' : 'secondary'}>
-            {planData.status === 'DRAFT' ? 'Brouillon' : 'Validé'}
+            {getStatusText(planData.status)}
           </Badge>
         </div>
       </div>
@@ -203,13 +217,15 @@ export default function WeeklyPlanPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Temps total
+              {t('weeklyPlan.stats.totalTime')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />
-              <span className="text-2xl font-bold">{Math.round(totalTime / 60)}h</span>
+              <span className="text-2xl font-bold">
+                {t('weeklyPlan.hours', { count: Math.round(totalTime / 60) })}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -217,7 +233,7 @@ export default function WeeklyPlanPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Favoris
+              {t('weeklyPlan.stats.favorites')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -231,7 +247,7 @@ export default function WeeklyPlanPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Nouveautés
+              {t('weeklyPlan.stats.novelties')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -245,7 +261,7 @@ export default function WeeklyPlanPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Repas
+              {t('weeklyPlan.stats.meals')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -264,11 +280,11 @@ export default function WeeklyPlanPage() {
             className="w-full md:w-auto"
             disabled={validateMutation.isPending}
           >
-            {validateMutation.isPending ? 'Validation...' : 'Valider le plan'}
+            {validateMutation.isPending ? t('weeklyPlan.actions.validating') : t('weeklyPlan.actions.validate')}
           </Button>
         ) : (
           <Button onClick={handleNavigateToShopping} className="w-full md:w-auto">
-            Voir la liste de courses
+            {t('weeklyPlan.actions.viewShoppingList')}
           </Button>
         )}
       </div>
@@ -278,7 +294,7 @@ export default function WeeklyPlanPage() {
         {mealsByDay.map(({ day, lunch, dinner }) => (
           <Card key={day}>
             <CardHeader>
-              <CardTitle>{DAY_NAMES_FR[day]}</CardTitle>
+              <CardTitle>{getDayName(day)}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Lunch */}
@@ -287,13 +303,13 @@ export default function WeeklyPlanPage() {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary">Déjeuner</Badge>
+                        <Badge variant="secondary">{t('weeklyPlan.mealTypes.lunch')}</Badge>
                         {lunch.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
                         {lunch.isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
                       </div>
                       <h3 className="font-semibold">{lunch.recipe.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {lunch.recipe.prepTime + lunch.recipe.cookTime} min · {lunch.portions} portions
+                        {t('weeklyPlan.minutes', { count: lunch.recipe.prepTime + lunch.recipe.cookTime })} · {t('weeklyPlan.portions', { count: lunch.portions })}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {lunch.recipe.tags.map(tag => (
@@ -311,14 +327,14 @@ export default function WeeklyPlanPage() {
                       onClick={() => handleSwapClick(lunch)}
                     >
                       <RefreshCw className="h-3 w-3 mr-1" />
-                      Échanger
+                      {t('weeklyPlan.actions.swap')}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handlePortionClick(lunch)}
                     >
-                      Portions
+                      {t('weeklyPlan.actions.adjustPortions')}
                     </Button>
                     <Button
                       size="sm"
@@ -341,13 +357,13 @@ export default function WeeklyPlanPage() {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary">Dîner</Badge>
+                        <Badge variant="secondary">{t('weeklyPlan.mealTypes.dinner')}</Badge>
                         {dinner.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
                         {dinner.isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
                       </div>
                       <h3 className="font-semibold">{dinner.recipe.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {dinner.recipe.prepTime + dinner.recipe.cookTime} min · {dinner.portions} portions
+                        {t('weeklyPlan.minutes', { count: dinner.recipe.prepTime + dinner.recipe.cookTime })} · {t('weeklyPlan.portions', { count: dinner.portions })}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {dinner.recipe.tags.map(tag => (
@@ -365,14 +381,14 @@ export default function WeeklyPlanPage() {
                       onClick={() => handleSwapClick(dinner)}
                     >
                       <RefreshCw className="h-3 w-3 mr-1" />
-                      Échanger
+                      {t('weeklyPlan.actions.swap')}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handlePortionClick(dinner)}
                     >
-                      Portions
+                      {t('weeklyPlan.actions.adjustPortions')}
                     </Button>
                     <Button
                       size="sm"
@@ -397,7 +413,7 @@ export default function WeeklyPlanPage() {
       <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Échanger la recette</DialogTitle>
+            <DialogTitle>{t('weeklyPlan.dialogs.swapRecipe.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-4">
             {recipesData?.map((recipe) => (
@@ -410,7 +426,7 @@ export default function WeeklyPlanPage() {
               >
                 <h4 className="font-semibold">{recipe.name}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {recipe.prepTime + recipe.cookTime} min · {recipe.category}
+                  {t('weeklyPlan.minutes', { count: recipe.prepTime + recipe.cookTime })} · {recipe.category}
                 </p>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {recipe.tags.map(tag => (
@@ -424,13 +440,13 @@ export default function WeeklyPlanPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSwapDialogOpen(false)}>
-              Annuler
+              {t('weeklyPlan.dialogs.swapRecipe.cancel')}
             </Button>
             <Button
               onClick={handleSwapConfirm}
               disabled={!selectedRecipeId || swapMutation.isPending}
             >
-              {swapMutation.isPending ? 'Échange...' : 'Confirmer'}
+              {swapMutation.isPending ? t('weeklyPlan.actions.swapping') : t('weeklyPlan.dialogs.swapRecipe.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -440,11 +456,11 @@ export default function WeeklyPlanPage() {
       <Dialog open={portionDialogOpen} onOpenChange={setPortionDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Ajuster les portions</DialogTitle>
+            <DialogTitle>{t('weeklyPlan.dialogs.adjustPortions.title')}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <label className="text-sm font-medium mb-2 block">
-              Nombre de portions
+              {t('weeklyPlan.dialogs.adjustPortions.label')}
             </label>
             <input
               type="number"
@@ -457,13 +473,13 @@ export default function WeeklyPlanPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPortionDialogOpen(false)}>
-              Annuler
+              {t('weeklyPlan.dialogs.adjustPortions.cancel')}
             </Button>
             <Button
               onClick={handlePortionConfirm}
               disabled={adjustPortionsMutation.isPending}
             >
-              {adjustPortionsMutation.isPending ? 'Ajustement...' : 'Confirmer'}
+              {adjustPortionsMutation.isPending ? t('weeklyPlan.actions.adjusting') : t('weeklyPlan.dialogs.adjustPortions.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

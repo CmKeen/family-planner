@@ -1,0 +1,190 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "reset": "Réinitialiser",
+    "print": "Imprimer"
+  },
+  "days": {
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche"
+  },
+  "weeklyPlan": {
+    "title": "Plan hebdomadaire",
+    "week": "Semaine {{number}} - {{year}}",
+    "loading": "Chargement du plan...",
+    "stats": {
+      "totalTime": "Temps total",
+      "favorites": "Favoris",
+      "novelties": "Nouveautés",
+      "meals": "Repas"
+    },
+    "mealTypes": {
+      "lunch": "Déjeuner",
+      "dinner": "Dîner"
+    },
+    "actions": {
+      "validate": "Valider le plan",
+      "validating": "Validation...",
+      "viewShoppingList": "Voir la liste de courses",
+      "swap": "Échanger",
+      "swapping": "Échange...",
+      "adjustPortions": "Portions",
+      "adjusting": "Ajustement...",
+      "lock": "Verrouiller",
+      "unlock": "Déverrouiller"
+    },
+    "dialogs": {
+      "swapRecipe": {
+        "title": "Échanger la recette",
+        "cancel": "Annuler",
+        "confirm": "Confirmer"
+      },
+      "adjustPortions": {
+        "title": "Ajuster les portions",
+        "label": "Nombre de portions",
+        "cancel": "Annuler",
+        "confirm": "Confirmer"
+      },
+      "validatePlan": "Valider ce plan hebdomadaire ? Cela générera la liste de courses."
+    },
+    "status": {
+      "draft": "Brouillon",
+      "validated": "Validé",
+      "archived": "Archivé"
+    },
+    "portions": "{{count}} portions",
+    "minutes": "{{count}} min",
+    "hours": "{{count}}h"
+  },
+  "recipes": {
+    "title": "Catalogue de recettes",
+    "searchPlaceholder": "Rechercher une recette...",
+    "loading": "Chargement des recettes...",
+    "noResults": "Aucune recette trouvée",
+    "categories": {
+      "all": "Toutes",
+      "meats": "Viandes",
+      "fish": "Poissons",
+      "pasta": "Pâtes",
+      "vegetables": "Légumes",
+      "soups": "Soupes",
+      "salads": "Salades"
+    },
+    "filters": {
+      "show": "Afficher les filtres",
+      "hide": "Masquer les filtres",
+      "title": "Filtres",
+      "maxTime": "Temps maximum (minutes)",
+      "maxTimePlaceholder": "Ex: 60",
+      "dietary": "Régimes alimentaires",
+      "vegetarian": "Végétarien",
+      "vegan": "Végan",
+      "glutenFree": "Sans gluten",
+      "kosher": "Casher",
+      "halal": "Halal",
+      "reset": "Réinitialiser les filtres"
+    },
+    "card": {
+      "servings": "{{count}} parts",
+      "minutes": "{{count}} min",
+      "more": "+{{count}}"
+    },
+    "detail": {
+      "time": "Temps",
+      "prepTime": "Prep: {{time}} min",
+      "cookTime": "Cuisson: {{time}} min",
+      "servings": "Portions",
+      "ingredients": "Ingrédients",
+      "instructions": "Instructions"
+    },
+    "kosherCategory": "Casher {{category}}"
+  },
+  "shoppingList": {
+    "title": "Liste de courses",
+    "loading": "Chargement de la liste...",
+    "generatedOn": "Générée le {{date}}",
+    "progress": {
+      "title": "Progression",
+      "items": "{{checked}} sur {{total}} articles"
+    },
+    "viewModes": {
+      "byCategory": "Par catégorie",
+      "byRecipe": "Par recette"
+    },
+    "categories": {
+      "meats": "Viandes",
+      "fish": "Poissons",
+      "fruitsVegetables": "Fruits et légumes",
+      "dairy": "Produits laitiers",
+      "grocery": "Épicerie",
+      "condiments": "Condiments",
+      "other": "Autres"
+    },
+    "forRecipes": "Pour: {{recipes}}",
+    "categoryLabel": "Catégorie: {{category}}",
+    "articles": "{{count}} article",
+    "articles_plural": "{{count}} articles",
+    "empty": "Aucun article dans la liste",
+    "actions": {
+      "print": "Imprimer",
+      "back": "Retour"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "email": "Email",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "noAccount": "Pas encore de compte ?",
+      "signUp": "S'inscrire"
+    },
+    "register": {
+      "title": "Inscription",
+      "name": "Nom",
+      "email": "Email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "submit": "S'inscrire",
+      "hasAccount": "Déjà un compte ?",
+      "signIn": "Se connecter"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue",
+    "recentPlans": "Plans récents",
+    "quickActions": "Actions rapides",
+    "newPlan": "Nouveau plan",
+    "recipes": "Recettes",
+    "noPlan": "Aucun plan pour le moment"
+  },
+  "onboarding": {
+    "title": "Bienvenue",
+    "steps": {
+      "family": "Famille",
+      "dietary": "Régime alimentaire",
+      "preferences": "Préférences"
+    }
+  },
+  "language": {
+    "fr": "Français",
+    "en": "English",
+    "switch": "Changer de langue"
+  }
+}
