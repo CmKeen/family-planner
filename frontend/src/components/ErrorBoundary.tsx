@@ -41,11 +41,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to console in development
-    if (import.meta.env.DEV) {
-      console.error('Error caught by boundary:', error);
-      console.error('Error info:', errorInfo);
-    }
+    // Always log errors to console for debugging
+    console.error('Error caught by boundary:', error);
+    console.error('Error info:', errorInfo);
+    console.error('Error stack:', error.stack);
 
     // Call custom error handler if provided
     if (this.props.onError) {

@@ -12,11 +12,14 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Recipe {
   id: string;
-  name: string;
+  title: string;
+  titleEn?: string;
   prepTime: number;
   cookTime: number;
   category: string;
-  tags: string[];
+  cuisine?: string;
+  isFavorite?: boolean;
+  isNovelty?: boolean;
 }
 
 interface Meal {
@@ -25,8 +28,7 @@ interface Meal {
   mealType: 'LUNCH' | 'DINNER';
   recipe: Recipe;
   portions: number;
-  isLocked: boolean;
-  isFavorite: boolean;
+  locked: boolean;
 }
 
 interface WeeklyPlan {
@@ -149,7 +151,7 @@ export default function WeeklyPlanPage() {
   };
 
   const handleToggleLock = (meal: Meal) => {
-    toggleLockMutation.mutate({ mealId: meal.id, isLocked: !meal.isLocked });
+    toggleLockMutation.mutate({ mealId: meal.id, isLocked: !meal.locked });
   };
 
   const handleValidate = () => {
@@ -178,8 +180,8 @@ export default function WeeklyPlanPage() {
     (sum, meal) => sum + meal.recipe.prepTime + meal.recipe.cookTime,
     0
   );
-  const favoriteCount = planData.meals.filter(m => m.isFavorite).length;
-  const noveltyCount = planData.meals.filter(m => !m.isFavorite).length;
+  const favoriteCount = planData.meals.filter(m => m.recipe.isFavorite).length;
+  const noveltyCount = planData.meals.filter(m => m.recipe.isNovelty).length;
 
   // Organize meals by day
   const mealsByDay = DAYS.map(day => ({
@@ -199,7 +201,7 @@ export default function WeeklyPlanPage() {
     <div className="container mx-auto p-4 pb-20">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+        <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('common.back')}
         </Button>
@@ -306,20 +308,25 @@ export default function WeeklyPlanPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary">{t('weeklyPlan.mealTypes.lunch')}</Badge>
-                        {lunch.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
-                        {lunch.isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
+                        {lunch.recipe.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
+                        {lunch.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
                       </div>
-                      <h3 className="font-semibold">{lunch.recipe.name}</h3>
+                      <h3 className="font-semibold">{lunch.recipe.title}</h3>
                       <p className="text-sm text-muted-foreground">
                         {t('weeklyPlan.minutes', { count: lunch.recipe.prepTime + lunch.recipe.cookTime })} · {t('weeklyPlan.portions', { count: lunch.portions })}
                       </p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {lunch.recipe.tags.map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
+                      {lunch.recipe.category && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            {lunch.recipe.category}
                           </Badge>
-                        ))}
-                      </div>
+                          {lunch.recipe.cuisine && (
+                            <Badge variant="outline" className="text-xs">
+                              {lunch.recipe.cuisine}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
@@ -343,7 +350,7 @@ export default function WeeklyPlanPage() {
                       variant="ghost"
                       onClick={() => handleToggleLock(lunch)}
                     >
-                      {lunch.isLocked ? (
+                      {lunch.locked ? (
                         <Unlock className="h-4 w-4" />
                       ) : (
                         <Lock className="h-4 w-4" />
@@ -360,20 +367,25 @@ export default function WeeklyPlanPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="secondary">{t('weeklyPlan.mealTypes.dinner')}</Badge>
-                        {dinner.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
-                        {dinner.isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
+                        {dinner.recipe.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
+                        {dinner.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
                       </div>
-                      <h3 className="font-semibold">{dinner.recipe.name}</h3>
+                      <h3 className="font-semibold">{dinner.recipe.title}</h3>
                       <p className="text-sm text-muted-foreground">
                         {t('weeklyPlan.minutes', { count: dinner.recipe.prepTime + dinner.recipe.cookTime })} · {t('weeklyPlan.portions', { count: dinner.portions })}
                       </p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {dinner.recipe.tags.map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
+                      {dinner.recipe.category && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            {dinner.recipe.category}
                           </Badge>
-                        ))}
-                      </div>
+                          {dinner.recipe.cuisine && (
+                            <Badge variant="outline" className="text-xs">
+                              {dinner.recipe.cuisine}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
@@ -397,7 +409,7 @@ export default function WeeklyPlanPage() {
                       variant="ghost"
                       onClick={() => handleToggleLock(dinner)}
                     >
-                      {dinner.isLocked ? (
+                      {dinner.locked ? (
                         <Unlock className="h-4 w-4" />
                       ) : (
                         <Lock className="h-4 w-4" />
@@ -426,17 +438,17 @@ export default function WeeklyPlanPage() {
                 }`}
                 onClick={() => setSelectedRecipeId(recipe.id)}
               >
-                <h4 className="font-semibold">{recipe.name}</h4>
+                <h4 className="font-semibold">{recipe.title}</h4>
                 <p className="text-sm text-muted-foreground">
                   {t('weeklyPlan.minutes', { count: recipe.prepTime + recipe.cookTime })} · {recipe.category}
                 </p>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {recipe.tags.map(tag => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
+                {recipe.cuisine && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <Badge variant="outline" className="text-xs">
+                      {recipe.cuisine}
                     </Badge>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

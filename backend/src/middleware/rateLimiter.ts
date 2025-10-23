@@ -50,8 +50,11 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   handler: rateLimitHandler,
   // Key generator: use IP + user agent for more granular control
+  // Using ipKeyGenerator helper to properly handle IPv6 addresses
   keyGenerator: (req) => {
-    return `${req.ip}-${req.get('user-agent')}`;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    const normalizedIp = ip.includes('::ffff:') ? ip.split('::ffff:')[1] : ip;
+    return `${normalizedIp}-${req.get('user-agent')}`;
   },
 });
 
