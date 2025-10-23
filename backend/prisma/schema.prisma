@@ -1,0 +1,455 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  firstName     String
+  lastName      String
+  language      String   @default("fr") // fr, en, nl
+  units         String   @default("metric") // metric, imperial
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  families      FamilyMember[]
+  createdFamilies Family[] @relation("FamilyCreator")
+}
+
+model Family {
+  id                String   @id @default(uuid())
+  name              String
+  language          String   @default("fr")
+  units             String   @default("metric")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Dietary profile
+  dietProfileId     String   @unique
+  dietProfile       DietProfile @relation(fields: [dietProfileId], references: [id], onDelete: Cascade)
+
+  // Relations
+  members           FamilyMember[]
+  recipes           Recipe[]
+  weeklyPlans       WeeklyPlan[]
+  shoppingLists     ShoppingList[]
+  schoolMenus       SchoolMenu[]
+  inventory         InventoryItem[]
+
+  creatorId         String
+  creator           User     @relation("FamilyCreator", fields: [creatorId], references: [id])
+}
+
+model DietProfile {
+  id                      String   @id @default(uuid())
+
+  // Main constraints
+  kosher                  Boolean  @default(false)
+  kosherType              String?  // strict, moderate, flexible
+  meatToMilkDelayHours    Int?     @default(3)
+  shabbatMode             Boolean  @default(false)
+
+  halal                   Boolean  @default(false)
+  halalType               String?  // strict, moderate
+
+  vegetarian              Boolean  @default(false)
+  vegan                   Boolean  @default(false)
+  pescatarian             Boolean  @default(false)
+
+  glutenFree              Boolean  @default(false)
+  lactoseFree             Boolean  @default(false)
+
+  // Allergies (array of allergen names)
+  allergies               String[]
+
+  // Preferences
+  favoriteRatio           Float    @default(0.6) // 60% favorites
+  maxNovelties            Int      @default(2)
+  diversityEnabled        Boolean  @default(true)
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  family                  Family?
+}
+
+enum MemberRole {
+  ADMIN
+  PARENT
+  MEMBER
+  CHILD
+}
+
+model FamilyMember {
+  id                String      @id @default(uuid())
+  familyId          String
+  family            Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  userId            String?
+  user              User?       @relation(fields: [userId], references: [id])
+
+  name              String
+  role              MemberRole  @default(MEMBER)
+  age               Int?
+  portionFactor     Float       @default(1.0) // 1.0 = adult, 0.7 = child
+
+  // Preferences & aversions
+  aversions         String[]
+  favorites         String[]
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  attendance        Attendance[]
+  votes             Vote[]
+}
+
+model Recipe {
+  id                String      @id @default(uuid())
+  title             String
+  titleEn           String?
+  description       String?
+  descriptionEn     String?
+
+  // Timing
+  prepTime          Int         // minutes
+  cookTime          Int         // minutes
+  totalTime         Int         // computed
+
+  // Difficulty & ratings
+  difficulty        Int         @default(2) // 1-5
+  kidsRating        Int         @default(3) // 1-5
+
+  // Dietary tags
+  kosherCategory    String?     // meat, dairy, parve
+  halalFriendly     Boolean     @default(true)
+  glutenFree        Boolean     @default(false)
+  lactoseFree       Boolean     @default(false)
+  vegetarian        Boolean     @default(false)
+  vegan             Boolean     @default(false)
+  pescatarian       Boolean     @default(false)
+
+  // Categories
+  category          String      // pasta, chicken, fish, beef, vegetable, soup, etc.
+  mealType          String[]    // breakfast, lunch, dinner, snack
+  cuisine           String?     // french, italian, asian, etc.
+  season            String[]    // spring, summer, fall, winter, all
+
+  // Images
+  imageUrl          String?
+  thumbnailUrl      String?
+
+  // Ingredients & instructions
+  ingredients       Ingredient[]
+  instructions      Instruction[]
+
+  // Metadata
+  servings          Int         @default(4)
+  budget            String      @default("medium") // low, medium, high
+
+  // Popularity
+  isFavorite        Boolean     @default(false)
+  isNovelty         Boolean     @default(false)
+  timesCooked       Int         @default(0)
+  avgRating         Float?
+
+  // Source
+  source            String?     // original, user, imported
+  sourceUrl         String?
+
+  // Relations
+  familyId          String?
+  family            Family?     @relation(fields: [familyId], references: [id])
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  meals             Meal[]
+  feedbacks         Feedback[]
+}
+
+model Ingredient {
+  id                String      @id @default(uuid())
+  recipeId          String
+  recipe            Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  name              String
+  nameEn            String?
+  quantity          Float
+  unit              String      // g, kg, ml, L, cup, tbsp, tsp, piece, etc.
+  category          String      // produce, meat, dairy, pantry, etc.
+
+  // Dietary flags
+  containsGluten    Boolean     @default(false)
+  containsLactose   Boolean     @default(false)
+  allergens         String[]
+
+  // Alternatives
+  alternatives      String[]    // e.g., ["soy milk", "almond milk"]
+
+  order             Int         @default(0)
+
+  createdAt         DateTime    @default(now())
+}
+
+model Instruction {
+  id                String      @id @default(uuid())
+  recipeId          String
+  recipe            Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  stepNumber        Int
+  text              String
+  textEn            String?
+  duration          Int?        // minutes if applicable
+
+  createdAt         DateTime    @default(now())
+}
+
+enum PlanStatus {
+  DRAFT
+  IN_VALIDATION
+  VALIDATED
+  LOCKED
+}
+
+model WeeklyPlan {
+  id                String      @id @default(uuid())
+  familyId          String
+  family            Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  weekStartDate     DateTime    // Monday of the week
+  weekNumber        Int
+  year              Int
+
+  status            PlanStatus  @default(DRAFT)
+
+  // Cutoff management
+  cutoffDate        DateTime?
+  cutoffTime        String?     // e.g., "20:00"
+  allowDeltaAfterCutoff Boolean @default(true)
+
+  validatedAt       DateTime?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  meals             Meal[]
+  shoppingLists     ShoppingList[]
+  wishes            Wish[]
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model Meal {
+  id                String      @id @default(uuid())
+  weeklyPlanId      String
+  weeklyPlan        WeeklyPlan  @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+
+  dayOfWeek         DayOfWeek
+  mealType          MealType
+
+  recipeId          String?
+  recipe            Recipe?     @relation(fields: [recipeId], references: [id])
+
+  portions          Int         @default(4)
+  locked            Boolean     @default(false)
+
+  // Special cases
+  isSchoolMeal      Boolean     @default(false)
+  isExternal        Boolean     @default(false) // restaurant, delivery, etc.
+  externalNote      String?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  attendance        Attendance[]
+  guests            Guest[]
+  votes             Vote[]
+  feedbacks         Feedback[]
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  MAYBE
+}
+
+model Attendance {
+  id                String            @id @default(uuid())
+  mealId            String
+  meal              Meal              @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  memberId          String
+  member            FamilyMember      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  status            AttendanceStatus  @default(PRESENT)
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([mealId, memberId])
+}
+
+model Guest {
+  id                String      @id @default(uuid())
+  mealId            String
+  meal              Meal        @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  adults            Int         @default(0)
+  children          Int         @default(0)
+
+  note              String?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+enum VoteType {
+  LIKE
+  DISLIKE
+  LOVE
+}
+
+model Vote {
+  id                String      @id @default(uuid())
+  mealId            String
+  meal              Meal        @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  memberId          String
+  member            FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  type              VoteType
+  comment           String?
+
+  createdAt         DateTime    @default(now())
+
+  @@unique([mealId, memberId])
+}
+
+model Wish {
+  id                String      @id @default(uuid())
+  weeklyPlanId      String
+  weeklyPlan        WeeklyPlan  @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+
+  text              String
+  memberId          String?     // who suggested it
+
+  fulfilled         Boolean     @default(false)
+  fulfilledWithRecipeId String?
+
+  createdAt         DateTime    @default(now())
+}
+
+model Feedback {
+  id                String      @id @default(uuid())
+  mealId            String
+  meal              Meal        @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  recipeId          String
+  recipe            Recipe      @relation(fields: [recipeId], references: [id])
+
+  rating            Int?        // 1-5
+  kidsLiked         Boolean?
+  tooLong           Boolean     @default(false)
+  comment           String?
+
+  createdAt         DateTime    @default(now())
+}
+
+model SchoolMenu {
+  id                String      @id @default(uuid())
+  familyId          String
+  family            Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  schoolName        String?
+  date              DateTime
+  mealType          MealType    @default(LUNCH)
+
+  title             String
+  category          String?     // for anti-duplication
+  description       String?
+
+  // OCR metadata
+  ocrConfidence     Float?
+  needsReview       Boolean     @default(false)
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model ShoppingList {
+  id                String      @id @default(uuid())
+  familyId          String
+  family            Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  weeklyPlanId      String
+  weeklyPlan        WeeklyPlan  @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+
+  generatedAt       DateTime    @default(now())
+
+  items             ShoppingItem[]
+}
+
+model ShoppingItem {
+  id                String        @id @default(uuid())
+  shoppingListId    String
+  shoppingList      ShoppingList  @relation(fields: [shoppingListId], references: [id], onDelete: Cascade)
+
+  name              String
+  nameEn            String?
+  quantity          Float
+  unit              String
+  category          String        // aisle/department
+
+  alternatives      String[]      // compliant alternatives
+
+  checked           Boolean       @default(false)
+
+  // Stock management
+  inStock           Boolean       @default(false)
+
+  order             Int           @default(0)
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model InventoryItem {
+  id                String      @id @default(uuid())
+  familyId          String
+  family            Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  name              String
+  quantity          Float
+  unit              String
+  category          String
+
+  expiryDate        DateTime?
+  threshold         Float?      // min quantity to trigger restock
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
