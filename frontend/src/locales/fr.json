@@ -147,22 +147,40 @@
   },
   "auth": {
     "login": {
-      "title": "Connexion",
+      "title": "Family Planner",
+      "subtitle": "Bienvenue ! Connectez-vous à votre compte",
       "email": "Email",
+      "emailPlaceholder": "votre@email.com",
       "password": "Mot de passe",
-      "submit": "Se connecter",
+      "passwordPlaceholder": "••••••••",
+      "signIn": "Se connecter",
+      "signingIn": "Connexion...",
       "noAccount": "Pas encore de compte ?",
-      "signUp": "S'inscrire"
+      "signUp": "S'inscrire",
+      "loginFailed": "Échec de la connexion. Veuillez vérifier vos identifiants.",
+      "submit": "Se connecter"
     },
     "register": {
-      "title": "Inscription",
+      "title": "Family Planner",
+      "subtitle": "Créez votre compte",
+      "firstName": "Prénom",
+      "firstNamePlaceholder": "Jean",
+      "lastName": "Nom",
+      "lastNamePlaceholder": "Dupont",
       "name": "Nom",
       "email": "Email",
+      "emailPlaceholder": "votre@email.com",
       "password": "Mot de passe",
+      "passwordPlaceholder": "••••••••",
       "confirmPassword": "Confirmer le mot de passe",
-      "submit": "S'inscrire",
-      "hasAccount": "Déjà un compte ?",
-      "signIn": "Se connecter"
+      "confirmPasswordPlaceholder": "••••••••",
+      "createAccount": "Créer un compte",
+      "creating": "Création...",
+      "hasAccount": "Vous avez déjà un compte ?",
+      "signIn": "Se connecter",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "registrationFailed": "Échec de l'inscription. Veuillez réessayer.",
+      "submit": "S'inscrire"
     }
   },
   "dashboard": {

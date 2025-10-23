@@ -1,39 +1,50 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { recipeAPI } from '@/lib/api';
-import { Heart, Clock, Users, Search, Filter } from 'lucide-react';
+import { Heart, Clock, Users, Search, Filter, ArrowLeft, Utensils } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Ingredient {
   id: string;
   name: string;
+  nameEn: string | null;
   quantity: number;
   unit: string;
+  category: string;
 }
 
 interface Instruction {
   id: string;
   stepNumber: number;
-  description: string;
+  text: string;
+  textEn: string | null;
 }
 
 interface Recipe {
   id: string;
-  name: string;
-  description: string;
+  title: string;
+  titleEn: string | null;
+  description: string | null;
+  descriptionEn: string | null;
   prepTime: number;
   cookTime: number;
+  totalTime: number;
   servings: number;
   category: string;
-  tags: string[];
+  mealType: string[];
   isFavorite: boolean;
   kosherCategory?: string;
+  vegetarian: boolean;
+  vegan: boolean;
+  glutenFree: boolean;
+  halalFriendly: boolean;
   ingredients: Ingredient[];
   instructions: Instruction[];
 }
@@ -41,6 +52,7 @@ interface Recipe {
 export default function RecipesPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -54,15 +66,19 @@ export default function RecipesPage() {
     halal: false
   });
 
-  // Categories mapping
+  // Categories mapping - values must match the API's category field exactly (lowercase without accents)
   const categories = [
     { value: 'all', label: t('recipes.categories.all') },
-    { value: 'Viandes', label: t('recipes.categories.meats') },
-    { value: 'Poissons', label: t('recipes.categories.fish') },
-    { value: 'Pâtes', label: t('recipes.categories.pasta') },
-    { value: 'Légumes', label: t('recipes.categories.vegetables') },
-    { value: 'Soupes', label: t('recipes.categories.soups') },
-    { value: 'Salades', label: t('recipes.categories.salads') }
+    { value: 'viande', label: t('recipes.categories.meats') },
+    { value: 'volaille', label: 'Volaille' },
+    { value: 'boeuf', label: 'Boeuf' },
+    { value: 'poisson', label: t('recipes.categories.fish') },
+    { value: 'pates', label: t('recipes.categories.pasta') },
+    { value: 'legume', label: t('recipes.categories.vegetables') },
+    { value: 'soupe', label: t('recipes.categories.soups') },
+    { value: 'salade', label: t('recipes.categories.salads') },
+    { value: 'accompagnement', label: 'Accompagnement' },
+    { value: 'legumineuses', label: 'Légumineuses' }
   ];
 
   // Fetch recipes
@@ -134,13 +150,28 @@ export default function RecipesPage() {
   const filteredRecipes = recipesData || [];
 
   return (
-    <div className="container mx-auto p-4 pb-20">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">{t('recipes.title')}</h1>
-          <LanguageSwitcher />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header - Mobile Optimized */}
+      <header className="bg-white dark:bg-gray-800 border-b sticky top-0 z-10 safe-top">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center space-x-2">
+                <Utensils className="h-5 w-5 text-primary" />
+                <h1 className="text-lg font-bold">{t('recipes.title')}</h1>
+              </div>
+            </div>
+            <LanguageSwitcher />
+          </div>
         </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto p-4 pb-20">
+      <div className="mb-6">
 
         {/* Search Bar */}
         <div className="relative mb-4">
@@ -285,7 +316,7 @@ export default function RecipesPage() {
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg">{recipe.name}</CardTitle>
+                  <CardTitle className="text-lg">{recipe.title}</CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -310,7 +341,7 @@ export default function RecipesPage() {
                 <div className="flex flex-wrap gap-3 text-sm mb-4">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{t('recipes.card.minutes', { count: recipe.prepTime + recipe.cookTime })}</span>
+                    <span>{t('recipes.card.minutes', { count: recipe.totalTime })}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4 text-muted-foreground" />
@@ -323,14 +354,14 @@ export default function RecipesPage() {
                   {recipe.kosherCategory && (
                     <Badge variant="outline">{t('recipes.kosherCategory', { category: recipe.kosherCategory })}</Badge>
                   )}
-                  {recipe.tags.slice(0, 2).map(tag => (
+                  {recipe.mealType.slice(0, 2).map(tag => (
                     <Badge key={tag} variant="outline" className="text-xs">
                       {tag}
                     </Badge>
                   ))}
-                  {recipe.tags.length > 2 && (
+                  {recipe.mealType.length > 2 && (
                     <Badge variant="outline" className="text-xs">
-                      {t('recipes.card.more', { count: recipe.tags.length - 2 })}
+                      {t('recipes.card.more', { count: recipe.mealType.length - 2 })}
                     </Badge>
                   )}
                 </div>
@@ -347,7 +378,7 @@ export default function RecipesPage() {
             <>
               <DialogHeader>
                 <div className="flex items-start justify-between">
-                  <DialogTitle className="text-2xl pr-8">{recipeDetails.name}</DialogTitle>
+                  <DialogTitle className="text-2xl pr-8">{recipeDetails.title}</DialogTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -394,7 +425,7 @@ export default function RecipesPage() {
                   {recipeDetails.kosherCategory && (
                     <Badge variant="outline">{t('recipes.kosherCategory', { category: recipeDetails.kosherCategory })}</Badge>
                   )}
-                  {recipeDetails.tags.map(tag => (
+                  {recipeDetails.mealType.map(tag => (
                     <Badge key={tag} variant="outline">
                       {tag}
                     </Badge>
@@ -427,7 +458,7 @@ export default function RecipesPage() {
                           <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
                             {instruction.stepNumber}
                           </span>
-                          <p className="flex-1 pt-0.5">{instruction.description}</p>
+                          <p className="flex-1 pt-0.5">{instruction.text}</p>
                         </li>
                       ))}
                   </ol>
@@ -437,6 +468,7 @@ export default function RecipesPage() {
           )}
         </DialogContent>
       </Dialog>
+      </main>
     </div>
   );
 }

@@ -21,6 +21,7 @@ i18n
     resources,
     fallbackLng: 'fr', // Default language
     supportedLngs: ['fr', 'en'],
+    lng: 'fr', // Set initial language explicitly
 
     detection: {
       order: ['localStorage', 'navigator'],
@@ -33,7 +34,9 @@ i18n
 
     react: {
       useSuspense: false
-    }
+    },
+
+    debug: true // Enable debug mode to see what's happening
   });
 
 export default i18n;

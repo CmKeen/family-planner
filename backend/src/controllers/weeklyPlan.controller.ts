@@ -238,7 +238,7 @@ export const generateAutoPlan = asyncHandler(
         noveltyCount,
         maxNovelties: noveltyMeals,
         favoriteRatio: dietProfile.favoriteRatio,
-        avoidCategory: schoolMenu?.category
+        avoidCategory: schoolMenu?.category || undefined
       });
 
       if (dinnerRecipe.from === 'favorites') favoriteIndex++;

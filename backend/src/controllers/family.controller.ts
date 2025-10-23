@@ -32,23 +32,27 @@ export const createFamily = asyncHandler(
     const data = createFamilySchema.parse(req.body);
     const userId = req.user!.id;
 
-    const family = await prisma.family.create({
-      data: {
-        name: data.name,
-        language: data.language || 'fr',
-        units: data.units || 'metric',
-        creatorId: userId,
-        dietProfile: {
-          create: data.dietProfile || {}
-        },
-        members: {
-          create: {
-            userId,
-            name: `${req.user!.email}`,
-            role: 'ADMIN'
-          }
-        }
+    const createData: any = {
+      name: data.name,
+      language: data.language || 'fr',
+      units: data.units || 'metric',
+      creator: {
+        connect: { id: userId }
       },
+      dietProfile: {
+        create: data.dietProfile || {}
+      },
+      members: {
+        create: {
+          userId,
+          name: `${req.user!.email}`,
+          role: 'ADMIN'
+        }
+      }
+    };
+
+    const family = await prisma.family.create({
+      data: createData,
       include: {
         dietProfile: true,
         members: true

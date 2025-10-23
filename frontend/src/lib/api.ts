@@ -82,7 +82,9 @@ export const weeklyPlanAPI = {
     api.post(`/weekly-plans/${planId}/meals/${mealId}/vote`, data),
   addWish: (planId: string, data: any) =>
     api.post(`/weekly-plans/${planId}/wishes`, data),
-  validate: (planId: string) => api.post(`/weekly-plans/${planId}/validate`)
+  validate: (planId: string) => api.post(`/weekly-plans/${planId}/validate`),
+  adjustPortions: (planId: string, mealId: string, data: any) =>
+    api.post(`/weekly-plans/${planId}/meals/${mealId}/adjust-portions`, data)
 };
 
 // Shopping List API
@@ -91,8 +93,10 @@ export const shoppingListAPI = {
     api.post(`/shopping-lists/generate/${weeklyPlanId}`),
   get: (weeklyPlanId: string) =>
     api.get(`/shopping-lists/${weeklyPlanId}`),
-  toggleItem: (itemId: string) =>
-    api.post(`/shopping-lists/items/${itemId}/toggle`)
+  getByPlanId: (weeklyPlanId: string) =>
+    api.get(`/shopping-lists/${weeklyPlanId}`),
+  toggleItem: (shoppingListId: string, itemId: string, data: any) =>
+    api.post(`/shopping-lists/${shoppingListId}/items/${itemId}/toggle`, data)
 };
 
 // School Menu API

@@ -147,22 +147,40 @@
   },
   "auth": {
     "login": {
-      "title": "Login",
+      "title": "Family Planner",
+      "subtitle": "Welcome back! Sign in to your account",
       "email": "Email",
+      "emailPlaceholder": "your@email.com",
       "password": "Password",
-      "submit": "Sign in",
+      "passwordPlaceholder": "••••••••",
+      "signIn": "Sign In",
+      "signingIn": "Signing in...",
       "noAccount": "Don't have an account?",
-      "signUp": "Sign up"
+      "signUp": "Sign up",
+      "loginFailed": "Login failed. Please check your credentials.",
+      "submit": "Sign in"
     },
     "register": {
-      "title": "Register",
+      "title": "Family Planner",
+      "subtitle": "Create your account",
+      "firstName": "First name",
+      "firstNamePlaceholder": "John",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Doe",
       "name": "Name",
       "email": "Email",
+      "emailPlaceholder": "your@email.com",
       "password": "Password",
+      "passwordPlaceholder": "••••••••",
       "confirmPassword": "Confirm password",
-      "submit": "Sign up",
+      "confirmPasswordPlaceholder": "••••••••",
+      "createAccount": "Create account",
+      "creating": "Creating...",
       "hasAccount": "Already have an account?",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "passwordMismatch": "Passwords do not match",
+      "registrationFailed": "Registration failed. Please try again.",
+      "submit": "Sign up"
     }
   },
   "dashboard": {
