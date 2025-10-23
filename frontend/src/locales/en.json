@@ -1,0 +1,208 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "confirm": "Confirm",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "print": "Print"
+  },
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
+  },
+  "weeklyPlan": {
+    "title": "Weekly Plan",
+    "week": "Week {{number}} - {{year}}",
+    "loading": "Loading plan...",
+    "stats": {
+      "totalTime": "Total time",
+      "favorites": "Favorites",
+      "novelties": "New dishes",
+      "meals": "Meals"
+    },
+    "mealTypes": {
+      "lunch": "Lunch",
+      "dinner": "Dinner"
+    },
+    "actions": {
+      "validate": "Validate plan",
+      "validating": "Validating...",
+      "viewShoppingList": "View shopping list",
+      "swap": "Swap",
+      "swapping": "Swapping...",
+      "adjustPortions": "Portions",
+      "adjusting": "Adjusting...",
+      "lock": "Lock",
+      "unlock": "Unlock"
+    },
+    "dialogs": {
+      "swapRecipe": {
+        "title": "Swap recipe",
+        "cancel": "Cancel",
+        "confirm": "Confirm"
+      },
+      "adjustPortions": {
+        "title": "Adjust portions",
+        "label": "Number of portions",
+        "cancel": "Cancel",
+        "confirm": "Confirm"
+      },
+      "validatePlan": "Validate this weekly plan? This will generate the shopping list."
+    },
+    "status": {
+      "draft": "Draft",
+      "validated": "Validated",
+      "archived": "Archived"
+    },
+    "portions": "{{count}} portions",
+    "minutes": "{{count}} min",
+    "hours": "{{count}}h"
+  },
+  "recipes": {
+    "title": "Recipe Catalog",
+    "searchPlaceholder": "Search for a recipe...",
+    "loading": "Loading recipes...",
+    "noResults": "No recipes found",
+    "categories": {
+      "all": "All",
+      "meats": "Meats",
+      "fish": "Fish",
+      "pasta": "Pasta",
+      "vegetables": "Vegetables",
+      "soups": "Soups",
+      "salads": "Salads"
+    },
+    "filters": {
+      "show": "Show filters",
+      "hide": "Hide filters",
+      "title": "Filters",
+      "maxTime": "Maximum time (minutes)",
+      "maxTimePlaceholder": "Ex: 60",
+      "dietary": "Dietary requirements",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "glutenFree": "Gluten-free",
+      "kosher": "Kosher",
+      "halal": "Halal",
+      "reset": "Reset filters"
+    },
+    "card": {
+      "servings": "{{count}} servings",
+      "minutes": "{{count}} min",
+      "more": "+{{count}}"
+    },
+    "detail": {
+      "time": "Time",
+      "prepTime": "Prep: {{time}} min",
+      "cookTime": "Cook: {{time}} min",
+      "servings": "Servings",
+      "ingredients": "Ingredients",
+      "instructions": "Instructions"
+    },
+    "kosherCategory": "Kosher {{category}}"
+  },
+  "shoppingList": {
+    "title": "Shopping List",
+    "loading": "Loading list...",
+    "generatedOn": "Generated on {{date}}",
+    "progress": {
+      "title": "Progress",
+      "items": "{{checked}} of {{total}} items"
+    },
+    "viewModes": {
+      "byCategory": "By category",
+      "byRecipe": "By recipe"
+    },
+    "categories": {
+      "meats": "Meats",
+      "fish": "Fish",
+      "fruitsVegetables": "Fruits and vegetables",
+      "dairy": "Dairy products",
+      "grocery": "Grocery",
+      "condiments": "Condiments",
+      "other": "Other"
+    },
+    "forRecipes": "For: {{recipes}}",
+    "categoryLabel": "Category: {{category}}",
+    "articles": "{{count}} item",
+    "articles_plural": "{{count}} items",
+    "empty": "No items in the list",
+    "actions": {
+      "print": "Print",
+      "back": "Back"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Family Planner",
+      "subtitle": "Welcome back! Sign in to your account",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "signIn": "Sign In",
+      "signingIn": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "loginFailed": "Login failed. Please check your credentials.",
+      "submit": "Sign in"
+    },
+    "register": {
+      "title": "Family Planner",
+      "subtitle": "Create your account",
+      "firstName": "First name",
+      "firstNamePlaceholder": "John",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Doe",
+      "name": "Name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "••••••••",
+      "createAccount": "Create account",
+      "creating": "Creating...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "passwordMismatch": "Passwords do not match",
+      "registrationFailed": "Registration failed. Please try again.",
+      "submit": "Sign up"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "recentPlans": "Recent plans",
+    "quickActions": "Quick actions",
+    "newPlan": "New plan",
+    "recipes": "Recipes",
+    "noPlan": "No plan yet"
+  },
+  "onboarding": {
+    "title": "Welcome",
+    "steps": {
+      "family": "Family",
+      "dietary": "Dietary requirements",
+      "preferences": "Preferences"
+    }
+  },
+  "language": {
+    "fr": "Français",
+    "en": "English",
+    "switch": "Change language"
+  }
+}
