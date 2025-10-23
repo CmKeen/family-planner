@@ -1,9 +1,12 @@
 import { Response } from 'express';
-import { z } from 'zod';
 import prisma from '../lib/prisma';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
-import { DayOfWeek, MealType, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
+// Type aliases for Prisma enums
+type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+type MealType = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
 
 const DAYS: DayOfWeek[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
@@ -152,9 +155,9 @@ export const generateAutoPlan = asyncHandler(
     const recipes = await getCompliantRecipes(family);
 
     // Separate favorites and novelties
-    const favorites = recipes.filter(r => r.isFavorite);
-    const novelties = recipes.filter(r => r.isNovelty);
-    const others = recipes.filter(r => !r.isFavorite && !r.isNovelty);
+    const favorites = recipes.filter((r: any) => r.isFavorite);
+    const novelties = recipes.filter((r: any) => r.isNovelty);
+    const others = recipes.filter((r: any) => !r.isFavorite && !r.isNovelty);
 
     // Calculate meal counts
     const dietProfile = family.dietProfile;
@@ -190,7 +193,7 @@ export const generateAutoPlan = asyncHandler(
       dayDate.setDate(dayDate.getDate() + dayIndex);
 
       // Check for school menu
-      const schoolMenu = schoolMenus.find(sm =>
+      const schoolMenu = schoolMenus.find((sm: any) =>
         sm.date.toDateString() === dayDate.toDateString() && sm.mealType === 'LUNCH'
       );
 
@@ -291,8 +294,8 @@ export const generateExpressPlan = asyncHandler(
     }
 
     const recipes = await getCompliantRecipes(family);
-    const favorites = recipes.filter(r => r.isFavorite);
-    const novelties = recipes.filter(r => r.isNovelty);
+    const favorites = recipes.filter((r: any) => r.isFavorite);
+    const novelties = recipes.filter((r: any) => r.isNovelty);
 
     if (favorites.length === 0) {
       throw new AppError('No favorite recipes found. Please mark some recipes as favorites first.', 400);
@@ -556,7 +559,7 @@ function getWeekNumber(date: Date): number {
 
 async function getCompliantRecipes(family: any) {
   const dietProfile = family.dietProfile;
-  const where: Prisma.RecipeWhereInput = {
+  const where: any = {
     OR: [
       { familyId: family.id },
       { familyId: null }
@@ -579,9 +582,9 @@ async function getCompliantRecipes(family: any) {
 
   // Filter by allergies
   if (dietProfile.allergies.length > 0) {
-    return recipes.filter(recipe => {
-      return !recipe.ingredients.some(ingredient =>
-        ingredient.allergens.some(allergen =>
+    return recipes.filter((recipe: any) => {
+      return !recipe.ingredients.some((ingredient: any) =>
+        ingredient.allergens.some((allergen: any) =>
           dietProfile.allergies.includes(allergen)
         )
       );

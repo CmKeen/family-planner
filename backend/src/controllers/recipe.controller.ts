@@ -98,7 +98,7 @@ export const getRecipes = asyncHandler(
       favorites
     } = req.query;
 
-    const where: Prisma.RecipeWhereInput = {};
+    const where: any = {};
 
     if (familyId) where.familyId = familyId as string;
     if (category) where.category = category as string;
@@ -220,7 +220,7 @@ export const getWeeklyCatalog = asyncHandler(
     const dietProfile = family.dietProfile;
 
     // Build filters based on diet profile
-    const where: Prisma.RecipeWhereInput = {
+    const where: any = {
       OR: [
         { familyId },
         { familyId: null } // Public recipes
@@ -262,9 +262,9 @@ export const getWeeklyCatalog = asyncHandler(
     // Filter by allergies
     let filteredRecipes = allRecipes;
     if (dietProfile.allergies.length > 0) {
-      filteredRecipes = allRecipes.filter(recipe => {
-        return !recipe.ingredients.some(ingredient =>
-          ingredient.allergens.some(allergen =>
+      filteredRecipes = allRecipes.filter((recipe: any) => {
+        return !recipe.ingredients.some((ingredient: any) =>
+          ingredient.allergens.some((allergen: any) =>
             dietProfile.allergies.includes(allergen)
           )
         );
@@ -272,9 +272,9 @@ export const getWeeklyCatalog = asyncHandler(
     }
 
     // Separate favorites and new recipes
-    const favorites = filteredRecipes.filter(r => r.isFavorite);
-    const novelties = filteredRecipes.filter(r => r.isNovelty);
-    const others = filteredRecipes.filter(r => !r.isFavorite && !r.isNovelty);
+    const favorites = filteredRecipes.filter((r: any) => r.isFavorite);
+    const novelties = filteredRecipes.filter((r: any) => r.isNovelty);
+    const others = filteredRecipes.filter((r: any) => !r.isFavorite && !r.isNovelty);
 
     // Calculate counts based on diet profile settings
     const favoritesCount = Math.ceil(12 * dietProfile.favoriteRatio);

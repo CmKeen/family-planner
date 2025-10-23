@@ -20,7 +20,7 @@ const loginSchema = z.object({
 });
 
 export const register = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const { email, password, firstName, lastName, language } = registerSchema.parse(req.body);
 
     // Check if user exists
@@ -82,7 +82,7 @@ export const register = asyncHandler(
 );
 
 export const login = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, _next: NextFunction) => {
     const { email, password } = loginSchema.parse(req.body);
 
     // Find user

@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { DayOfWeek, MealType } from '@prisma/client';
+
+// Type aliases for Prisma enums
+type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+type MealType = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
 
 // Mock Prisma client
 jest.mock('../../lib/prisma', () => ({

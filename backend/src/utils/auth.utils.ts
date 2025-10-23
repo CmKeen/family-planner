@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
+import { env } from '../config/env';
 
 export const hashPassword = async (password: string): Promise<string> => {
   const salt = await bcrypt.genSalt(10);
@@ -14,11 +15,11 @@ export const comparePassword = async (
 };
 
 export const generateToken = (payload: { id: string; email: string }): string => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+  return jwt.sign(payload, env.JWT_SECRET, {
+    expiresIn: (env.JWT_EXPIRES_IN || '7d') as any
   });
 };
 
 export const verifyToken = (token: string) => {
-  return jwt.verify(token, process.env.JWT_SECRET!);
+  return jwt.verify(token, env.JWT_SECRET);
 };

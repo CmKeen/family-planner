@@ -55,7 +55,7 @@ export const generateShoppingList = asyncHandler(
 
       // Add guest portions
       const totalGuests = meal.guests.reduce(
-        (sum, g) => sum + g.adults + g.children * 0.7,
+        (sum: number, g: any) => sum + g.adults + g.children * 0.7,
         0
       );
       const finalFactor = servingFactor * (1 + totalGuests / meal.portions);
@@ -107,7 +107,7 @@ export const generateShoppingList = asyncHandler(
     const inventory = plan.family.inventory;
     const finalItems = substitutedItems.map((item, index) => {
       const stockItem = inventory.find(
-        inv => inv.name.toLowerCase() === item.name.toLowerCase()
+        (inv: any) => inv.name.toLowerCase() === item.name.toLowerCase()
       );
 
       let finalQuantity = item.quantity;
@@ -181,7 +181,7 @@ export const getShoppingList = asyncHandler(
     }
 
     // Group by category
-    const groupedItems = shoppingList.items.reduce((acc, item) => {
+    const groupedItems = shoppingList.items.reduce((acc: any, item: any) => {
       if (!acc[item.category]) {
         acc[item.category] = [];
       }
