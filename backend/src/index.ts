@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger';
+import { env, logEnvConfig } from './config/env';
 import authRoutes from './routes/auth.routes';
 import familyRoutes from './routes/family.routes';
 import recipeRoutes from './routes/recipe.routes';
@@ -19,10 +19,11 @@ import {
 } from './middleware/security';
 import { getEnvironmentLimiter } from './middleware/rateLimiter';
 
-dotenv.config();
+// Validate and log environment configuration
+logEnvConfig();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = env.PORT;
 
 // Security Middleware (must be first!)
 app.use(securityHeaders);
@@ -32,8 +33,7 @@ app.use(additionalSecurityHeaders);
 app.use(getEnvironmentLimiter());
 
 // CORS with security configuration
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
-app.use(cors(getCorsOptions(corsOrigin)));
+app.use(cors(getCorsOptions(env.CORS_ORIGIN)));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' })); // Limit payload size
@@ -73,8 +73,11 @@ app.use('/api/school-menus', schoolMenuRoutes);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-  console.log(`🔍 Swagger JSON: http://localhost:${PORT}/api-docs.json`);
+  console.log(`\n🚀 ${env.APP_NAME} Server Started Successfully!`);
+  console.log(`   📍 Port: ${PORT}`);
+  console.log(`   📝 Environment: ${env.NODE_ENV}`);
+  console.log(`   📚 API Documentation: http://localhost:${PORT}/api-docs`);
+  console.log(`   🔍 Swagger JSON: http://localhost:${PORT}/api-docs.json`);
+  console.log(`   ✅ Health Check: http://localhost:${PORT}/health`);
+  console.log('\n📊 Ready to accept connections!\n');
 });
