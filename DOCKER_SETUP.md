@@ -26,6 +26,7 @@ docker-compose up -d --build
 Services will be available at:
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3001
+- **📚 API Documentation (Swagger)**: http://localhost:3001/api-docs
 - **Database**: localhost:5432
 
 ### Development Mode (with hot reload)
@@ -43,6 +44,7 @@ docker-compose -f docker-compose.dev.yml up -d --build
 Development servers:
 - **Frontend**: http://localhost:5173 (Vite dev server)
 - **Backend API**: http://localhost:3001 (with nodemon/tsx watch)
+- **📚 API Documentation (Swagger)**: http://localhost:3001/api-docs
 - **Database**: localhost:5432
 
 ### Useful Commands

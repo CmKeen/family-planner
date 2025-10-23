@@ -128,6 +128,24 @@ npm run dev
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3001
 - **API Health Check**: http://localhost:3001/health
+- **📚 Interactive API Documentation (Swagger)**: http://localhost:3001/api-docs
+- **Swagger JSON**: http://localhost:3001/api-docs.json
+
+### API Documentation
+
+The backend includes **automatic interactive API documentation** using Swagger/OpenAPI:
+
+- **Swagger UI**: http://localhost:3001/api-docs
+  - Interactive interface to explore and test all API endpoints
+  - Try endpoints directly from your browser
+  - See request/response schemas
+  - Authentication testing built-in
+
+- **OpenAPI JSON**: http://localhost:3001/api-docs.json
+  - Machine-readable API specification
+  - Import into Postman, Insomnia, or other tools
+
+For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
 
 ### Database Management
 
