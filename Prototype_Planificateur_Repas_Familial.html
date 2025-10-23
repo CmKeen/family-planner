@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prototype — Planificateur de repas familial</title>
+  <style>
+    :root{
+      --bg:#0f172a; /* slate-900 */
+      --card:#111827; /* gray-900 */
+      --muted:#94a3b8; /* slate-400 */
+      --text:#e5e7eb; /* gray-200 */
+      --brand:#22c55e; /* green-500 */
+      --accent:#38bdf8; /* sky-400 */
+      --warn:#f59e0b; /* amber-500 */
+      --danger:#ef4444; /* red-500 */
+      --ok:#10b981; /* emerald-500 */
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#0f172a 0%,rgba(15,23,42,.85) 100%);backdrop-filter:saturate(120%) blur(8px);border-bottom:1px solid rgba(148,163,184,.2)}
+    .wrap{max-width:1200px;margin:0 auto;padding:16px}
+    .topbar{display:flex;gap:16px;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center}
+    .brand .logo{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--brand),#16a34a);display:grid;place-items:center;font-weight:700;color:#052e16}
+    .brand h1{font-size:18px;margin:0}
+    nav{display:flex;gap:6px;flex-wrap:wrap}
+    nav button{background:transparent;border:1px solid rgba(148,163,184,.25);color:var(--text);padding:8px 12px;border-radius:8px;cursor:pointer}
+    nav button.active{background:var(--accent);border-color:transparent;color:#03202b;font-weight:600}
+    .content{padding:20px}
+    .grid{display:grid;gap:12px}
+    .grid.days{grid-template-columns:repeat(7,1fr)}
+    @media(max-width:1100px){.grid.days{grid-template-columns:repeat(4,1fr)}}
+    @media(max-width:740px){.grid.days{grid-template-columns:repeat(2,1fr)}}
+    .card{background:var(--card);border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:12px}
+    .day-title{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:8px}
+    .meal{border:1px dashed rgba(148,163,184,.2);border-radius:10px;padding:10px;margin:8px 0}
+    .meal h4{margin:0 0 8px 0;font-size:14px}
+    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+    .tag{font-size:11px;padding:3px 6px;border-radius:999px;border:1px solid rgba(148,163,184,.25);color:var(--muted)}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .row.end{justify-content:flex-end}
+    .btn{border:1px solid rgba(148,163,184,.25);background:transparent;color:var(--text);border-radius:8px;padding:8px 10px;cursor:pointer}
+    .btn.primary{background:var(--brand);border-color:transparent;color:#052e16;font-weight:700}
+    .btn.accent{background:var(--accent);color:#03202b;border-color:transparent;font-weight:700}
+    .btn.warn{background:var(--warn);border-color:transparent;color:#3b2f00}
+    .btn.ghost{opacity:.85}
+    .btn.small{padding:6px 8px;font-size:12px}
+    .btn.icon{padding:6px;display:grid;place-items:center}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+    .section-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0}
+    .muted{color:var(--muted)}
+    .pill{padding:4px 8px;border-radius:999px;background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.2);font-size:12px}
+    .hidden{display:none !important}
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(2,6,23,.65);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px}
+    .modal .panel{background:#0b1220;border:1px solid rgba(148,163,184,.2);width:min(920px,100%);max-height:90vh;border-radius:14px;overflow:auto}
+    .panel header{position:sticky;top:0;background:#0b1220;border-bottom:1px solid rgba(148,163,184,.2)}
+    .panel .wrap{padding:12px 16px}
+    .panel h3{margin:0}
+    .list{display:grid;gap:8px}
+    .recipe-item{display:flex;gap:12px;align-items:flex-start;border:1px solid rgba(148,163,184,.2);border-radius:10px;padding:10px}
+    .recipe-item img{width:72px;height:72px;border-radius:10px;object-fit:cover;background:#0f172a;border:1px solid rgba(148,163,184,.2)}
+    .recipe-item .meta{font-size:12px;color:var(--muted)}
+    .kpi{display:flex;gap:12px;flex-wrap:wrap}
+    .kpi .box{background:rgba(148,163,184,.12);border:1px solid rgba(148,163,184,.2);padding:8px 10px;border-radius:10px;font-size:12px}
+    /* Shopping list */
+    .cols{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    @media(max-width:900px){.cols{grid-template-columns:1fr;}}
+    .list-cat{margin:8px 0}
+    .list-cat h4{margin:0 0 6px 0}
+    .list-item{display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid rgba(148,163,184,.15);border-radius:8px;margin:6px 0;background:#0b1220}
+    .list-item input[type=checkbox]{width:18px;height:18px}
+    .list-item .qty{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted)}
+    .toast{position:fixed;bottom:16px;right:16px;background:#052e16;color:#dcfce7;border:1px solid #14532d;padding:10px 12px;border-radius:10px;display:none}
+    .alert{border-left:4px solid var(--warn);background:#0b1220;padding:10px;border-radius:8px;border:1px solid rgba(245,158,11,.25)}
+    .alert.ok{border-left-color:var(--ok);border-color:rgba(16,185,129,.25)}
+    .chip{display:inline-flex;gap:6px;align-items:center;padding:4px 8px;border-radius:999px;border:1px solid rgba(148,163,184,.2);color:var(--muted);font-size:12px;margin:2px}
+    .flex{display:flex;gap:8px;align-items:center}
+    .flex-wrap{flex-wrap:wrap}
+    .space-between{justify-content:space-between}
+    .sep{height:1px;background:rgba(148,163,184,.15);margin:12px 0}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <div class="brand">
+        <div class="logo">🍽️</div>
+        <h1>Planificateur familial — Prototype</h1>
+        <span class="pill">MVP + Collab</span>
+      </div>
+      <nav id="nav">
+        <button data-screen="semaine" class="active">Semaine</button>
+        <button data-screen="liste">Liste de courses</button>
+        <button data-screen="collab">Collaboration</button>
+        <button data-screen="synthese">Synthèse & Validation</button>
+      </nav>
+    </div>
+  </header>
+  <div class="wrap content">
+
+    <!-- Screen: Semaine -->
+    <section id="screen-semaine">
+      <div class="section-title">
+        <h2>Menu hebdomadaire</h2>
+        <div class="row">
+          <button class="btn" id="btn-reprendre">Reprendre semaine dernière</button>
+          <button class="btn" id="btn-plan-express">Plan express</button>
+          <button class="btn primary" id="btn-generer">Générer mon menu</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="chip">Contraintes: <strong id="chip-diet"></strong></span>
+        <span class="chip">Menus scolaires: <strong id="chip-school"></strong></span>
+        <span class="chip">Favoris ≥ 60% | Nouveautés ≤ 2</span>
+      </div>
+
+      <div id="antiDoublonAlert" class="alert hidden"></div>
+
+      <div class="grid days" id="daysGrid"></div>
+      <div class="sep"></div>
+      <div class="kpi">
+        <div class="box">⏱️ Temps total cuisine estimé: <b id="kpi-time">—</b></div>
+        <div class="box">🍽️ Favoris cette semaine: <b id="kpi-favs">—</b></div>
+        <div class="box">🧪 Nouveautés: <b id="kpi-new">—</b></div>
+        <div class="box">✔️ Conformité: <b id="kpi-compliance">—</b></div>
+      </div>
+    </section>
+
+    <!-- Screen: Liste de courses -->
+    <section id="screen-liste" class="hidden">
+      <div class="section-title">
+        <h2>Liste de courses</h2>
+        <div class="row">
+          <button class="btn" id="btn-regenerer-liste">Régénérer</button>
+          <button class="btn" onclick="window.print()">Imprimer / PDF</button>
+          <button class="btn ghost" id="btn-export-excel">Exporter Excel</button>
+        </div>
+      </div>
+      <div class="cols">
+        <div>
+          <div class="row space-between">
+            <div class="row flex-wrap">
+              <label class="chip"><input type="checkbox" id="viewByRecipe"/> Regrouper par recette</label>
+              <label class="chip"><input type="checkbox" id="hideBought" checked/> Masquer les cochés</label>
+            </div>
+            <div class="row">
+              <button class="btn small" id="btn-clear-checked">Tout décocher</button>
+            </div>
+          </div>
+          <div id="shoppingContainer"></div>
+        </div>
+        <aside>
+          <div class="card">
+            <h3>Paramètres portions</h3>
+            <div class="list">
+              <div class="flex space-between"><span>Portions moyennes</span> <input id="portionAverage" type="number" min="1" max="12" value="4" style="width:64px"></div>
+              <div class="flex space-between"><span>Invités cette semaine</span> <input id="guestsWeek" type="number" min="0" max="12" value="0" style="width:64px"></div>
+              <div class="flex space-between"><span>Prendre en compte stocks</span> <input id="useStock" type="checkbox" checked></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:12px">
+            <h3>Delta (post‑validation)</h3>
+            <p class="muted">Simule un changement tardif pour voir les compléments à acheter.</p>
+            <div class="list">
+              <div class="flex space-between"><span>+ Invité jeudi</span> <input id="deltaGuestThu" type="number" min="0" max="4" value="0" style="width:64px"></div>
+              <button class="btn small" id="btn-apply-delta">Appliquer delta</button>
+              <div id="deltaBox" class="alert hidden"></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Screen: Collaboration -->
+    <section id="screen-collab" class="hidden">
+      <div class="section-title">
+        <h2>Collaboration familiale</h2>
+        <div class="row">
+          <button class="btn" id="btn-partager">Partager pour avis</button>
+          <span class="pill" id="pill-cutoff">Cutoff: mar. 20:00</span>
+        </div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <h3>RSVP & Invités</h3>
+          <div id="rsvpContainer"></div>
+        </div>
+        <div class="card">
+          <h3>Envies & commentaires</h3>
+          <div class="list">
+            <div class="flex"><input id="wishInput" placeholder="Ajouter une envie (ex: Sushis, Burger maison)" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(148,163,184,.2);background:#0b1220;color:var(--text)"> <button class="btn" id="btn-add-wish">Ajouter</button></div>
+            <div id="wishesList" class="row flex-wrap"></div>
+            <div class="sep"></div>
+            <label>Commentaire général</label>
+            <textarea id="globalComment" rows="4" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(148,163,184,.2);background:#0b1220;color:var(--text)" placeholder="Ex: Jeudi j'ai entraînement, éviter un plat long."></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen: Synthèse & Validation -->
+    <section id="screen-synthese" class="hidden">
+      <div class="section-title">
+        <h2>Synthèse & Validation</h2>
+        <div class="row">
+          <button class="btn" id="btn-check-compliance">Vérifier la conformité</button>
+          <button class="btn primary" id="btn-validate">Valider la semaine</button>
+        </div>
+      </div>
+      <div id="syntheseAlerts" class="list"></div>
+      <div class="sep"></div>
+      <div class="kpi">
+        <div class="box">Présents totaux: <b id="syn-pres">—</b></div>
+        <div class="box">Invités: <b id="syn-guests">—</b></div>
+        <div class="box">Conformité: <b id="syn-comp">—</b></div>
+        <div class="box">Nouveautés: <b id="syn-new">—</b></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Modal: Détail repas -->
+  <div id="mealModal" class="modal" role="dialog" aria-modal="true" aria-label="Détail du repas">
+    <div class="panel">
+      <header><div class="wrap flex space-between"><h3 id="mealTitle">Repas</h3><div class="row"><button class="btn small" id="btn-open-swap">Changer (Swap)</button><button class="btn small" id="btn-lock">🔒 Verrouiller</button><button class="btn small" id="btn-close-meal">Fermer</button></div></div></header>
+      <div class="wrap">
+        <div class="row flex-wrap">
+          <img id="mealImg" alt="image" style="width:120px;height:120px;border-radius:12px;border:1px solid rgba(148,163,184,.2);object-fit:cover;background:#0f172a"/>
+          <div>
+            <div id="mealTags" class="tags"></div>
+            <div class="muted" id="mealMeta"></div>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <h4>Ingrédients</h4>
+        <div id="mealIngr"></div>
+        <div class="sep"></div>
+        <h4>Étapes</h4>
+        <ol id="mealSteps"></ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Swap -->
+  <div id="swapModal" class="modal" role="dialog" aria-modal="true" aria-label="Changer de recette">
+    <div class="panel">
+      <header><div class="wrap flex space-between"><h3>Changer de recette</h3><div class="row"><select id="swapFilter" class="btn"><option value="all">Toutes</option><option value="express">≤ 20 min</option><option value="kids">Populaires enfants</option><option value="budget">Économiques</option></select><button class="btn small" id="btn-close-swap">Fermer</button></div></div></header>
+      <div class="wrap list" id="swapList"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Export Excel bientôt dispo — prototype</div>
+
+  <script>
+    /**** DATA (prototype) ****/
+    const dietProfile = { casher:true, halal:false, glutenFree:false, lactoseFree:false, vegetarian:false, vegan:false, meatToMilkDelayHours:3 };
+    const members = [
+      {id:'m1', name:'Olivier', role:'parent', present:true},
+      {id:'m2', name:'Conjoint', role:'parent', present:true},
+      {id:'m3', name:'Enfant A', role:'child', present:true},
+      {id:'m4', name:'Enfant B', role:'child', present:true},
+    ];
+    const schoolMenu = {
+      Lundi:null,
+      Mardi:{dej:{title:'Pâtes bolognaise', cat:'pates'}},
+      Mercredi:null,
+      Jeudi:{dej:{title:'Poulet au four', cat:'volaille'}},
+      Vendredi:null,
+      Samedi:null,
+      Dimanche:null,
+    };
+    const RECIPES = [
+      {id:'r1', title:'Poulet rôti & pommes rôties', time:60, kids:4, fav:true, novelty:false, 
+       kosher:"viande", halalFriendly:true, glutenFree:true, lactoseFree:true, vegetarian:false, vegan:false,
+       cat:'volaille', img:'https://picsum.photos/seed/poulet/300/200',
+       ingredients:[
+         {name:'Poulet', qty:1, unit:'kg', cat:'Boucherie'},
+         {name:'Pommes de terre', qty:1, unit:'kg', cat:'Fruits & Légumes'},
+         {name:'Ail', qty:3, unit:'gousses', cat:'Épicerie'},
+       ],
+       steps:['Préchauffer le four à 200°C','Assaisonner et enfourner 45–60 min','Servir avec pommes rôties']},
+
+      {id:'r2', title:'Pâtes tomates basilic (parvé)', time:15, kids:5, fav:true, novelty:false,
+       kosher:"parve", halalFriendly:true, glutenFree:false, lactoseFree:true, vegetarian:true, vegan:true,
+       cat:'pates', img:'https://picsum.photos/seed/pates/300/200',
+       ingredients:[
+         {name:'Pâtes', qty:500, unit:'g', cat:'Épicerie', gluten:true},
+         {name:'Tomates concassées', qty:400, unit:'g', cat:'Épicerie'},
+         {name:'Basilic', qty:1, unit:'botte', cat:'Fruits & Légumes'},
+       ],
+       steps:['Cuire les pâtes 8–10 min','Chauffer la sauce tomate','Mélanger avec basilic']},
+
+      {id:'r3', title:'Saumon au four & légumes', time:25, kids:4, fav:false, novelty:true,
+       kosher:"parve", halalFriendly:true, glutenFree:true, lactoseFree:true, vegetarian:false, vegan:false,
+       cat:'poisson', img:'https://picsum.photos/seed/saumon/300/200',
+       ingredients:[
+         {name:'Saumon', qty:600, unit:'g', cat:'Boucherie'},
+         {name:'Courgettes', qty:2, unit:'pièces', cat:'Fruits & Légumes'},
+         {name:'Citron', qty:1, unit:'pièce', cat:'Fruits & Légumes'},
+       ],
+       steps:['Préchauffer 200°C','Cuire 15–20 min','Assaisonner citron/aneth']},
+
+      {id:'r4', title:'Burger maison (parvé)', time:30, kids:5, fav:true, novelty:false,
+       kosher:"viande", halalFriendly:true, glutenFree:false, lactoseFree:true, vegetarian:false, vegan:false,
+       cat:'boeuf', img:'https://picsum.photos/seed/burger/300/200',
+       ingredients:[
+         {name:'Buns', qty:6, unit:'pièces', cat:'Boulangerie', gluten:true},
+         {name:'Steaks hachés', qty:600, unit:'g', cat:'Boucherie'},
+         {name:'Salade', qty:1, unit:'pièce', cat:'Fruits & Légumes'},
+       ],
+       steps:['Former steaks','Cuire 3–4 min/face','Assembler buns, salade, condiments']},
+
+      {id:'r5', title:'Chili sin carne (végan)', time:35, kids:3, fav:false, novelty:true,
+       kosher:"parve", halalFriendly:true, glutenFree:true, lactoseFree:true, vegetarian:true, vegan:true,
+       cat:'legumineuses', img:'https://picsum.photos/seed/chili/300/200',
+       ingredients:[
+         {name:'Haricots rouges', qty:400, unit:'g', cat:'Épicerie'},
+         {name:'Maïs', qty:200, unit:'g', cat:'Épicerie'},
+         {name:'Tomates concassées', qty:400, unit:'g', cat:'Épicerie'},
+       ],
+       steps:['Revenir oignons/épices','Ajouter haricots, maïs, tomates','Mijoter 20 min']},
+
+      {id:'r6', title:'Gratin dauphinois (lait)', time:50, kids:4, fav:false, novelty:false,
+       kosher:"lait", halalFriendly:true, glutenFree:true, lactoseFree:false, vegetarian:true, vegan:false,
+       cat:'accompagnement', img:'https://picsum.photos/seed/gratin/300/200',
+       ingredients:[
+         {name:'Crème', qty:250, unit:'ml', cat:'Produits laitiers', lactose:true},
+         {name:'Pommes de terre', qty:800, unit:'g', cat:'Fruits & Légumes'},
+       ],
+       steps:['Émincer pommes de terre','Cuire avec crème 40–50 min']},
+
+      {id:'r7', title:'Sushis maison (parvé)', time:45, kids:5, fav:false, novelty:true,
+       kosher:"parve", halalFriendly:true, glutenFree:true, lactoseFree:true, vegetarian:false, vegan:false,
+       cat:'poisson', img:'https://picsum.photos/seed/sushi/300/200',
+       ingredients:[
+         {name:'Riz à sushi', qty:500, unit:'g', cat:'Épicerie'},
+         {name:'Saumon', qty:400, unit:'g', cat:'Boucherie'},
+         {name:'Nori', qty:6, unit:'feuilles', cat:'Épicerie'},
+       ],
+       steps:['Cuire riz vinaigré','Découper garnitures','Rouler et trancher']},
+
+      {id:'r8', title:'Soupe de légumes (parvé, express)', time:18, kids:3, fav:true, novelty:false,
+       kosher:"parve", halalFriendly:true, glutenFree:true, lactoseFree:true, vegetarian:true, vegan:true,
+       cat:'soupe', img:'https://picsum.photos/seed/soupe/300/200',
+       ingredients:[
+         {name:'Mirepoix (carotte, céleri, oignon)', qty:500, unit:'g', cat:'Fruits & Légumes'},
+         {name:'Bouillon légumes', qty:1, unit:'L', cat:'Épicerie'},
+       ],
+       steps:['Revenir mirepoix','Ajouter bouillon','Mixer']},
+    ];
+
+    const WEEK_DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+
+    // State
+    const state = {
+      plan: {}, // { day: { dej: mealRef, diner: mealRef } }
+      locked: {}, // { day_meal: true }
+      rsvp: {}, // { day_meal: {memberId: 'yes'|'no'|'maybe'} }
+      guests: {}, // { day_meal: {adults:int, children:int} }
+      wishes: [],
+      validated: false,
+    };
+
+    // Helpers
+    const qs = (s,el=document)=>el.querySelector(s);
+    const qsa = (s,el=document)=>[...el.querySelectorAll(s)];
+    const fmtTime = m => (m<=20?`≤ ${m} min`:`${m} min`);
+    const tag = (t)=>`<span class="tag">${t}</span>`;
+
+    function dietToText(){
+      const a=[]; if(dietProfile.casher) a.push('Casher'); if(dietProfile.halal) a.push('Halal'); if(dietProfile.glutenFree) a.push('Sans gluten'); if(dietProfile.lactoseFree) a.push('Sans lactose'); if(dietProfile.vegetarian) a.push('Végé'); if(dietProfile.vegan) a.push('Végan');
+      return a.length? a.join(' · ') : 'Standard';
+    }
+
+    function initDefaultPlan(){
+      WEEK_DAYS.forEach((d,idx)=>{
+        state.plan[d] = { 
+          dej: idx%2===0 ? {recipeId:'r8', portions:4} : {recipeId:'r2', portions:4},
+          diner: [{recipeId:'r1', portions:4},{recipeId:'r3', portions:4},{recipeId:'r4', portions:4},{recipeId:'r5', portions:4}][idx%4]
+        };
+      });
+    }
+
+    function renderWeek(){
+      qs('#chip-diet').textContent = dietToText();
+      qs('#chip-school').textContent = '2 jours importés';
+      const grid = qs('#daysGrid');
+      grid.innerHTML='';
+      let totalTime=0, favs=0, news=0, violations=0;
+
+      WEEK_DAYS.forEach(day=>{
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `<div class='day-title'><span>${day}</span><span class='muted'>${schoolMenu[day]?.dej? 'École: '+schoolMenu[day].dej.title : ''}</span></div>`;
+        ['dej','diner'].forEach(mealType=>{
+          const mealRef = state.plan[day][mealType];
+          const r = RECIPES.find(x=>x.id===mealRef.recipeId);
+          totalTime += r.time;
+          if(r.fav) favs++; if(r.novelty) news++;
+          // simple compliance check inside a meal (no mix meat/milk within same)
+          const invalid = false; // we avoid combining two recipes per meal in this prototype
+          if(invalid) violations++;
+          const div = document.createElement('div'); div.className='meal';
+          div.innerHTML = `
+            <div class='row space-between'>
+              <h4>${mealType==='dej'?'Déjeuner':'Dîner'} — ${r.title}</h4>
+              <div class='row'>
+                <button class='btn small icon' title='Détail' data-act='detail'>🔍</button>
+                <button class='btn small icon' title='Swap' data-act='swap'>🔄</button>
+                <button class='btn small icon' title='Verrouiller' data-act='lock'>🔒</button>
+              </div>
+            </div>
+            <div class='tags'>
+              ${tag('⏱ '+fmtTime(r.time))}
+              ${tag('Casher: '+r.kosher)}
+              ${r.glutenFree?tag('GF'):''}
+              ${r.lactoseFree?tag('LF'):''}
+              ${r.vegetarian?tag('Végé'):''}
+            </div>
+            <div class='row'><span class='muted'>Portions: </span>
+              <input type='number' min='1' max='12' value='${mealRef.portions||4}' data-day='${day}' data-meal='${mealType}' data-act='portion' style='width:64px;background:#0b1220;border:1px solid rgba(148,163,184,.2);color:var(--text);padding:4px 6px;border-radius:6px'>
+            </div>
+          `;
+          div.dataset.day = day; div.dataset.meal = mealType; div.dataset.recipeId = r.id;
+          card.appendChild(div);
+        });
+        grid.appendChild(card);
+      });
+
+      qs('#kpi-time').textContent = totalTime+' min';
+      qs('#kpi-favs').textContent = favs;
+      qs('#kpi-new').textContent = news;
+      const comp = violations===0? 'OK' : (violations+ ' problème(s)');
+      qs('#kpi-compliance').textContent = comp;
+
+      checkSchoolAntiDoublon();
+    }
+
+    function checkSchoolAntiDoublon(){
+      let issues=[];
+      WEEK_DAYS.forEach(day=>{
+        const school = schoolMenu[day]?.dej?.cat;
+        if(!school) return;
+        const dinnerId = state.plan[day].diner.recipeId; const r=RECIPES.find(x=>x.id===dinnerId);
+        if(r.cat===school){ issues.push(`${day}: École (${schoolMenu[day].dej.title}) et dîner (${r.title}) sont redondants.`); }
+      });
+      const box = qs('#antiDoublonAlert');
+      if(issues.length){ box.classList.remove('hidden'); box.innerHTML = `<b>Anti‑doublons école :</b><br>${issues.map(i=>`• ${i}`).join('<br>')}`; }
+      else { box.classList.add('hidden'); box.textContent=''; }
+    }
+
+    // Meal modal
+    let currentCtx = null; // {day, meal}
+    function openMeal(day, meal){
+      currentCtx = {day, meal};
+      const ref = state.plan[day][meal];
+      const r = RECIPES.find(x=>x.id===ref.recipeId);
+      qs('#mealTitle').textContent = `${day} — ${meal==='dej'?'Déjeuner':'Dîner'} — ${r.title}`;
+      qs('#mealImg').src = r.img;
+      const tags = [];
+      tags.push(tag('⏱ '+fmtTime(r.time)));
+      tags.push(tag('Casher: '+r.kosher));
+      if(r.glutenFree) tags.push(tag('GF'));
+      if(r.lactoseFree) tags.push(tag('LF'));
+      if(r.vegetarian) tags.push(tag('Végé'));
+      qs('#mealTags').innerHTML = tags.join('');
+      qs('#mealMeta').textContent = `Popularité enfants: ${'★'.repeat(r.kids)}${'☆'.repeat(5-r.kids)}`;
+      qs('#mealIngr').innerHTML = r.ingredients.map(i=>`<div class='row'><span>${i.name}</span><span class='muted'>${i.qty}</span><span class='muted'>${i.unit||''}</span><span class='pill'>${i.cat}</span></div>`).join('');
+      qs('#mealSteps').innerHTML = r.steps.map(s=>`<li>${s}</li>`).join('');
+      qs('#mealModal').style.display='flex';
+    }
+
+    // Swap modal
+    function openSwap(){
+      const list = qs('#swapList');
+      renderSwapList('all');
+      qs('#swapModal').style.display='flex';
+    }
+
+    function renderSwapList(mode){
+      const list = qs('#swapList');
+      list.innerHTML='';
+      const ref = currentCtx? state.plan[currentCtx.day][currentCtx.meal] : null;
+      let arr = RECIPES.slice();
+      // filter by diet (basic)
+      if(dietProfile.casher){
+        arr = arr.filter(r=> true ); // in prototype we assume recipes are tagged compatibles
+      }
+      if(mode==='express') arr = arr.filter(r=> r.time<=20);
+      if(mode==='kids') arr = arr.filter(r=> r.kids>=4);
+      if(mode==='budget') arr = arr.filter(r=> (r.ingredients||[]).length<=3);
+
+      arr.forEach(r=>{
+        const el = document.createElement('div'); el.className='recipe-item';
+        el.innerHTML = `
+          <img src='${r.img}' alt='${r.title}'>
+          <div style='flex:1'>
+            <div class='row space-between'>
+              <div>
+                <div style='font-weight:600'>${r.title}</div>
+                <div class='meta'>${fmtTime(r.time)} • ${r.kosher.toUpperCase()} • ${r.vegetarian? 'Végé' : 'Omni'} ${r.glutenFree?'• GF':''} ${r.lactoseFree?'• LF':''}</div>
+                <div class='tags'>${r.fav?tag('Favori'):''}${r.novelty?tag('Nouveauté'):''}</div>
+              </div>
+              <div class='row'>
+                <button class='btn small' data-swap='${r.id}'>Choisir</button>
+              </div>
+            </div>
+          </div>
+        `;
+        list.appendChild(el);
+      })
+    }
+
+    // Shopping list
+    function computeShoppingList(){
+      // Aggregate ingredients across all meals
+      const map = new Map(); // key: name|cat|unit -> {name,cat,unit,qty}
+      WEEK_DAYS.forEach(day=>{
+        ['dej','diner'].forEach(meal=>{
+          const ref = state.plan[day][meal];
+          const r = RECIPES.find(x=>x.id===ref.recipeId);
+          const factor = (ref.portions||4)/4;
+          r.ingredients.forEach(i=>{
+            const key = `${i.name}|${i.cat}|${i.unit||''}`;
+            const cur = map.get(key)||{name:i.name,cat:i.cat,unit:i.unit||'',qty:0};
+            cur.qty += (i.qty||0)*factor;
+            map.set(key, cur);
+          })
+        })
+      })
+      return [...map.values()].sort((a,b)=>a.cat.localeCompare(b.cat)||a.name.localeCompare(b.name));
+    }
+
+    function renderShoppingList(){
+      const container = qs('#shoppingContainer');
+      const byRecipe = qs('#viewByRecipe').checked;
+      const hideBought = qs('#hideBought').checked;
+      container.innerHTML='';
+
+      if(byRecipe){
+        WEEK_DAYS.forEach(day=>{
+          const wrap = document.createElement('div'); wrap.className='list-cat';
+          wrap.innerHTML = `<h4>${day}</h4>`;
+          ['dej','diner'].forEach(meal=>{
+            const ref = state.plan[day][meal];
+            const r = RECIPES.find(x=>x.id===ref.recipeId);
+            const factor = (ref.portions||4)/4;
+            const box = document.createElement('div'); box.className='card';
+            box.innerHTML = `<div class='row space-between'><div><b>${meal==='dej'?'Déjeuner':'Dîner'} — ${r.title}</b></div><span class='muted'>Portions: ${ref.portions||4}</span></div>`;
+            r.ingredients.forEach(i=>{
+              const id = `rec_${day}_${meal}_${i.name}`;
+              const row = document.createElement('label'); row.className='list-item'; row.htmlFor = id;
+              row.innerHTML = `<input id='${id}' type='checkbox'><span>${i.name}</span><span class='pill'>${i.cat}</span><span class='qty'>${(i.qty*factor).toFixed(0)} ${i.unit||''}</span>`;
+              if(hideBought){ row.querySelector('input').addEventListener('change',ev=>{ row.style.display=ev.target.checked?'none':'flex'; }); }
+              box.appendChild(row);
+            })
+            wrap.appendChild(box);
+          })
+          container.appendChild(wrap);
+        })
+        return;
+      }
+
+      // by category
+      const items = computeShoppingList();
+      const cats = [...new Set(items.map(x=>x.cat))];
+      cats.forEach(cat=>{
+        const wrap = document.createElement('div'); wrap.className='list-cat';
+        wrap.innerHTML = `<h4>${cat}</h4>`;
+        items.filter(x=>x.cat===cat).forEach(i=>{
+          const id = `cat_${cat}_${i.name}`;
+          const row = document.createElement('label'); row.className='list-item'; row.htmlFor = id;
+          row.innerHTML = `<input id='${id}' type='checkbox'><span>${i.name}</span><span class='qty'>${Math.round(i.qty)} ${i.unit}</span>`;
+          if(hideBought){ row.querySelector('input').addEventListener('change',ev=>{ row.style.display=ev.target.checked?'none':'flex'; }); }
+          wrap.appendChild(row);
+        })
+        container.appendChild(wrap);
+      })
+    }
+
+    // Collaboration
+    function renderRSVP(){
+      const cont = qs('#rsvpContainer'); cont.innerHTML='';
+      WEEK_DAYS.forEach(day=>{
+        const box = document.createElement('div'); box.className='card';
+        box.innerHTML = `<div class='day-title'><span>${day}</span></div>`;
+        ['dej','diner'].forEach(meal=>{
+          const ref = state.plan[day][meal];
+          const r = RECIPES.find(x=>x.id===ref.recipeId);
+          const row = document.createElement('div'); row.className='list-item';
+          row.innerHTML = `
+            <div style='min-width:150px'><b>${meal==='dej'?'Déjeuner':'Dîner'}</b> — ${r.title}</div>
+            <div class='row'>
+              ${members.map(m=>{
+                const key = `${day}_${meal}_${m.id}`;
+                const val = state.rsvp[key]||'yes';
+                return `<label class='chip'>${m.name}: <select data-rsvp='${key}' class='btn small'>
+                  <option value='yes' ${val==='yes'?'selected':''}>✅ Présent</option>
+                  <option value='no' ${val==='no'?'selected':''}>🚫 Absent</option>
+                  <option value='maybe' ${val==='maybe'?'selected':''}>🕒 Incertain</option>
+                </select></label>`;
+              }).join('')}
+            </div>
+            <div class='row' style='margin-left:auto'>
+              Invités: Adultes <input type='number' min='0' max='8' value='${(state.guests[day+'_'+meal]?.adults)||0}' data-guests='${day}_${meal}_ad' style='width:64px'>
+              Enfants <input type='number' min='0' max='8' value='${(state.guests[day+'_'+meal]?.children)||0}' data-guests='${day}_${meal}_ch' style='width:64px'>
+            </div>
+          `;
+          box.appendChild(row);
+        })
+        cont.appendChild(box);
+      })
+    }
+
+    function recomputePortionsFromRSVP(){
+      WEEK_DAYS.forEach(day=>{
+        ['dej','diner'].forEach(meal=>{
+          const base = members.filter(m=> (state.rsvp[`${day}_${meal}_${m.id}`]||'yes')==='yes').length;
+          const g = state.guests[day+'_'+meal]||{adults:0,children:0};
+          const total = base + g.adults + Math.round(g.children*0.7);
+          state.plan[day][meal].portions = Math.max(1,total);
+        })
+      })
+      renderWeek();
+    }
+
+    // Synthèse & validation
+    function renderSynthese(){
+      const alerts = qs('#syntheseAlerts'); alerts.innerHTML='';
+      // compliance quick checks
+      const msgs=[];
+      WEEK_DAYS.forEach(day=>{
+        ['dej','diner'].forEach(meal=>{
+          const ref = state.plan[day][meal];
+          const r = RECIPES.find(x=>x.id===ref.recipeId);
+          // Example: if previous meal was meat and this is milk within 3h (not modeled by time) — skip in prototype
+          // We add a school doublon alert
+          if(meal==='diner' && schoolMenu[day]?.dej?.cat === r.cat){
+            msgs.push(`${day} soir: doublon avec le menu scolaire (${schoolMenu[day].dej.title}).`);
+          }
+        })
+      })
+      if(!msgs.length){ alerts.innerHTML = `<div class='alert ok'>Aucune incohérence majeure détectée.</div>`; }
+      else{ alerts.innerHTML = msgs.map(m=>`<div class='alert'>⚠️ ${m}</div>`).join(''); }
+
+      // KPIs
+      let pres=0, guests=0, news=0; let allOk=true;
+      WEEK_DAYS.forEach(day=>{
+        ['dej','diner'].forEach(meal=>{
+          const ref = state.plan[day][meal];
+          pres += (ref.portions||4);
+          const g = state.guests[day+'_'+meal]||{adults:0,children:0};
+          guests += g.adults + g.children;
+          const r = RECIPES.find(x=>x.id===ref.recipeId);
+          if(r.novelty) news++;
+        })
+      })
+      qs('#syn-pres').textContent = pres;
+      qs('#syn-guests').textContent = guests;
+      qs('#syn-new').textContent = news;
+      qs('#syn-comp').textContent = msgs.length? 'À régler' : 'OK';
+    }
+
+    /**** EVENTS ****/
+    // Nav
+    qsa('nav button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        qsa('nav button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const scr = btn.dataset.screen;
+        qsa('[id^=screen-]').forEach(s=>s.classList.add('hidden'));
+        qs('#screen-'+scr).classList.remove('hidden');
+        if(scr==='liste') renderShoppingList();
+        if(scr==='collab'){ renderRSVP(); }
+        if(scr==='synthese'){ renderSynthese(); }
+      })
+    })
+
+    // Week interactions (delegate)
+    qs('#daysGrid').addEventListener('click', (ev)=>{
+      const target = ev.target.closest('[data-act]'); if(!target) return;
+      const meal = target.closest('.meal');
+      const day = meal.dataset.day; const type = meal.dataset.meal;
+      if(target.dataset.act==='detail') openMeal(day,type);
+      if(target.dataset.act==='swap'){ currentCtx={day,meal:type}; openSwap(); }
+      if(target.dataset.act==='lock'){ const key=day+'_'+type; state.locked[key]=!state.locked[key]; target.textContent = state.locked[key]? '🔓' : '🔒'; }
+    });
+    qs('#daysGrid').addEventListener('input', (ev)=>{
+      if(ev.target.dataset.act==='portion'){
+        const day = ev.target.dataset.day; const meal=ev.target.dataset.meal; const v = parseInt(ev.target.value||'4',10);
+        state.plan[day][meal].portions = v; renderWeek();
+      }
+    });
+
+    // Toolbar buttons semaine
+    qs('#btn-plan-express').addEventListener('click',()=>{
+      // keep majority of current favorites, add ≤1 novelty
+      WEEK_DAYS.forEach((day,idx)=>{
+        const favPool = RECIPES.filter(r=>r.fav);
+        const novPool = RECIPES.filter(r=>r.novelty);
+        const pick = (arr)=>arr[(idx+Math.floor(Math.random()*arr.length))%arr.length];
+        state.plan[day].diner = {recipeId: pick(favPool).id, portions:4};
+      });
+      // introduce one novelty random day
+      const d = WEEK_DAYS[Math.floor(Math.random()*WEEK_DAYS.length)];
+      const nov = RECIPES.find(r=>r.novelty) || RECIPES[0];
+      state.plan[d].diner = {recipeId: nov.id, portions:4};
+      renderWeek();
+    });
+
+    qs('#btn-generer').addEventListener('click',()=>{
+      // generate default with diversity (simple round-robin)
+      initDefaultPlan(); renderWeek();
+    });
+
+    qs('#btn-reprendre').addEventListener('click',()=>{
+      const saved = localStorage.getItem('prototype_week');
+      if(saved){ Object.assign(state.plan, JSON.parse(saved)); renderWeek(); showToast('Semaine précédente chargée'); }
+      else showToast('Aucune semaine enregistrée — utilisez Générer');
+    });
+
+    // Meal modal actions
+    qs('#btn-open-swap').addEventListener('click',()=>{ openSwap(); });
+    qs('#btn-lock').addEventListener('click',()=>{ if(!currentCtx) return; const key=currentCtx.day+'_'+currentCtx.meal; state.locked[key]=!state.locked[key]; showToast(state.locked[key]? 'Repas verrouillé' : 'Repas déverrouillé'); });
+    qs('#btn-close-meal').addEventListener('click',()=>{ qs('#mealModal').style.display='none'; });
+
+    // Swap modal actions
+    qs('#swapFilter').addEventListener('change',ev=>{ renderSwapList(ev.target.value); });
+    qs('#swapList').addEventListener('click',ev=>{
+      const btn = ev.target.closest('[data-swap]'); if(!btn) return;
+      if(!currentCtx) return; const rId = btn.dataset.swap;
+      // prevent violation: if kosher milk in dinner after meat lunch — skipped in proto
+      state.plan[currentCtx.day][currentCtx.meal] = {recipeId:rId, portions: state.plan[currentCtx.day][currentCtx.meal].portions||4};
+      qs('#swapModal').style.display='none';
+      qs('#mealModal').style.display='none';
+      renderWeek(); showToast('Recette remplacée');
+    })
+    qs('#btn-close-swap').addEventListener('click',()=> qs('#swapModal').style.display='none');
+
+    // Liste de courses
+    qs('#btn-export-excel').addEventListener('click',()=>{ showToast('Export Excel non implémenté (prototype)'); });
+    qsa('#viewByRecipe, #hideBought').forEach(el=> el.addEventListener('change', renderShoppingList));
+    qs('#btn-regenerer-liste').addEventListener('click', renderShoppingList);
+    qs('#btn-clear-checked').addEventListener('click',()=>{ qsa('#shoppingContainer input[type=checkbox]').forEach(c=>{c.checked=false;c.dispatchEvent(new Event('change'))}); })
+    qs('#btn-apply-delta').addEventListener('click',()=>{
+      const n = parseInt(qs('#deltaGuestThu').value||'0',10);
+      const key = 'Jeudi_diner';
+      state.guests['Jeudi_diner'] = {adults:n, children:0};
+      recomputePortionsFromRSVP();
+      // compute delta for the dinner only
+      const ref = state.plan['Jeudi']['diner'];
+      const r = RECIPES.find(x=>x.id===ref.recipeId);
+      const factor = (ref.portions||4)/4;
+      const extra = r.ingredients.map(i=>`${i.name}: +${Math.max(0,Math.round((i.qty*factor) - i.qty))} ${i.unit||''}`).join('<br>');
+      const box = qs('#deltaBox'); box.classList.remove('hidden'); box.innerHTML = `<b>Delta courses (Jeudi soir):</b><br>${extra}`;
+      showToast('Delta appliqué pour Jeudi soir');
+    })
+
+    // Collaboration
+    qs('#btn-partager').addEventListener('click',()=>{ showToast('Lien de partage simulé — les membres peuvent voter/RSVP'); });
+    qs('#rsvpContainer').addEventListener('change',ev=>{
+      if(ev.target.matches('[data-rsvp]')){
+        state.rsvp[ev.target.dataset.rsvp] = ev.target.value; recomputePortionsFromRSVP();
+      }
+      if(ev.target.matches('[data-guests]')){
+        const [day,meal,kind] = ev.target.dataset.guests.split('_');
+        const key = day+'_'+meal; state.guests[key] = state.guests[key]||{adults:0,children:0};
+        if(kind==='ad') state.guests[key].adults = parseInt(ev.target.value||'0',10);
+        if(kind==='ch') state.guests[key].children = parseInt(ev.target.value||'0',10);
+        recomputePortionsFromRSVP();
+      }
+    })
+    qs('#btn-add-wish').addEventListener('click',()=>{
+      const v = qs('#wishInput').value.trim(); if(!v) return; state.wishes.push(v); qs('#wishInput').value=''; renderWishes(); showToast('Envie ajoutée');
+    })
+
+    function renderWishes(){
+      const box = qs('#wishesList'); box.innerHTML='';
+      state.wishes.forEach((w,idx)=>{
+        const el = document.createElement('span'); el.className='chip'; el.innerHTML = `💡 ${w} <button class='btn small' data-usewish='${idx}'>Proposer</button>`;
+        box.appendChild(el);
+      });
+      box.addEventListener('click',ev=>{
+        const b = ev.target.closest('[data-usewish]'); if(!b) return;
+        // replace Wednesday dinner with a wish-friendly recipe (best-effort)
+        const idx = parseInt(b.dataset.usewish,10);
+        const wish = state.wishes[idx].toLowerCase();
+        const match = RECIPES.find(r=> r.title.toLowerCase().includes('sushi') && wish.includes('sushi')) ||
+                      RECIPES.find(r=> r.title.toLowerCase().includes('burger') && wish.includes('burger')) || RECIPES.find(r=>r.kids>=4);
+        state.plan['Mercredi']['diner'] = {recipeId: match.id, portions:4};
+        renderWeek(); showToast(`Envie appliquée sur mercredi soir: ${match.title}`);
+      }, {once:true});
+    }
+
+    // Validation
+    qs('#btn-check-compliance').addEventListener('click',()=>{ renderSynthese(); showToast('Conformité vérifiée'); })
+    qs('#btn-validate').addEventListener('click',()=>{
+      state.validated = true; localStorage.setItem('prototype_week', JSON.stringify(state.plan));
+      showToast('Semaine validée — liste finalisée');
+    })
+
+    // Toast
+    let toastTimer=null; function showToast(msg){ const t=qs('#toast'); t.textContent = msg; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display='none',2200); }
+
+    // INIT
+    initDefaultPlan();
+    renderWeek();
+  </script>
+</body>
+</html>
