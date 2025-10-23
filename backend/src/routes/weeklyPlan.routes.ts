@@ -15,6 +15,7 @@ import {
   validatePlan
 } from '../controllers/weeklyPlan.controller';
 import { authenticate } from '../middleware/auth';
+import { intensiveOperationLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -23,8 +24,9 @@ router.use(authenticate);
 router.post('/', createWeeklyPlan);
 router.get('/family/:familyId', getWeeklyPlans);
 router.get('/:id', getWeeklyPlan);
-router.post('/:familyId/generate', generateAutoPlan);
-router.post('/:familyId/generate-express', generateExpressPlan);
+// Rate limit intensive operations (plan generation)
+router.post('/:familyId/generate', intensiveOperationLimiter, generateAutoPlan);
+router.post('/:familyId/generate-express', intensiveOperationLimiter, generateExpressPlan);
 router.put('/:planId/meals/:mealId', updateMeal);
 router.post('/:planId/meals/:mealId/swap', swapMeal);
 router.post('/:planId/meals/:mealId/lock', lockMeal);

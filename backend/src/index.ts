@@ -11,20 +11,37 @@ import weeklyPlanRoutes from './routes/weeklyPlan.routes';
 import shoppingListRoutes from './routes/shoppingList.routes';
 import schoolMenuRoutes from './routes/schoolMenu.routes';
 import { errorHandler } from './middleware/errorHandler';
+import {
+  securityHeaders,
+  additionalSecurityHeaders,
+  getCorsOptions,
+  sanitizeRequest,
+} from './middleware/security';
+import { getEnvironmentLimiter } from './middleware/rateLimiter';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Security Middleware (must be first!)
+app.use(securityHeaders);
+app.use(additionalSecurityHeaders);
+
+// Rate limiting (global)
+app.use(getEnvironmentLimiter());
+
+// CORS with security configuration
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+app.use(cors(getCorsOptions(corsOrigin)));
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' })); // Limit payload size
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// Request sanitization
+app.use(sanitizeRequest);
 
 // Health check
 app.get('/health', (req, res) => {
