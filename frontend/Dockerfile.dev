@@ -1,0 +1,17 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including dev)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+EXPOSE 5173
+
+# Development server with hot reload
+CMD ["npm", "run", "dev", "--", "--host"]
