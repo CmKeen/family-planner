@@ -7,6 +7,7 @@
 
 import helmet from 'helmet';
 import { Request, Response, NextFunction } from 'express';
+import { log } from '../config/logger';
 
 /**
  * Helmet Security Headers Configuration
@@ -155,15 +156,14 @@ export const sanitizeRequest = (
 /**
  * Security Logging
  *
- * Logs security-related events
+ * Logs security-related events using Winston logger
  */
 export const logSecurityEvent = (
   event: string,
   details: any,
   req?: Request
 ) => {
-  const logEntry = {
-    timestamp: new Date().toISOString(),
+  const logContext = {
     event,
     details,
     ip: req?.ip,
@@ -171,11 +171,5 @@ export const logSecurityEvent = (
     path: req?.path,
   };
 
-  // In production, send to logging service (Sentry, LogRocket, etc.)
-  if (process.env.NODE_ENV === 'production') {
-    // TODO: Send to logging service
-    console.error('[SECURITY]', JSON.stringify(logEntry));
-  } else {
-    console.warn('[SECURITY]', logEntry);
-  }
+  log.security(event, logContext);
 };

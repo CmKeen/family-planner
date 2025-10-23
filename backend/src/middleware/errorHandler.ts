@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
+import { log } from '../config/logger';
+import { trackError } from '../config/errorTracker';
 
 export class AppError extends Error {
   statusCode: number;
@@ -18,15 +20,50 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  // Collect error context
+  const errorContext = {
+    method: req.method,
+    url: req.originalUrl || req.url,
+    ip: req.ip || req.socket.remoteAddress,
+    userId: (req as any).user?.id,
+    userAgent: req.get('user-agent'),
+  };
+
   if (err instanceof AppError) {
+    // Operational errors (expected errors)
+    log.warn(`Operational error: ${err.message}`, {
+      ...errorContext,
+      statusCode: err.statusCode,
+    });
+
+    // Track operational errors (don't send to external service for expected errors)
+    // but keep for statistics
+    if (err.statusCode >= 500) {
+      trackError(err, errorContext);
+    }
+
     return res.status(err.statusCode).json({
       status: 'error',
       message: err.message
     });
   }
 
-  console.error('ERROR:', err);
+  // Unexpected errors (programming errors, bugs)
+  log.error('Unexpected error occurred', err, errorContext);
 
+  // Track all unexpected errors
+  trackError(err, errorContext);
+
+  // In development, send the full error stack
+  if (process.env.NODE_ENV === 'development') {
+    return res.status(500).json({
+      status: 'error',
+      message: err.message,
+      stack: err.stack,
+    });
+  }
+
+  // In production, send generic error message
   return res.status(500).json({
     status: 'error',
     message: 'Internal server error'

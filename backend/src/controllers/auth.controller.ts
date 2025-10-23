@@ -4,6 +4,7 @@ import prisma from '../lib/prisma';
 import { hashPassword, comparePassword, generateToken } from '../utils/auth.utils';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
+import { log } from '../config/logger';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -25,6 +26,10 @@ export const register = asyncHandler(
     // Check if user exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
+      log.auth('Registration failed - user already exists', {
+        email,
+        ip: req.ip,
+      });
       throw new AppError('User already exists', 400);
     }
 
@@ -48,6 +53,12 @@ export const register = asyncHandler(
         language: true,
         createdAt: true
       }
+    });
+
+    log.auth('New user registered successfully', {
+      userId: user.id,
+      email: user.email,
+      ip: req.ip,
     });
 
     // Generate token
@@ -77,14 +88,29 @@ export const login = asyncHandler(
     // Find user
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      log.auth('Login failed - user not found', {
+        email,
+        ip: req.ip,
+      });
       throw new AppError('Invalid credentials', 401);
     }
 
     // Check password
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
+      log.auth('Login failed - invalid password', {
+        userId: user.id,
+        email,
+        ip: req.ip,
+      });
       throw new AppError('Invalid credentials', 401);
     }
+
+    log.auth('User logged in successfully', {
+      userId: user.id,
+      email: user.email,
+      ip: req.ip,
+    });
 
     // Generate token
     const token = generateToken({ id: user.id, email: user.email });
