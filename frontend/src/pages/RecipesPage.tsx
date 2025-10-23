@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { recipeAPI } from '@/lib/api';
 import { Heart, Clock, Users, Search, Filter } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Ingredient {
   id: string;
@@ -136,7 +137,10 @@ export default function RecipesPage() {
     <div className="container mx-auto p-4 pb-20">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">{t('recipes.title')}</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">{t('recipes.title')}</h1>
+          <LanguageSwitcher />
+        </div>
 
         {/* Search Bar */}
         <div className="relative mb-4">

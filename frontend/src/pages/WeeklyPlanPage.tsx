@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { weeklyPlanAPI, recipeAPI } from '@/lib/api';
 import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Recipe {
   id: string;
@@ -210,6 +211,7 @@ export default function WeeklyPlanPage() {
             {getStatusText(planData.status)}
           </Badge>
         </div>
+        <LanguageSwitcher />
       </div>
 
       {/* Stats Cards */}

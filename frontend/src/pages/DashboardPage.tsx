@@ -5,8 +5,9 @@ import { familyAPI, weeklyPlanAPI } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Utensils, Plus, Calendar, ShoppingCart, LogOut, Settings } from 'lucide-react';
+import { Utensils, Plus, Calendar, ShoppingCart, LogOut } from 'lucide-react';
 import { getMonday, formatDate } from '@/lib/utils';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -91,6 +92,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <LanguageSwitcher />
               <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>

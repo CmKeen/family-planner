@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { shoppingListAPI } from '@/lib/api';
 import { ArrowLeft, Check, ShoppingCart, Printer } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface ShoppingItem {
   id: string;
@@ -153,10 +154,13 @@ export default function ShoppingListPage() {
             {t('shoppingList.generatedOn', { date: formatDate(shoppingData.generatedAt) })}
           </p>
         </div>
-        <Button variant="outline" onClick={handlePrint}>
-          <Printer className="h-4 w-4 mr-2" />
-          {t('shoppingList.actions.print')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher />
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="h-4 w-4 mr-2" />
+            {t('shoppingList.actions.print')}
+          </Button>
+        </div>
       </div>
 
       {/* Print-only Header */}
