@@ -16,7 +16,9 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx prisma/seed.ts",
     "make-admin": "tsx src/scripts/makeAdmin.ts",
-    "revoke-admin": "tsx src/scripts/revokeAdmin.ts"
+    "revoke-admin": "tsx src/scripts/revokeAdmin.ts",
+    "scrape-hellofresh": "tsx src/scripts/scrapeHelloFresh.ts",
+    "fix-broken-images": "tsx src/scripts/fixBrokenImages.ts"
   },
   "keywords": [],
   "author": "",
@@ -25,8 +27,11 @@
     "@adminjs/express": "^6.1.1",
     "@adminjs/prisma": "^5.0.4",
     "@prisma/client": "^5.7.1",
+    "@types/cheerio": "^0.22.35",
     "adminjs": "^7.8.17",
+    "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
+    "cheerio": "^1.1.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

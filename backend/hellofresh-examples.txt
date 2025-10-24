@@ -1,0 +1,57 @@
+# HelloFresh Recipe Examples
+
+This file contains example recipe URLs from HelloFresh that you can scrape.
+Replace these with actual recipe URLs from HelloFresh's website.
+
+## How to Find Recipes
+
+1. Visit https://www.hellofresh.com/recipes
+2. Browse or search for recipes you like
+3. Click on a recipe to view its details
+4. Copy the URL from your browser's address bar
+5. Add the URL to this file or use it directly with the scraper
+
+## Example URLs (These are placeholders - use real URLs)
+
+### US Recipes (.com)
+https://www.hellofresh.com/recipes/[recipe-slug-here]
+https://www.hellofresh.com/recipes/[recipe-slug-here]
+
+### French Recipes (.fr)
+https://www.hellofresh.fr/recipes/[recipe-slug-here]
+
+### UK Recipes (.co.uk)
+https://www.hellofresh.co.uk/recipes/[recipe-slug-here]
+
+## Usage Examples
+
+### Scrape Single Recipe
+npm run scrape-hellofresh -- https://www.hellofresh.com/recipes/your-recipe-url
+
+### Scrape Multiple Recipes
+npm run scrape-hellofresh -- \
+  https://www.hellofresh.com/recipes/recipe-1 \
+  https://www.hellofresh.com/recipes/recipe-2 \
+  https://www.hellofresh.com/recipes/recipe-3
+
+### Scrape with Family Association
+npm run scrape-hellofresh -- https://www.hellofresh.com/recipes/recipe-url --family-id=YOUR_FAMILY_ID
+
+## Tips
+
+- Visit HelloFresh website when you want specific types of recipes (vegetarian, quick meals, etc.)
+- HelloFresh often categorizes recipes by dietary preferences, making it easy to find what you need
+- The scraper will automatically extract dietary tags, so vegetarian/vegan recipes will be marked
+- You can scrape recipes in batches to build your database quickly
+
+## Recipe Categories Available on HelloFresh
+
+- Quick & Easy (under 30 mins)
+- Vegetarian
+- Family-Friendly
+- Calorie Smart
+- Pescatarian
+- Carb Smart
+- And more!
+
+Happy scraping!

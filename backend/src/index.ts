@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { swaggerSpec } from './config/swagger.js';
 import { env, logEnvConfig } from './config/env.js';
 import { log } from './config/logger.js';
@@ -23,6 +25,10 @@ import {
 } from './middleware/security.js';
 import { getEnvironmentLimiter } from './middleware/rateLimiter.js';
 import { skipHealthCheck } from './middleware/requestLogger.js';
+
+// Get directory name in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Validate and log environment configuration
 logEnvConfig();
@@ -50,6 +56,16 @@ app.use(sanitizeRequest);
 
 // Request logging (skip health checks to reduce noise)
 app.use(skipHealthCheck);
+
+// Serve static files (for recipe images)
+const publicPath = path.join(__dirname, '..', 'public');
+app.use('/images', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+app.use('/images', express.static(path.join(publicPath, 'images')));
 
 // Health check routes (before API routes for faster response)
 app.use('/health', healthRoutes);

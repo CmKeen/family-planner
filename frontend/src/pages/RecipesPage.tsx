@@ -45,6 +45,8 @@ interface Recipe {
   vegan: boolean;
   glutenFree: boolean;
   halalFriendly: boolean;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   ingredients: Ingredient[];
   instructions: Instruction[];
 }
@@ -311,17 +313,27 @@ export default function RecipesPage() {
           {filteredRecipes.map((recipe) => (
             <Card
               key={recipe.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
+              className="cursor-pointer hover:shadow-lg transition-all overflow-hidden group"
               onClick={() => handleRecipeClick(recipe)}
             >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg">{recipe.title}</CardTitle>
+              {/* Recipe Image */}
+              {recipe.imageUrl && (
+                <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  <img
+                    src={`http://localhost:3001${recipe.imageUrl}`}
+                    alt={recipe.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                  {/* Favorite button overlay */}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => handleToggleFavorite(e, recipe.id)}
-                    className="ml-2 flex-shrink-0"
+                    className="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 backdrop-blur-sm"
                   >
                     <Heart
                       className={`h-5 w-5 ${
@@ -331,6 +343,28 @@ export default function RecipesPage() {
                       }`}
                     />
                   </Button>
+                </div>
+              )}
+
+              <CardHeader className={recipe.imageUrl ? 'pb-3' : ''}>
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg">{recipe.title}</CardTitle>
+                  {!recipe.imageUrl && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleToggleFavorite(e, recipe.id)}
+                      className="ml-2 flex-shrink-0"
+                    >
+                      <Heart
+                        className={`h-5 w-5 ${
+                          recipe.isFavorite
+                            ? 'fill-red-500 text-red-500'
+                            : 'text-muted-foreground'
+                        }`}
+                      />
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -396,6 +430,21 @@ export default function RecipesPage() {
               </DialogHeader>
 
               <div className="space-y-6 py-4">
+                {/* Recipe Image */}
+                {recipeDetails.imageUrl && (
+                  <div className="relative w-full h-64 md:h-80 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    <img
+                      src={`http://localhost:3001${recipeDetails.imageUrl}`}
+                      alt={recipeDetails.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+
                 {/* Description */}
                 <p className="text-muted-foreground">{recipeDetails.description}</p>
 

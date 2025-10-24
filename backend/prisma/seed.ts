@@ -306,6 +306,15 @@ async function main() {
     }
   ];
 
+  // Check if recipes already exist to avoid duplicates
+  const existingRecipesCount = await prisma.recipe.count();
+
+  if (existingRecipesCount > 0) {
+    console.log('⏭️  Database already has', existingRecipesCount, 'recipes. Skipping seed to avoid duplicates.');
+    console.log('   To re-seed, clear the database first.');
+    return;
+  }
+
   for (const recipeData of recipes) {
     const { ingredients, instructions, ...recipe } = recipeData;
 
