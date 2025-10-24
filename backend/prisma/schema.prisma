@@ -17,6 +17,7 @@ model User {
   lastName      String
   language      String   @default("fr") // fr, en, nl
   units         String   @default("metric") // metric, imperial
+  isAdmin       Boolean  @default(false) // system admin for backend admin interface
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

@@ -31,7 +31,7 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       PORT: ${PORT:-3001}
       NODE_ENV: ${NODE_ENV:-production}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,http://localhost:3001}
       APP_NAME: ${APP_NAME:-Family Planner}
       APP_URL: ${APP_URL:-http://localhost:3000}
     ports:

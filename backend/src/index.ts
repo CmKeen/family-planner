@@ -2,25 +2,27 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
-import { swaggerSpec } from './config/swagger';
-import { env, logEnvConfig } from './config/env';
-import { log } from './config/logger';
-import authRoutes from './routes/auth.routes';
-import familyRoutes from './routes/family.routes';
-import recipeRoutes from './routes/recipe.routes';
-import weeklyPlanRoutes from './routes/weeklyPlan.routes';
-import shoppingListRoutes from './routes/shoppingList.routes';
-import schoolMenuRoutes from './routes/schoolMenu.routes';
-import healthRoutes from './routes/health.routes';
-import { errorHandler } from './middleware/errorHandler';
+import { swaggerSpec } from './config/swagger.js';
+import { env, logEnvConfig } from './config/env.js';
+import { log } from './config/logger.js';
+import authRoutes from './routes/auth.routes.js';
+import familyRoutes from './routes/family.routes.js';
+import recipeRoutes from './routes/recipe.routes.js';
+import weeklyPlanRoutes from './routes/weeklyPlan.routes.js';
+import shoppingListRoutes from './routes/shoppingList.routes.js';
+import schoolMenuRoutes from './routes/schoolMenu.routes.js';
+import healthRoutes from './routes/health.routes.js';
+import { createAdminRouter } from './routes/admin.routes.js';
+import { authenticateAdmin } from './middleware/adminAuth.js';
+import { errorHandler } from './middleware/errorHandler.js';
 import {
   securityHeaders,
   additionalSecurityHeaders,
   getCorsOptions,
   sanitizeRequest,
-} from './middleware/security';
-import { getEnvironmentLimiter } from './middleware/rateLimiter';
-import { skipHealthCheck } from './middleware/requestLogger';
+} from './middleware/security.js';
+import { getEnvironmentLimiter } from './middleware/rateLimiter.js';
+import { skipHealthCheck } from './middleware/requestLogger.js';
 
 // Validate and log environment configuration
 logEnvConfig();
@@ -66,6 +68,9 @@ app.get('/api-docs.json', (req, res) => {
   res.send(swaggerSpec);
 });
 
+// Admin Panel (protected by admin authentication)
+app.use('/admin', authenticateAdmin, createAdminRouter());
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/families', familyRoutes);
@@ -82,6 +87,7 @@ app.listen(PORT, () => {
     port: PORT,
     environment: env.NODE_ENV,
     endpoints: {
+      admin: `http://localhost:${PORT}/admin`,
       apiDocs: `http://localhost:${PORT}/api-docs`,
       swaggerJson: `http://localhost:${PORT}/api-docs.json`,
       health: `http://localhost:${PORT}/health`,
@@ -95,6 +101,7 @@ app.listen(PORT, () => {
   console.log(`\n🚀 ${env.APP_NAME} Server Started Successfully!`);
   console.log(`   📍 Port: ${PORT}`);
   console.log(`   📝 Environment: ${env.NODE_ENV}`);
+  console.log(`   🔑 Admin Panel: http://localhost:${PORT}/admin (requires admin user)`);
   console.log(`   📚 API Documentation: http://localhost:${PORT}/api-docs`);
   console.log(`   🔍 Swagger JSON: http://localhost:${PORT}/api-docs.json`);
   console.log(`   ✅ Health Check: http://localhost:${PORT}/health`);

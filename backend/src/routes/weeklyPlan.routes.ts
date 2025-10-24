@@ -13,9 +13,9 @@ import {
   addVote,
   addWish,
   validatePlan
-} from '../controllers/weeklyPlan.controller';
-import { authenticate } from '../middleware/auth';
-import { intensiveOperationLimiter } from '../middleware/rateLimiter';
+} from '../controllers/weeklyPlan.controller.js';
+import { authenticate } from '../middleware/auth.js';
+import { intensiveOperationLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 
