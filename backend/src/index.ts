@@ -15,6 +15,7 @@ import shoppingListRoutes from './routes/shoppingList.routes.js';
 import schoolMenuRoutes from './routes/schoolMenu.routes.js';
 import healthRoutes from './routes/health.routes.js';
 import { createAdminRouter } from './routes/admin.routes.js';
+import adminApiRoutes from './routes/admin.api.routes.js';
 import { authenticateAdmin } from './middleware/adminAuth.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import {
@@ -86,6 +87,9 @@ app.get('/api-docs.json', (req, res) => {
 
 // Admin Panel (protected by admin authentication)
 app.use('/admin', authenticateAdmin, createAdminRouter());
+
+// Admin API routes (protected by admin authentication)
+app.use('/api/admin', adminApiRoutes);
 
 // API Routes
 app.use('/api/auth', authRoutes);

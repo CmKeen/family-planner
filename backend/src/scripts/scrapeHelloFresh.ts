@@ -53,10 +53,22 @@ interface ScrapedRecipe {
 class HelloFreshScraper {
   private baseUrl: string;
   private imageDir: string;
+  private locale?: string; // For Belgian site locale parameter
 
   constructor(region: string = 'com') {
     // HelloFresh has regional sites: .com (US), .fr (France), .co.uk (UK), etc.
-    this.baseUrl = `https://www.hellofresh.${region}`;
+    // Handle Belgian language variants (uses locale query parameter instead of path)
+    if (region === 'be-fr') {
+      this.baseUrl = 'https://www.hellofresh.be';
+      this.locale = 'fr-BE';
+    } else if (region === 'be-nl') {
+      this.baseUrl = 'https://www.hellofresh.be';
+      this.locale = 'nl-BE';
+    } else if (region === 'uk') {
+      this.baseUrl = 'https://www.hellofresh.co.uk';
+    } else {
+      this.baseUrl = `https://www.hellofresh.${region}`;
+    }
     this.imageDir = path.join(process.cwd(), 'public', 'images', 'recipes');
   }
 
@@ -77,6 +89,18 @@ class HelloFreshScraper {
    */
   async scrapeRecipe(recipeUrl: string): Promise<ScrapedRecipe | null> {
     try {
+      // Extract recipe slug/ID from URL and construct URL with correct region
+      const urlParts = recipeUrl.match(/\/recipes\/([^/?]+)/);
+      if (urlParts && urlParts[1]) {
+        const recipeSlug = urlParts[1];
+        recipeUrl = `${this.baseUrl}/recipes/${recipeSlug}`;
+
+        // Add locale query parameter for Belgian site
+        if (this.locale) {
+          recipeUrl += `?locale=${this.locale}`;
+        }
+      }
+
       console.log(`🔍 Scraping recipe: ${recipeUrl}`);
 
       const response = await axios.get(recipeUrl, {
@@ -468,11 +492,17 @@ class HelloFreshScraper {
   /**
    * Scrape multiple recipes from a list of URLs
    */
-  async scrapeRecipes(urls: string[], familyId?: string): Promise<void> {
+  async scrapeRecipes(urls: string[], familyId?: string): Promise<{
+    totalCount: number;
+    successCount: number;
+    failureCount: number;
+    scrapedRecipes: ScrapedRecipe[];
+  }> {
     console.log(`\n🚀 Starting to scrape ${urls.length} recipes...\n`);
 
     let successCount = 0;
     let failCount = 0;
+    const scrapedRecipes: ScrapedRecipe[] = [];
 
     for (const url of urls) {
       try {
@@ -480,6 +510,7 @@ class HelloFreshScraper {
 
         if (recipe) {
           await this.saveRecipe(recipe, familyId);
+          scrapedRecipes.push(recipe);
           successCount++;
         } else {
           failCount++;
@@ -496,6 +527,13 @@ class HelloFreshScraper {
     console.log(`\n✨ Scraping complete!`);
     console.log(`   ✅ Success: ${successCount}`);
     console.log(`   ❌ Failed: ${failCount}\n`);
+
+    return {
+      totalCount: urls.length,
+      successCount,
+      failureCount: failCount,
+      scrapedRecipes,
+    };
   }
 
   /**

@@ -2,8 +2,15 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import AdminJS from 'adminjs';
 import * as AdminJSPrisma from '@adminjs/prisma';
+import { ComponentLoader } from 'adminjs';
 
 const { Database, Resource, getModelByName } = AdminJSPrisma;
+
+// Component loader for custom components
+const componentLoader = new ComponentLoader();
+
+// Load dashboard component
+const DashboardComponent = componentLoader.add('Dashboard', '../admin/scraper-action');
 
 // Register the Prisma adapter
 AdminJS.registerAdapter({ Database, Resource });
@@ -13,7 +20,7 @@ const prisma = new PrismaClient();
 
 // Create AdminJS configuration
 export const createAdminConfig = () => {
-  return new AdminJS({
+  const admin = new AdminJS({
     databases: [],
     resources: [
       // User Management
@@ -226,13 +233,19 @@ export const createAdminConfig = () => {
         },
       },
     ],
+    dashboard: {
+      component: DashboardComponent,
+    },
     branding: {
       companyName: 'Family Planner Admin',
       logo: false,
       withMadeWithLove: false,
     },
     rootPath: '/admin',
+    componentLoader,
   });
+
+  return admin;
 };
 
 export { prisma };
