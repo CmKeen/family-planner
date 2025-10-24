@@ -9,8 +9,14 @@ A powerful tool to scrape recipes from HelloFresh and import them into your Fami
 - **Ingredients Parsing**: Extracts ingredients with quantities and units
 - **Step-by-step Instructions**: Captures cooking instructions in order
 - **Dietary Tags**: Identifies vegetarian, vegan, gluten-free, and other dietary preferences
-- **Multi-region Support**: Works with HelloFresh sites in different countries (.com, .fr, .uk, etc.)
+- **Multi-region Support**: Works with HelloFresh sites in different countries (.com, .fr, .uk, .be, etc.)
 - **Database Integration**: Saves directly to your PostgreSQL database via Prisma
+
+## Requirements
+
+- **Node.js**: Version 20.18.1 or higher (required for cheerio dependency)
+- **PostgreSQL**: Database must be running and accessible
+- **Prisma**: Schema must be generated and migrations applied
 
 ## Installation
 

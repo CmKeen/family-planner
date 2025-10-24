@@ -424,6 +424,7 @@ class HelloFreshScraper {
           description: scrapedRecipe.description,
           prepTime: scrapedRecipe.prepTime,
           cookTime: scrapedRecipe.cookTime,
+          totalTime: scrapedRecipe.prepTime + scrapedRecipe.cookTime,
           difficulty: scrapedRecipe.difficulty,
           servings: scrapedRecipe.servings,
           category: scrapedRecipe.category,
