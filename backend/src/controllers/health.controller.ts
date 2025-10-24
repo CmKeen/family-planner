@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { asyncHandler } from '../middleware/errorHandler';
-import { getErrorStats } from '../config/errorTracker';
-import { env } from '../config/env';
-import prisma from '../lib/prisma';
+import { asyncHandler } from '../middleware/errorHandler.js';
+import { getErrorStats } from '../config/errorTracker.js';
+import { env } from '../config/env.js';
+import prisma from '../lib/prisma.js';
 
 /**
  * Health Check Types

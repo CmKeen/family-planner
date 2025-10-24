@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../config/admin';
-import { AppError } from './errorHandler';
+import { prisma } from '../config/admin.js';
+import { AppError } from './errorHandler.js';
 
 export interface AdminAuthRequest extends Request {
   user?: {

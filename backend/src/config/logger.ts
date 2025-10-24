@@ -1,5 +1,6 @@
 import winston from 'winston';
-import { env } from './env';
+import { env } from './env.js';
+import fs from 'fs';
 
 /**
  * Custom log format for development - includes colors and readable formatting
@@ -70,7 +71,6 @@ if (env.NODE_ENV === 'production') {
  * Create logs directory if it doesn't exist (production)
  */
 if (env.NODE_ENV === 'production') {
-  const fs = require('fs');
   const logsDir = 'logs';
 
   if (!fs.existsSync(logsDir)) {

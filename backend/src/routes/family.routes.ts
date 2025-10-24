@@ -9,8 +9,8 @@ import {
   updateMember,
   removeMember,
   updateDietProfile
-} from '../controllers/family.controller';
-import { authenticate } from '../middleware/auth';
+} from '../controllers/family.controller.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, jest } from '@jest/globals';
 import request from 'supertest';
 import express, { Express } from 'express';
 import cookieParser from 'cookie-parser';
-import weeklyPlanRoutes from '../../routes/weeklyPlan.routes';
+import weeklyPlanRoutes from '../../routes/weeklyPlan.routes.js';
 
 // Mock Prisma
 jest.mock('../../lib/prisma', () => ({

@@ -1,9 +1,8 @@
-import AdminJS from 'adminjs';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import AdminJS from 'adminjs';
+import * as AdminJSPrisma from '@adminjs/prisma';
 
-// Use require for @adminjs/prisma to avoid ESM/CommonJS conflicts
-const AdminJSPrisma = require('@adminjs/prisma');
 const { Database, Resource, getModelByName } = AdminJSPrisma;
 
 // Register the Prisma adapter

@@ -1,8 +1,8 @@
 import { Response } from 'express';
 import { z } from 'zod';
-import prisma from '../lib/prisma';
-import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import prisma from '../lib/prisma.js';
+import { AppError, asyncHandler } from '../middleware/errorHandler.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const createSchoolMenuSchema = z.object({
   familyId: z.string(),

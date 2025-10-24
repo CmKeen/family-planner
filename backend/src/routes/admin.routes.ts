@@ -1,5 +1,5 @@
+import { createAdminConfig } from '../config/admin.js';
 import AdminJSExpress from '@adminjs/express';
-import { createAdminConfig } from '../config/admin';
 
 /**
  * Create and configure the AdminJS router
