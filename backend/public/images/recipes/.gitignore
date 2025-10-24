@@ -1,0 +1,9 @@
+# Ignore all downloaded recipe images
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
+# But keep the directory structure
+!.gitignore
