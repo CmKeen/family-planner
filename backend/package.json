@@ -17,7 +17,8 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "make-admin": "tsx src/scripts/makeAdmin.ts",
     "revoke-admin": "tsx src/scripts/revokeAdmin.ts",
-    "scrape-hellofresh": "tsx src/scripts/scrapeHelloFresh.ts"
+    "scrape-hellofresh": "tsx src/scripts/scrapeHelloFresh.ts",
+    "fix-broken-images": "tsx src/scripts/fixBrokenImages.ts"
   },
   "keywords": [],
   "author": "",

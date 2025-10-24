@@ -59,6 +59,12 @@ app.use(skipHealthCheck);
 
 // Serve static files (for recipe images)
 const publicPath = path.join(__dirname, '..', 'public');
+app.use('/images', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
 app.use('/images', express.static(path.join(publicPath, 'images')));
 
 // Health check routes (before API routes for faster response)
