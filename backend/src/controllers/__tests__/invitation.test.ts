@@ -46,6 +46,9 @@ import {
 } from '../invitation.controller.js';
 import { AuthRequest } from '../../middleware/auth.js';
 
+// Helper to wait for async operations
+const waitForAsync = () => new Promise(resolve => setImmediate(resolve));
+
 describe('Invitation Controller', () => {
   let mockRequest: Partial<AuthRequest>;
   let mockResponse: Partial<Response>;
@@ -97,11 +100,14 @@ describe('Invitation Controller', () => {
       mockFamilyInvitation.findFirst.mockResolvedValue(null); // No existing invitation
       mockFamilyInvitation.create.mockResolvedValue(mockInvitation);
 
-      await sendInvitation(
+      sendInvitation(
         mockRequest as AuthRequest,
         mockResponse as Response,
         nextFunction
       );
+
+      // Wait for async operations to complete
+      await new Promise(resolve => setImmediate(resolve));
 
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith({
@@ -119,13 +125,18 @@ describe('Invitation Controller', () => {
 
       mockFamilyMember.findFirst.mockResolvedValue(null);
 
-      await expect(
-        sendInvitation(
-          mockRequest as AuthRequest,
-          mockResponse as Response,
-          nextFunction
-        )
-      ).rejects.toThrow('Only admins and parents can send invitations');
+      sendInvitation(
+        mockRequest as AuthRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      await waitForAsync();
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as any;
+      expect(error.message).toBe('Only admins and parents can send invitations');
+      expect(error.statusCode).toBe(403);
     });
 
     it('should throw error when invitee is already a member', async () => {
@@ -142,13 +153,18 @@ describe('Invitation Controller', () => {
         .mockResolvedValueOnce(mockMember)
         .mockResolvedValueOnce(mockExistingMember);
 
-      await expect(
-        sendInvitation(
-          mockRequest as AuthRequest,
-          mockResponse as Response,
-          nextFunction
-        )
-      ).rejects.toThrow('User is already a member of this family');
+      sendInvitation(
+        mockRequest as AuthRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      await waitForAsync();
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as any;
+      expect(error.message).toBe('User is already a member of this family');
+      expect(error.statusCode).toBe(400);
     });
 
     it('should throw error when pending invitation already exists', async () => {
@@ -166,13 +182,18 @@ describe('Invitation Controller', () => {
         .mockResolvedValueOnce(null);
       mockFamilyInvitation.findFirst.mockResolvedValue(mockExistingInvitation);
 
-      await expect(
-        sendInvitation(
-          mockRequest as AuthRequest,
-          mockResponse as Response,
-          nextFunction
-        )
-      ).rejects.toThrow('An invitation has already been sent to this email');
+      sendInvitation(
+        mockRequest as AuthRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      await waitForAsync();
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as any;
+      expect(error.message).toBe('An invitation has already been sent to this email');
+      expect(error.statusCode).toBe(400);
     });
   });
 
@@ -199,11 +220,13 @@ describe('Invitation Controller', () => {
 
       mockFamilyInvitation.findMany.mockResolvedValue(mockInvitations);
 
-      await getReceivedInvitations(
+      getReceivedInvitations(
         mockRequest as AuthRequest,
         mockResponse as Response,
         nextFunction
       );
+
+      await waitForAsync();
 
       expect(mockResponse.json).toHaveBeenCalledWith({
         status: 'success',
@@ -226,21 +249,25 @@ describe('Invitation Controller', () => {
         family: { name: 'Test Family' }
       };
 
+      const mockUserDetails = { firstName: 'John', lastName: 'Doe' };
       const mockMember = { id: 'member-1', familyId: 'family-1', userId: 'user-1' };
       const mockUpdatedInvitation = { ...mockInvitation, status: 'ACCEPTED' as InvitationStatus };
 
       mockFamilyInvitation.findUnique.mockResolvedValue(mockInvitation);
       mockFamilyMember.findFirst.mockResolvedValue(null);
+      mockUser.findUnique.mockResolvedValue(mockUserDetails);
       mockTransaction.mockResolvedValue({
         member: mockMember,
         invitation: mockUpdatedInvitation
       });
 
-      await acceptInvitation(
+      acceptInvitation(
         mockRequest as AuthRequest,
         mockResponse as Response,
         nextFunction
       );
+
+      await waitForAsync();
 
       expect(mockResponse.json).toHaveBeenCalledWith({
         status: 'success',
@@ -254,13 +281,18 @@ describe('Invitation Controller', () => {
 
       mockFamilyInvitation.findUnique.mockResolvedValue(null);
 
-      await expect(
-        acceptInvitation(
-          mockRequest as AuthRequest,
-          mockResponse as Response,
-          nextFunction
-        )
-      ).rejects.toThrow('Invitation not found');
+      acceptInvitation(
+        mockRequest as AuthRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      await waitForAsync();
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as any;
+      expect(error.message).toBe('Invitation not found');
+      expect(error.statusCode).toBe(404);
     });
 
     it('should throw error when invitation is for different email', async () => {
@@ -274,13 +306,18 @@ describe('Invitation Controller', () => {
 
       mockFamilyInvitation.findUnique.mockResolvedValue(mockInvitation);
 
-      await expect(
-        acceptInvitation(
-          mockRequest as AuthRequest,
-          mockResponse as Response,
-          nextFunction
-        )
-      ).rejects.toThrow('This invitation is not for you');
+      acceptInvitation(
+        mockRequest as AuthRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      await waitForAsync();
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as any;
+      expect(error.message).toBe('This invitation is not for you');
+      expect(error.statusCode).toBe(403);
     });
 
     it('should throw error when invitation has expired', async () => {
@@ -295,13 +332,18 @@ describe('Invitation Controller', () => {
 
       mockFamilyInvitation.findUnique.mockResolvedValue(mockInvitation);
 
-      await expect(
-        acceptInvitation(
-          mockRequest as AuthRequest,
-          mockResponse as Response,
-          nextFunction
-        )
-      ).rejects.toThrow('Invitation has expired');
+      acceptInvitation(
+        mockRequest as AuthRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      await waitForAsync();
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as any;
+      expect(error.message).toBe('Invitation has expired');
+      expect(error.statusCode).toBe(400);
     });
 
     it('should throw error when user is already a member', async () => {
@@ -320,13 +362,18 @@ describe('Invitation Controller', () => {
       mockFamilyInvitation.findUnique.mockResolvedValue(mockInvitation);
       mockFamilyMember.findFirst.mockResolvedValue(mockExistingMember);
 
-      await expect(
-        acceptInvitation(
-          mockRequest as AuthRequest,
-          mockResponse as Response,
-          nextFunction
-        )
-      ).rejects.toThrow('You are already a member of this family');
+      acceptInvitation(
+        mockRequest as AuthRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      await waitForAsync();
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as any;
+      expect(error.message).toBe('You are already a member of this family');
+      expect(error.statusCode).toBe(400);
     });
   });
 
@@ -345,11 +392,13 @@ describe('Invitation Controller', () => {
       mockFamilyInvitation.findUnique.mockResolvedValue(mockInvitation);
       mockFamilyInvitation.update.mockResolvedValue(mockUpdatedInvitation);
 
-      await declineInvitation(
+      declineInvitation(
         mockRequest as AuthRequest,
         mockResponse as Response,
         nextFunction
       );
+
+      await waitForAsync();
 
       expect(mockResponse.json).toHaveBeenCalledWith({
         status: 'success',
@@ -377,11 +426,13 @@ describe('Invitation Controller', () => {
         status: 'CANCELLED' as InvitationStatus
       });
 
-      await cancelInvitation(
+      cancelInvitation(
         mockRequest as AuthRequest,
         mockResponse as Response,
         nextFunction
       );
+
+      await waitForAsync();
 
       expect(mockResponse.json).toHaveBeenCalledWith({
         status: 'success',
@@ -394,13 +445,18 @@ describe('Invitation Controller', () => {
 
       mockFamilyMember.findFirst.mockResolvedValue(null);
 
-      await expect(
-        cancelInvitation(
-          mockRequest as AuthRequest,
-          mockResponse as Response,
-          nextFunction
-        )
-      ).rejects.toThrow('Only admins and parents can cancel invitations');
+      cancelInvitation(
+        mockRequest as AuthRequest,
+        mockResponse as Response,
+        nextFunction
+      );
+
+      await waitForAsync();
+
+      expect(nextFunction).toHaveBeenCalled();
+      const error = nextFunction.mock.calls[0][0] as any;
+      expect(error.message).toBe('Only admins and parents can cancel invitations');
+      expect(error.statusCode).toBe(403);
     });
   });
 });

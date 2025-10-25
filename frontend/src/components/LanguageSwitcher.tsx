@@ -5,9 +5,13 @@ import { Globe } from 'lucide-react';
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
 
+  const languages = ['fr', 'en', 'nl'];
+  const languageLabels = { fr: 'EN', en: 'NL', nl: 'FR' };
+
   const toggleLanguage = () => {
-    const newLang = i18n.language === 'fr' ? 'en' : 'fr';
-    i18n.changeLanguage(newLang);
+    const currentIndex = languages.indexOf(i18n.language);
+    const nextIndex = (currentIndex + 1) % languages.length;
+    i18n.changeLanguage(languages[nextIndex]);
   };
 
   return (
@@ -20,7 +24,7 @@ export function LanguageSwitcher() {
     >
       <Globe className="h-4 w-4" />
       <span className="text-sm font-medium">
-        {i18n.language === 'fr' ? 'EN' : 'FR'}
+        {languageLabels[i18n.language as keyof typeof languageLabels] || 'FR'}
       </span>
     </Button>
   );

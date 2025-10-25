@@ -247,13 +247,23 @@ export const acceptInvitation = asyncHandler(
       throw new AppError('You are already a member of this family', 400);
     }
 
+    // Fetch user details
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true }
+    });
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
     // Create family member and update invitation status in a transaction
     const result = await prisma.$transaction(async (tx) => {
       const member = await tx.familyMember.create({
         data: {
           familyId: invitation.familyId,
           userId,
-          name: `${req.user!.firstName} ${req.user!.lastName}`,
+          name: `${user.firstName} ${user.lastName}`,
           role: invitation.role
         }
       });
