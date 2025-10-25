@@ -184,13 +184,30 @@
     }
   },
   "dashboard": {
-    "title": "Dashboard",
-    "welcome": "Welcome",
-    "recentPlans": "Recent plans",
+    "title": "Family Planner",
+    "welcome": "Welcome, {{name}}",
+    "loading": "Loading...",
+    "yourPlans": "Your Plans",
     "quickActions": "Quick actions",
-    "newPlan": "New plan",
+    "newPlan": "New Plan",
     "recipes": "Recipes",
-    "noPlan": "No plan yet"
+    "noPlans": {
+      "title": "No plans yet",
+      "description": "Create your first weekly meal plan",
+      "button": "Create Plan"
+    },
+    "planCard": {
+      "week": "Week {{weekNumber}}, {{year}}",
+      "mealsPlanned": "{{count}} meal planned",
+      "mealsPlanned_plural": "{{count}} meals planned",
+      "viewPlan": "View Plan",
+      "shopping": "Shopping"
+    },
+    "status": {
+      "VALIDATED": "Validated",
+      "DRAFT": "Draft",
+      "ARCHIVED": "Archived"
+    }
   },
   "onboarding": {
     "title": "Welcome",

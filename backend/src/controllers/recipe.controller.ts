@@ -95,7 +95,9 @@ export const getRecipes = asyncHandler(
       vegan,
       glutenFree,
       lactoseFree,
-      favorites
+      favorites,
+      search,
+      language
     } = req.query;
 
     const where: any = {};
@@ -111,6 +113,65 @@ export const getRecipes = asyncHandler(
     if (glutenFree === 'true') where.glutenFree = true;
     if (lactoseFree === 'true') where.lactoseFree = true;
     if (favorites === 'true') where.isFavorite = true;
+
+    // Handle search - search in the appropriate language field (accent-insensitive)
+    if (search) {
+      const searchTerm = search as string;
+      const lang = language as string || 'fr';
+
+      // Fetch all recipes first if there are other filters, then filter by search
+      // This is more reliable than trying to use complex Prisma queries
+      let allRecipes = await prisma.recipe.findMany({
+        where: Object.keys(where).length > 0 ? where : undefined,
+        include: {
+          ingredients: true,
+          instructions: {
+            orderBy: { stepNumber: 'asc' }
+          }
+        },
+        orderBy: [
+          { isFavorite: 'desc' },
+          { avgRating: 'desc' },
+          { timesCooked: 'desc' }
+        ]
+      });
+
+      // Normalize function to remove accents for comparison
+      const normalize = (str: string | null): string => {
+        if (!str) return '';
+        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      };
+
+      const normalizedSearch = normalize(searchTerm);
+
+      // Filter recipes based on accent-insensitive search
+      const filteredRecipes = allRecipes.filter((recipe) => {
+        if (lang === 'en') {
+          // Search in English fields first, then fall back to French
+          const searchFields = [
+            recipe.titleEn,
+            recipe.descriptionEn,
+            recipe.title,
+            recipe.description
+          ];
+          return searchFields.some(field =>
+            normalize(field).includes(normalizedSearch)
+          );
+        } else {
+          // Search in French fields
+          const searchFields = [recipe.title, recipe.description];
+          return searchFields.some(field =>
+            normalize(field).includes(normalizedSearch)
+          );
+        }
+      });
+
+      res.json({
+        status: 'success',
+        data: { recipes: filteredRecipes, count: filteredRecipes.length }
+      });
+      return;
+    }
 
     const recipes = await prisma.recipe.findMany({
       where,

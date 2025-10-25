@@ -184,13 +184,30 @@
     }
   },
   "dashboard": {
-    "title": "Tableau de bord",
-    "welcome": "Bienvenue",
-    "recentPlans": "Plans récents",
+    "title": "Family Planner",
+    "welcome": "Bienvenue, {{name}}",
+    "loading": "Chargement...",
+    "yourPlans": "Vos plans",
     "quickActions": "Actions rapides",
     "newPlan": "Nouveau plan",
     "recipes": "Recettes",
-    "noPlan": "Aucun plan pour le moment"
+    "noPlans": {
+      "title": "Aucun plan pour le moment",
+      "description": "Créez votre premier plan de repas hebdomadaire",
+      "button": "Créer un plan"
+    },
+    "planCard": {
+      "week": "Semaine {{weekNumber}}, {{year}}",
+      "mealsPlanned": "{{count}} repas planifiés",
+      "mealsPlanned_plural": "{{count}} repas planifiés",
+      "viewPlan": "Voir le plan",
+      "shopping": "Courses"
+    },
+    "status": {
+      "VALIDATED": "Validé",
+      "DRAFT": "Brouillon",
+      "ARCHIVED": "Archivé"
+    }
   },
   "onboarding": {
     "title": "Bienvenue",

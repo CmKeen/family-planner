@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { familyAPI, weeklyPlanAPI } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { getMonday, formatDate } from '@/lib/utils';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
@@ -70,7 +72,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+          <p className="mt-4 text-muted-foreground">{t('dashboard.loading')}</p>
         </div>
       </div>
     );
@@ -87,8 +89,8 @@ export default function DashboardPage() {
                 <Utensils className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">Family Planner</h1>
-                <p className="text-xs text-muted-foreground">Welcome, {user?.firstName}</p>
+                <h1 className="text-lg font-bold">{t('dashboard.title')}</h1>
+                <p className="text-xs text-muted-foreground">{t('dashboard.welcome', { name: user?.firstName })}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -111,7 +113,7 @@ export default function DashboardPage() {
             size="lg"
           >
             <Plus className="h-6 w-6" />
-            <span className="text-sm">New Plan</span>
+            <span className="text-sm">{t('dashboard.newPlan')}</span>
           </Button>
           <Button
             variant="outline"
@@ -120,14 +122,14 @@ export default function DashboardPage() {
             onClick={() => navigate('/recipes')}
           >
             <Utensils className="h-6 w-6" />
-            <span className="text-sm">Recipes</span>
+            <span className="text-sm">{t('dashboard.recipes')}</span>
           </Button>
         </div>
 
         {/* Recent Plans */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Your Plans</h2>
+            <h2 className="text-xl font-semibold">{t('dashboard.yourPlans')}</h2>
             {families && families.length > 1 && (
               <select
                 value={selectedFamily || ''}
@@ -155,7 +157,10 @@ export default function DashboardPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg">
-                          Week {plan.weekNumber}, {new Date(plan.weekStartDate).getFullYear()}
+                          {t('dashboard.planCard.week', {
+                            weekNumber: plan.weekNumber,
+                            year: new Date(plan.weekStartDate).getFullYear()
+                          })}
                         </CardTitle>
                         <CardDescription>
                           {formatDate(plan.weekStartDate)}
@@ -166,13 +171,13 @@ export default function DashboardPage() {
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {plan.status}
+                        {t(`dashboard.status.${plan.status}`)}
                       </span>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="text-sm text-muted-foreground">
-                      {plan.meals?.length || 0} meals planned
+                      {t('dashboard.planCard.mealsPlanned', { count: plan.meals?.length || 0 })}
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -182,7 +187,7 @@ export default function DashboardPage() {
                       >
                         <Link to={`/plan/${plan.id}`}>
                           <Calendar className="h-4 w-4 mr-2" />
-                          View Plan
+                          {t('dashboard.planCard.viewPlan')}
                         </Link>
                       </Button>
                       {plan.status === 'VALIDATED' && (
@@ -194,7 +199,7 @@ export default function DashboardPage() {
                         >
                           <Link to={`/shopping/${plan.id}`}>
                             <ShoppingCart className="h-4 w-4 mr-2" />
-                            Shopping
+                            {t('dashboard.planCard.shopping')}
                           </Link>
                         </Button>
                       )}
@@ -207,13 +212,13 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No plans yet</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('dashboard.noPlans.title')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  Create your first weekly meal plan
+                  {t('dashboard.noPlans.description')}
                 </p>
                 <Button onClick={handleCreatePlan}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Plan
+                  {t('dashboard.noPlans.button')}
                 </Button>
               </CardContent>
             </Card>

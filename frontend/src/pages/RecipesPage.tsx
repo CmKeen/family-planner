@@ -52,7 +52,7 @@ interface Recipe {
 }
 
 export default function RecipesPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,6 +67,27 @@ export default function RecipesPage() {
     kosher: false,
     halal: false
   });
+
+  // Helper function to get text in the current language
+  // Works with any language by looking for field with language suffix
+  // e.g., getLocalizedField(recipe, 'title') will return 'titleEn' for English
+  const getLocalizedField = <T extends Record<string, any>>(obj: T, fieldName: string): string => {
+    const currentLang = i18n.language;
+
+    // If current language is French (or default), use base field
+    if (currentLang === 'fr') {
+      return obj[fieldName] || '';
+    }
+
+    // For other languages, look for the field with language suffix
+    // e.g., 'en' -> 'titleEn', 'es' -> 'titleEs'
+    const langSuffix = currentLang.charAt(0).toUpperCase() + currentLang.slice(1);
+    const translatedFieldName = `${fieldName}${langSuffix}`;
+    const translatedValue = obj[translatedFieldName];
+
+    // Use translated text if available, otherwise fall back to base field
+    return translatedValue || obj[fieldName] || '';
+  };
 
   // Categories mapping - values must match the API's category field exactly (lowercase without accents)
   const categories = [
@@ -85,11 +106,12 @@ export default function RecipesPage() {
 
   // Fetch recipes
   const { data: recipesData, isLoading } = useQuery({
-    queryKey: ['recipes', searchQuery, selectedCategory, filters],
+    queryKey: ['recipes', searchQuery, selectedCategory, filters, i18n.language],
     queryFn: async () => {
       const params: Record<string, any> = {
         page: 1,
-        limit: 50
+        limit: 50,
+        language: i18n.language // Pass current language for search
       };
 
       if (searchQuery) params.search = searchQuery;
@@ -189,7 +211,7 @@ export default function RecipesPage() {
 
         {/* Category Tabs */}
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-4">
-          <TabsList className="w-full overflow-x-auto flex">
+          <TabsList className="w-full overflow-x-auto overflow-y-hidden flex h-auto">
             {categories.map(cat => (
               <TabsTrigger key={cat.value} value={cat.value} className="flex-shrink-0">
                 {cat.label}
@@ -321,7 +343,7 @@ export default function RecipesPage() {
                 <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800">
                   <img
                     src={`http://localhost:3001${recipe.imageUrl}`}
-                    alt={recipe.title}
+                    alt={getLocalizedField(recipe, 'title')}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -348,7 +370,7 @@ export default function RecipesPage() {
 
               <CardHeader className={recipe.imageUrl ? 'pb-3' : ''}>
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg">{recipe.title}</CardTitle>
+                  <CardTitle className="text-lg">{getLocalizedField(recipe, 'title')}</CardTitle>
                   {!recipe.imageUrl && (
                     <Button
                       variant="ghost"
@@ -369,7 +391,7 @@ export default function RecipesPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {recipe.description}
+                  {getLocalizedField(recipe, 'description')}
                 </p>
 
                 <div className="flex flex-wrap gap-3 text-sm mb-4">
@@ -412,7 +434,7 @@ export default function RecipesPage() {
             <>
               <DialogHeader>
                 <div className="flex items-start justify-between">
-                  <DialogTitle className="text-2xl pr-8">{recipeDetails.title}</DialogTitle>
+                  <DialogTitle className="text-2xl pr-8">{getLocalizedField(recipeDetails, 'title')}</DialogTitle>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -435,7 +457,7 @@ export default function RecipesPage() {
                   <div className="relative w-full h-64 md:h-80 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
                     <img
                       src={`http://localhost:3001${recipeDetails.imageUrl}`}
-                      alt={recipeDetails.title}
+                      alt={getLocalizedField(recipeDetails, 'title')}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -446,7 +468,7 @@ export default function RecipesPage() {
                 )}
 
                 {/* Description */}
-                <p className="text-muted-foreground">{recipeDetails.description}</p>
+                <p className="text-muted-foreground">{getLocalizedField(recipeDetails, 'description')}</p>
 
                 {/* Meta Info */}
                 <div className="flex flex-wrap gap-4">
@@ -489,7 +511,7 @@ export default function RecipesPage() {
                       <li key={ingredient.id} className="flex items-start gap-2">
                         <span className="text-muted-foreground">•</span>
                         <span>
-                          {ingredient.quantity} {ingredient.unit} {ingredient.name}
+                          {ingredient.quantity} {ingredient.unit} {getLocalizedField(ingredient, 'name')}
                         </span>
                       </li>
                     ))}
@@ -507,7 +529,7 @@ export default function RecipesPage() {
                           <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
                             {instruction.stepNumber}
                           </span>
-                          <p className="flex-1 pt-0.5">{instruction.text}</p>
+                          <p className="flex-1 pt-0.5">{getLocalizedField(instruction, 'text')}</p>
                         </li>
                       ))}
                   </ol>
