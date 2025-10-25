@@ -23,6 +23,7 @@ model User {
 
   families      FamilyMember[]
   createdFamilies Family[] @relation("FamilyCreator")
+  sentInvitations FamilyInvitation[]
 }
 
 model Family {
@@ -37,6 +38,10 @@ model Family {
   dietProfileId     String   @unique
   dietProfile       DietProfile @relation(fields: [dietProfileId], references: [id], onDelete: Cascade)
 
+  // Default meal schedule template
+  defaultTemplateId String?
+  defaultTemplate   MealScheduleTemplate? @relation("FamilyDefaultTemplate", fields: [defaultTemplateId], references: [id])
+
   // Relations
   members           FamilyMember[]
   recipes           Recipe[]
@@ -44,6 +49,8 @@ model Family {
   shoppingLists     ShoppingList[]
   schoolMenus       SchoolMenu[]
   inventory         InventoryItem[]
+  mealTemplates     MealScheduleTemplate[] @relation("FamilyTemplates")
+  invitations       FamilyInvitation[]
 
   creatorId         String
   creator           User     @relation("FamilyCreator", fields: [creatorId], references: [id])
@@ -231,6 +238,10 @@ model WeeklyPlan {
   year              Int
 
   status            PlanStatus  @default(DRAFT)
+
+  // Meal schedule template used
+  templateId        String?
+  template          MealScheduleTemplate? @relation(fields: [templateId], references: [id])
 
   // Cutoff management
   cutoffDate        DateTime?
@@ -453,4 +464,55 @@ model InventoryItem {
 
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+}
+
+model MealScheduleTemplate {
+  id                String      @id @default(uuid())
+  familyId          String?
+  family            Family?     @relation("FamilyTemplates", fields: [familyId], references: [id], onDelete: Cascade)
+
+  name              String
+  description       String?
+  isSystem          Boolean     @default(false)
+
+  // JSON structure: [{ dayOfWeek: "MONDAY", mealTypes: ["DINNER"] }, ...]
+  schedule          Json
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  weeklyPlans       WeeklyPlan[]
+  familiesUsingAsDefault Family[] @relation("FamilyDefaultTemplate")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+model FamilyInvitation {
+  id                String            @id @default(uuid())
+  familyId          String
+  family            Family            @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  inviterUserId     String
+  inviter           User              @relation(fields: [inviterUserId], references: [id])
+
+  inviteeEmail      String
+  role              MemberRole        @default(MEMBER)
+
+  status            InvitationStatus  @default(PENDING)
+  token             String            @unique @default(uuid())
+
+  expiresAt         DateTime
+  acceptedAt        DateTime?
+
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@unique([familyId, inviteeEmail, status])
+  @@index([inviteeEmail, status])
+  @@index([token])
 }

@@ -11,6 +11,8 @@ import OnboardingPage from './pages/OnboardingPage';
 import WeeklyPlanPage from './pages/WeeklyPlanPage';
 import RecipesPage from './pages/RecipesPage';
 import ShoppingListPage from './pages/ShoppingListPage';
+import FamilySettingsPage from './pages/FamilySettingsPage';
+import InvitationsPage from './pages/InvitationsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +83,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <ShoppingListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/family/settings"
+            element={
+              <ProtectedRoute>
+                <FamilySettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/invitations"
+            element={
+              <ProtectedRoute>
+                <InvitationsPage />
               </ProtectedRoute>
             }
           />

@@ -122,18 +122,49 @@ export const getWeeklyPlan = asyncHandler(
 export const generateAutoPlan = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { familyId } = req.params;
-    const { weekStartDate } = req.body;
+    const { weekStartDate, templateId } = req.body;
 
     const family = await prisma.family.findUnique({
       where: { id: familyId },
       include: {
         dietProfile: true,
-        members: true
+        members: true,
+        defaultTemplate: true
       }
     });
 
     if (!family) {
       throw new AppError('Family not found', 404);
+    }
+
+    // Get meal schedule template
+    let template;
+    if (templateId) {
+      template = await prisma.mealScheduleTemplate.findFirst({
+        where: {
+          id: templateId,
+          OR: [
+            { isSystem: true },
+            { familyId }
+          ]
+        }
+      });
+      if (!template) {
+        throw new AppError('Template not found', 404);
+      }
+    } else {
+      // Use family default or fall back to system default
+      template = family.defaultTemplate;
+      if (!template) {
+        // Get "Standard Work Week" system template as fallback
+        template = await prisma.mealScheduleTemplate.findFirst({
+          where: { isSystem: true, name: 'Standard Work Week' }
+        });
+      }
+    }
+
+    if (!template) {
+      throw new AppError('No meal schedule template found', 404);
     }
 
     // Get school menus for the week
@@ -159,9 +190,12 @@ export const generateAutoPlan = asyncHandler(
     const novelties = recipes.filter((r: any) => r.isNovelty);
     const others = recipes.filter((r: any) => !r.isFavorite && !r.isNovelty);
 
-    // Calculate meal counts
+    // Parse template schedule
+    const scheduleData = template.schedule as any[];
+
+    // Calculate total meals from template
+    const totalMeals = scheduleData.reduce((sum, day) => sum + day.mealTypes.length, 0);
     const dietProfile = family.dietProfile;
-    const totalMeals = 14; // 7 days * 2 meals (lunch + dinner)
     const favoriteMeals = Math.ceil(totalMeals * dietProfile.favoriteRatio);
     const noveltyMeals = Math.min(dietProfile.maxNovelties, 2);
 
@@ -176,82 +210,65 @@ export const generateAutoPlan = asyncHandler(
         weekStartDate: date,
         weekNumber,
         year,
-        status: 'DRAFT'
+        status: 'DRAFT',
+        templateId: template.id
       }
     });
 
-    // Generate meals
+    // Generate meals based on template schedule
     const meals = [];
     let favoriteIndex = 0;
     let noveltyIndex = 0;
     let otherIndex = 0;
     let noveltyCount = 0;
 
-    for (const day of DAYS) {
-      const dayDate = new Date(weekStart);
+    for (const scheduleItem of scheduleData) {
+      const day = scheduleItem.dayOfWeek as DayOfWeek;
       const dayIndex = DAYS.indexOf(day);
+      const dayDate = new Date(weekStart);
       dayDate.setDate(dayDate.getDate() + dayIndex);
 
-      // Check for school menu
+      // Check for school menu for this day
       const schoolMenu = schoolMenus.find((sm: any) =>
         sm.date.toDateString() === dayDate.toDateString() && sm.mealType === 'LUNCH'
       );
 
-      // Lunch
-      if (schoolMenu) {
-        meals.push({
-          weeklyPlanId: weeklyPlan.id,
-          dayOfWeek: day,
-          mealType: 'LUNCH' as MealType,
-          isSchoolMeal: true,
-          portions: family.members.length
-        });
-      } else {
-        // Select recipe for lunch
-        const recipe = selectRecipe(favorites, novelties, others, {
-          favoriteIndex,
-          noveltyIndex,
-          otherIndex,
-          noveltyCount,
-          maxNovelties: noveltyMeals,
-          favoriteRatio: dietProfile.favoriteRatio
-        });
+      // Generate each meal type specified in the schedule
+      for (const mealType of scheduleItem.mealTypes) {
+        // If it's lunch and there's a school menu, create school meal instead
+        if (mealType === 'LUNCH' && schoolMenu) {
+          meals.push({
+            weeklyPlanId: weeklyPlan.id,
+            dayOfWeek: day,
+            mealType: mealType as MealType,
+            isSchoolMeal: true,
+            portions: family.members.length
+          });
+        } else {
+          // Select recipe
+          const recipe = selectRecipe(favorites, novelties, others, {
+            favoriteIndex,
+            noveltyIndex,
+            otherIndex,
+            noveltyCount,
+            maxNovelties: noveltyMeals,
+            favoriteRatio: dietProfile.favoriteRatio,
+            avoidCategory: (mealType === 'DINNER' && schoolMenu) ? schoolMenu.category : undefined
+          });
 
-        if (recipe.from === 'favorites') favoriteIndex++;
-        if (recipe.from === 'novelties') { noveltyIndex++; noveltyCount++; }
-        if (recipe.from === 'others') otherIndex++;
+          if (recipe.from === 'favorites') favoriteIndex++;
+          if (recipe.from === 'novelties') { noveltyIndex++; noveltyCount++; }
+          if (recipe.from === 'others') otherIndex++;
 
-        meals.push({
-          weeklyPlanId: weeklyPlan.id,
-          dayOfWeek: day,
-          mealType: 'LUNCH' as MealType,
-          recipeId: recipe.recipe.id,
-          portions: family.members.length
-        });
+          meals.push({
+            weeklyPlanId: weeklyPlan.id,
+            dayOfWeek: day,
+            mealType: mealType as MealType,
+            recipeId: recipe.recipe.id,
+            portions: family.members.length
+          });
+        }
       }
-
-      // Dinner - avoid duplicating school lunch category
-      const dinnerRecipe = selectRecipe(favorites, novelties, others, {
-        favoriteIndex,
-        noveltyIndex,
-        otherIndex,
-        noveltyCount,
-        maxNovelties: noveltyMeals,
-        favoriteRatio: dietProfile.favoriteRatio,
-        avoidCategory: schoolMenu?.category || undefined
-      });
-
-      if (dinnerRecipe.from === 'favorites') favoriteIndex++;
-      if (dinnerRecipe.from === 'novelties') { noveltyIndex++; noveltyCount++; }
-      if (dinnerRecipe.from === 'others') otherIndex++;
-
-      meals.push({
-        weeklyPlanId: weeklyPlan.id,
-        dayOfWeek: day,
-        mealType: 'DINNER' as MealType,
-        recipeId: dinnerRecipe.recipe.id,
-        portions: family.members.length
-      });
     }
 
     // Create all meals
@@ -546,6 +563,262 @@ export const validatePlan = asyncHandler(
     res.json({
       status: 'success',
       data: { plan }
+    });
+  }
+);
+
+// Add single meal to draft plan
+export const addMeal = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { planId } = req.params;
+    const { dayOfWeek, mealType, recipeId } = req.body;
+
+    // Verify plan exists and is in DRAFT status
+    const plan = await prisma.weeklyPlan.findUnique({
+      where: { id: planId },
+      include: { family: { include: { members: true } } }
+    });
+
+    if (!plan) {
+      throw new AppError('Weekly plan not found', 404);
+    }
+
+    if (plan.status !== 'DRAFT') {
+      throw new AppError('Can only add meals to draft plans', 400);
+    }
+
+    // Check if meal already exists for this day/mealType
+    const existingMeal = await prisma.meal.findFirst({
+      where: {
+        weeklyPlanId: planId,
+        dayOfWeek,
+        mealType
+      }
+    });
+
+    if (existingMeal) {
+      throw new AppError('A meal already exists for this day and meal type', 400);
+    }
+
+    // Create the meal
+    const meal = await prisma.meal.create({
+      data: {
+        weeklyPlanId: planId,
+        dayOfWeek,
+        mealType,
+        recipeId: recipeId || null,
+        portions: plan.family.members.length
+      },
+      include: {
+        recipe: true
+      }
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: { meal }
+    });
+  }
+);
+
+// Remove meal from draft plan
+export const removeMeal = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { planId, mealId } = req.params;
+
+    // Verify plan exists and is in DRAFT status
+    const plan = await prisma.weeklyPlan.findUnique({
+      where: { id: planId }
+    });
+
+    if (!plan) {
+      throw new AppError('Weekly plan not found', 404);
+    }
+
+    if (plan.status !== 'DRAFT') {
+      throw new AppError('Can only remove meals from draft plans', 400);
+    }
+
+    // Verify meal belongs to this plan
+    const meal = await prisma.meal.findFirst({
+      where: {
+        id: mealId,
+        weeklyPlanId: planId
+      }
+    });
+
+    if (!meal) {
+      throw new AppError('Meal not found or does not belong to this plan', 404);
+    }
+
+    // Ensure at least one meal remains
+    const mealCount = await prisma.meal.count({
+      where: { weeklyPlanId: planId }
+    });
+
+    if (mealCount <= 1) {
+      throw new AppError('Cannot remove the last meal from a plan', 400);
+    }
+
+    await prisma.meal.delete({
+      where: { id: mealId }
+    });
+
+    res.json({
+      status: 'success',
+      message: 'Meal removed successfully'
+    });
+  }
+);
+
+// Switch template for draft plan (regenerates all meals)
+export const switchTemplate = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { planId } = req.params;
+    const { templateId } = req.body;
+
+    // Verify plan exists and is in DRAFT status
+    const plan = await prisma.weeklyPlan.findUnique({
+      where: { id: planId },
+      include: {
+        family: {
+          include: {
+            dietProfile: true,
+            members: true
+          }
+        }
+      }
+    });
+
+    if (!plan) {
+      throw new AppError('Weekly plan not found', 404);
+    }
+
+    if (plan.status !== 'DRAFT') {
+      throw new AppError('Can only switch templates for draft plans', 400);
+    }
+
+    // Verify template exists and is accessible
+    const template = await prisma.mealScheduleTemplate.findFirst({
+      where: {
+        id: templateId,
+        OR: [
+          { isSystem: true },
+          { familyId: plan.familyId }
+        ]
+      }
+    });
+
+    if (!template) {
+      throw new AppError('Template not found', 404);
+    }
+
+    // Delete existing meals
+    await prisma.meal.deleteMany({
+      where: { weeklyPlanId: planId }
+    });
+
+    // Get data needed for meal generation
+    const weekStart = new Date(plan.weekStartDate);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const schoolMenus = await prisma.schoolMenu.findMany({
+      where: {
+        familyId: plan.familyId,
+        date: {
+          gte: weekStart,
+          lt: weekEnd
+        }
+      }
+    });
+
+    const recipes = await getCompliantRecipes(plan.family);
+    const favorites = recipes.filter((r: any) => r.isFavorite);
+    const novelties = recipes.filter((r: any) => r.isNovelty);
+    const others = recipes.filter((r: any) => !r.isFavorite && !r.isNovelty);
+
+    // Parse template schedule
+    const scheduleData = template.schedule as any[];
+    const totalMeals = scheduleData.reduce((sum: number, day: any) => sum + day.mealTypes.length, 0);
+    const dietProfile = plan.family.dietProfile;
+    const favoriteMeals = Math.ceil(totalMeals * dietProfile.favoriteRatio);
+    const noveltyMeals = Math.min(dietProfile.maxNovelties, 2);
+
+    // Generate new meals
+    const meals = [];
+    let favoriteIndex = 0;
+    let noveltyIndex = 0;
+    let otherIndex = 0;
+    let noveltyCount = 0;
+
+    for (const scheduleItem of scheduleData) {
+      const day = scheduleItem.dayOfWeek as DayOfWeek;
+      const dayIndex = DAYS.indexOf(day);
+      const dayDate = new Date(weekStart);
+      dayDate.setDate(dayDate.getDate() + dayIndex);
+
+      const schoolMenu = schoolMenus.find((sm: any) =>
+        sm.date.toDateString() === dayDate.toDateString() && sm.mealType === 'LUNCH'
+      );
+
+      for (const mealType of scheduleItem.mealTypes) {
+        if (mealType === 'LUNCH' && schoolMenu) {
+          meals.push({
+            weeklyPlanId: plan.id,
+            dayOfWeek: day,
+            mealType: mealType as MealType,
+            isSchoolMeal: true,
+            portions: plan.family.members.length
+          });
+        } else {
+          const recipe = selectRecipe(favorites, novelties, others, {
+            favoriteIndex,
+            noveltyIndex,
+            otherIndex,
+            noveltyCount,
+            maxNovelties: noveltyMeals,
+            favoriteRatio: dietProfile.favoriteRatio,
+            avoidCategory: (mealType === 'DINNER' && schoolMenu) ? schoolMenu.category : undefined
+          });
+
+          if (recipe.from === 'favorites') favoriteIndex++;
+          if (recipe.from === 'novelties') { noveltyIndex++; noveltyCount++; }
+          if (recipe.from === 'others') otherIndex++;
+
+          meals.push({
+            weeklyPlanId: plan.id,
+            dayOfWeek: day,
+            mealType: mealType as MealType,
+            recipeId: recipe.recipe.id,
+            portions: plan.family.members.length
+          });
+        }
+      }
+    }
+
+    await prisma.meal.createMany({ data: meals });
+
+    // Update plan with new template
+    const updatedPlan = await prisma.weeklyPlan.update({
+      where: { id: planId },
+      data: { templateId },
+      include: {
+        meals: {
+          include: {
+            recipe: true
+          },
+          orderBy: [
+            { dayOfWeek: 'asc' },
+            { mealType: 'asc' }
+          ]
+        }
+      }
+    });
+
+    res.json({
+      status: 'success',
+      data: { plan: updatedPlan }
     });
   }
 );

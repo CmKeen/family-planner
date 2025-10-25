@@ -34,8 +34,10 @@
       "meals": "Meals"
     },
     "mealTypes": {
+      "breakfast": "Breakfast",
       "lunch": "Lunch",
-      "dinner": "Dinner"
+      "dinner": "Dinner",
+      "snack": "Snack"
     },
     "actions": {
       "validate": "Validate plan",
@@ -46,7 +48,11 @@
       "adjustPortions": "Portions",
       "adjusting": "Adjusting...",
       "lock": "Lock",
-      "unlock": "Unlock"
+      "unlock": "Unlock",
+      "changePattern": "Change pattern",
+      "addMeal": "Add meal",
+      "removeMeal": "Remove",
+      "switchingTemplate": "Switching template..."
     },
     "dialogs": {
       "swapRecipe": {
@@ -60,7 +66,28 @@
         "cancel": "Cancel",
         "confirm": "Confirm"
       },
-      "validatePlan": "Validate this weekly plan? This will generate the shopping list."
+      "selectTemplate": {
+        "title": "Choose meal schedule",
+        "description": "Select which meals you want to plan this week",
+        "cancel": "Cancel",
+        "confirm": "Generate plan"
+      },
+      "switchTemplate": {
+        "title": "Change meal pattern",
+        "description": "This will regenerate all meals with a different schedule",
+        "warning": "This will replace all current meals. Continue?",
+        "cancel": "Cancel",
+        "confirm": "Change pattern"
+      },
+      "addMealDialog": {
+        "title": "Add a meal",
+        "dayLabel": "Day",
+        "mealTypeLabel": "Meal type",
+        "cancel": "Cancel",
+        "confirm": "Add"
+      },
+      "validatePlan": "Validate this weekly plan? This will generate the shopping list.",
+      "confirmRemoveMeal": "Remove this meal from the plan?"
     },
     "status": {
       "draft": "Draft",
@@ -209,6 +236,30 @@
       "ARCHIVED": "Archived"
     }
   },
+  "mealTemplates": {
+    "title": "Meal Schedules",
+    "description": "Manage your meal planning patterns",
+    "selectTemplate": "Choose a schedule",
+    "systemTemplates": "Default schedules",
+    "customTemplates": "My schedules",
+    "createNew": "Create schedule",
+    "templates": {
+      "fullWeek": {
+        "name": "Full Week",
+        "description": "Lunch and dinner for all 7 days (14 meals)"
+      },
+      "standardWorkWeek": {
+        "name": "Standard Work Week",
+        "description": "Dinner only on weekdays, lunch and dinner on weekends (9 meals)"
+      },
+      "vacationMode": {
+        "name": "Vacation Mode",
+        "description": "Lunch and dinner every day (14 meals)"
+      }
+    },
+    "mealCount": "{{count}} meal",
+    "mealCount_plural": "{{count}} meals"
+  },
   "onboarding": {
     "title": "Welcome",
     "steps": {
@@ -221,5 +272,134 @@
     "fr": "Français",
     "en": "English",
     "switch": "Change language"
+  },
+  "family": {
+    "title": "Family",
+    "settings": "Family Settings",
+    "members": "Members",
+    "invitations": "Invitations",
+    "loading": "Loading...",
+    "membersList": {
+      "title": "Family Members",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions",
+      "linked": "Linked",
+      "notLinked": "Not linked",
+      "noMembers": "No members yet"
+    },
+    "roles": {
+      "ADMIN": "Administrator",
+      "PARENT": "Parent",
+      "MEMBER": "Member",
+      "CHILD": "Child"
+    },
+    "actions": {
+      "inviteMember": "Invite Member",
+      "addMember": "Add Family Member",
+      "editMember": "Edit Member",
+      "removeMember": "Remove Member",
+      "viewInvitations": "View Invitations"
+    },
+    "inviteModal": {
+      "title": "Invite a member",
+      "description": "Send an invitation to join your family",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "member@example.com",
+      "roleLabel": "Role",
+      "cancel": "Cancel",
+      "send": "Send Invitation",
+      "sending": "Sending...",
+      "success": "Invitation sent successfully!",
+      "error": "Failed to send invitation"
+    },
+    "addMemberModal": {
+      "title": "Add a family member",
+      "description": "Add a non-registered member (like a child)",
+      "nameLabel": "Name",
+      "namePlaceholder": "John Doe",
+      "ageLabel": "Age (optional)",
+      "agePlaceholder": "8",
+      "portionFactorLabel": "Portion size",
+      "portionFactorDescription": "1.0 = adult portion, 0.7 = child portion",
+      "cancel": "Cancel",
+      "add": "Add Member",
+      "adding": "Adding...",
+      "success": "Member added successfully!",
+      "error": "Failed to add member"
+    },
+    "removeConfirm": {
+      "title": "Remove member",
+      "message": "Are you sure you want to remove {{name}} from the family?",
+      "cancel": "Cancel",
+      "confirm": "Remove"
+    }
+  },
+  "invitations": {
+    "title": "Invitations",
+    "received": "Received Invitations",
+    "sent": "Sent Invitations",
+    "loading": "Loading invitations...",
+    "noReceived": "No pending invitations",
+    "noSent": "No invitations sent",
+    "receivedList": {
+      "from": "From",
+      "family": "Family",
+      "role": "Role",
+      "members": "{{count}} member",
+      "members_plural": "{{count}} members",
+      "expiresIn": "Expires in {{days}} days",
+      "actions": "Actions"
+    },
+    "sentList": {
+      "to": "To",
+      "role": "Role",
+      "status": "Status",
+      "sentOn": "Sent on",
+      "actions": "Actions"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "ACCEPTED": "Accepted",
+      "DECLINED": "Declined",
+      "CANCELLED": "Cancelled"
+    },
+    "actions": {
+      "accept": "Accept",
+      "decline": "Decline",
+      "cancel": "Cancel Invitation",
+      "accepting": "Accepting...",
+      "declining": "Declining...",
+      "cancelling": "Cancelling..."
+    },
+    "confirmAccept": {
+      "title": "Accept invitation",
+      "message": "Do you want to join {{familyName}}?",
+      "cancel": "Cancel",
+      "confirm": "Accept"
+    },
+    "confirmDecline": {
+      "title": "Decline invitation",
+      "message": "Are you sure you want to decline this invitation?",
+      "cancel": "Cancel",
+      "confirm": "Decline"
+    },
+    "confirmCancel": {
+      "title": "Cancel invitation",
+      "message": "Are you sure you want to cancel this invitation to {{email}}?",
+      "cancel": "Cancel",
+      "confirm": "Cancel Invitation"
+    },
+    "notifications": {
+      "accepted": "You have joined {{familyName}}!",
+      "declined": "Invitation declined",
+      "cancelled": "Invitation cancelled",
+      "acceptError": "Failed to accept invitation",
+      "declineError": "Failed to decline invitation",
+      "cancelError": "Failed to cancel invitation"
+    },
+    "badge": "{{count}} new"
   }
 }

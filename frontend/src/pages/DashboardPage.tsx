@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { familyAPI, weeklyPlanAPI } from '@/lib/api';
+import { familyAPI, weeklyPlanAPI, mealTemplateAPI } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Utensils, Plus, Calendar, ShoppingCart, LogOut } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Utensils, Plus, Calendar, ShoppingCart, LogOut, CalendarDays, Users } from 'lucide-react';
 import { getMonday, formatDate } from '@/lib/utils';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
@@ -16,6 +17,9 @@ export default function DashboardPage() {
   const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const [selectedFamily, setSelectedFamily] = useState<string | null>(null);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [isCreatingPlan, setIsCreatingPlan] = useState(false);
 
   const { data: families, isLoading: loadingFamilies } = useQuery({
     queryKey: ['families'],
@@ -31,6 +35,16 @@ export default function DashboardPage() {
       if (!selectedFamily) return [];
       const response = await weeklyPlanAPI.getByFamily(selectedFamily);
       return response.data.data.plans;
+    },
+    enabled: !!selectedFamily
+  });
+
+  const { data: templates } = useQuery({
+    queryKey: ['mealTemplates', selectedFamily],
+    queryFn: async () => {
+      if (!selectedFamily) return [];
+      const response = await mealTemplateAPI.getAll(selectedFamily);
+      return response.data.data.templates;
     },
     enabled: !!selectedFamily
   });
@@ -52,19 +66,36 @@ export default function DashboardPage() {
     navigate('/login');
   };
 
-  const handleCreatePlan = async () => {
+  const handleCreatePlan = () => {
+    setShowTemplateDialog(true);
+  };
+
+  const handleConfirmTemplate = async () => {
     if (!selectedFamily) return;
 
     try {
+      setIsCreatingPlan(true);
       const weekStart = getMonday(new Date());
       const response = await weeklyPlanAPI.generateAuto(selectedFamily, {
-        weekStartDate: weekStart.toISOString()
+        weekStartDate: weekStart.toISOString(),
+        templateId: selectedTemplate || undefined
       });
       const newPlan = response.data.data.plan;
+      setShowTemplateDialog(false);
+      setSelectedTemplate(null);
       navigate(`/plan/${newPlan.id}`);
     } catch (error) {
       console.error('Error creating plan:', error);
+    } finally {
+      setIsCreatingPlan(false);
     }
+  };
+
+  const getMealCount = (template: any) => {
+    if (!template.schedule) return 0;
+    return template.schedule.reduce((count: number, day: any) => {
+      return count + (day.mealTypes?.length || 0);
+    }, 0);
   };
 
   if (loadingFamilies) {
@@ -123,6 +154,15 @@ export default function DashboardPage() {
           >
             <Utensils className="h-6 w-6" />
             <span className="text-sm">{t('dashboard.recipes')}</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="h-24 flex-col space-y-2 col-span-2"
+            size="lg"
+            onClick={() => navigate('/family/settings')}
+          >
+            <Users className="h-6 w-6" />
+            <span className="text-sm">{t('family.title')}</span>
           </Button>
         </div>
 
@@ -225,6 +265,152 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* Template Selection Dialog */}
+      <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('weeklyPlan.dialogs.selectTemplate.title')}</DialogTitle>
+            <DialogDescription>
+              {t('weeklyPlan.dialogs.selectTemplate.description')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* System Templates */}
+            {templates && templates.filter((t: any) => t.isSystem).length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t('mealTemplates.systemTemplates')}
+                </h3>
+                <div className="grid gap-3">
+                  {templates.filter((t: any) => t.isSystem).map((template: any) => (
+                    <button
+                      key={template.id}
+                      onClick={() => setSelectedTemplate(template.id)}
+                      className={`relative flex items-start space-x-4 p-4 rounded-lg border-2 transition-all text-left ${
+                        selectedTemplate === template.id
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex-shrink-0 mt-1">
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                          selectedTemplate === template.id
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          <CalendarDays className="h-5 w-5" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-semibold text-base">
+                            {template.name}
+                          </h4>
+                          <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full">
+                            {t('mealTemplates.mealCount', { count: getMealCount(template) })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {template.description}
+                        </p>
+                      </div>
+                      {selectedTemplate === template.id && (
+                        <div className="absolute top-2 right-2 h-5 w-5 bg-primary rounded-full flex items-center justify-center">
+                          <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Custom Templates */}
+            {templates && templates.filter((t: any) => !t.isSystem).length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t('mealTemplates.customTemplates')}
+                </h3>
+                <div className="grid gap-3">
+                  {templates.filter((t: any) => !t.isSystem).map((template: any) => (
+                    <button
+                      key={template.id}
+                      onClick={() => setSelectedTemplate(template.id)}
+                      className={`relative flex items-start space-x-4 p-4 rounded-lg border-2 transition-all text-left ${
+                        selectedTemplate === template.id
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex-shrink-0 mt-1">
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                          selectedTemplate === template.id
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          <CalendarDays className="h-5 w-5" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-semibold text-base">
+                            {template.name}
+                          </h4>
+                          <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full">
+                            {t('mealTemplates.mealCount', { count: getMealCount(template) })}
+                          </span>
+                        </div>
+                        {template.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {template.description}
+                          </p>
+                        )}
+                      </div>
+                      {selectedTemplate === template.id && (
+                        <div className="absolute top-2 right-2 h-5 w-5 bg-primary rounded-full flex items-center justify-center">
+                          <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowTemplateDialog(false);
+                setSelectedTemplate(null);
+              }}
+              disabled={isCreatingPlan}
+            >
+              {t('weeklyPlan.dialogs.selectTemplate.cancel')}
+            </Button>
+            <Button
+              onClick={handleConfirmTemplate}
+              disabled={isCreatingPlan}
+            >
+              {isCreatingPlan ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {t('common.loading')}
+                </>
+              ) : (
+                t('weeklyPlan.dialogs.selectTemplate.confirm')
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

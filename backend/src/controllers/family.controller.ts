@@ -203,17 +203,51 @@ export const deleteFamily = asyncHandler(
 export const addMember = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
-    const { name, role, age, portionFactor, aversions, favorites } = req.body;
+    const { name, email, role, age, portionFactor, aversions, favorites } = req.body;
+
+    // If email is provided, try to link to existing user
+    let userId: string | undefined;
+    if (email) {
+      const user = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (user) {
+        userId = user.id;
+
+        // Check if user is already a member
+        const existingMember = await prisma.familyMember.findFirst({
+          where: {
+            familyId: id,
+            userId: user.id
+          }
+        });
+
+        if (existingMember) {
+          throw new AppError('This user is already a member of the family', 400);
+        }
+      }
+    }
 
     const member = await prisma.familyMember.create({
       data: {
         familyId: id,
+        userId,
         name,
         role: role || 'MEMBER',
         age,
         portionFactor: portionFactor || 1.0,
         aversions: aversions || [],
         favorites: favorites || []
+      },
+      include: {
+        user: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        }
       }
     });
 

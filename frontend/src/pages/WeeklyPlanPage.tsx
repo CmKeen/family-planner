@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { weeklyPlanAPI, recipeAPI } from '@/lib/api';
-import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { weeklyPlanAPI, recipeAPI, mealTemplateAPI } from '@/lib/api';
+import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface Recipe {
@@ -25,7 +25,7 @@ interface Recipe {
 interface Meal {
   id: string;
   dayOfWeek: string;
-  mealType: 'LUNCH' | 'DINNER';
+  mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
   recipe: Recipe;
   portions: number;
   locked: boolean;
@@ -37,6 +37,10 @@ interface WeeklyPlan {
   year: number;
   status: 'DRAFT' | 'VALIDATED' | 'ARCHIVED';
   meals: Meal[];
+  family?: {
+    id: string;
+    name: string;
+  };
 }
 
 const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
@@ -52,6 +56,11 @@ export default function WeeklyPlanPage() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [newPortions, setNewPortions] = useState(4);
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
+  const [switchTemplateDialogOpen, setSwitchTemplateDialogOpen] = useState(false);
+  const [addMealDialogOpen, setAddMealDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [newMealDay, setNewMealDay] = useState('MONDAY');
+  const [newMealType, setNewMealType] = useState<'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'>('DINNER');
 
   // Day names mapping
   const getDayName = (day: string): string => {
@@ -85,6 +94,17 @@ export default function WeeklyPlanPage() {
       return response.data.data.recipes as Recipe[];
     },
     enabled: swapDialogOpen
+  });
+
+  // Fetch meal templates
+  const { data: templates } = useQuery({
+    queryKey: ['mealTemplates', planData?.family?.id],
+    queryFn: async () => {
+      if (!planData?.family?.id) return [];
+      const response = await mealTemplateAPI.getAll(planData.family.id);
+      return response.data.data.templates;
+    },
+    enabled: !!planData?.family?.id && switchTemplateDialogOpen
   });
 
   // Swap meal mutation
@@ -127,6 +147,35 @@ export default function WeeklyPlanPage() {
     }
   });
 
+  // Switch template mutation
+  const switchTemplateMutation = useMutation({
+    mutationFn: (templateId: string) =>
+      weeklyPlanAPI.switchTemplate(planId!, { templateId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
+      setSwitchTemplateDialogOpen(false);
+      setSelectedTemplate(null);
+    }
+  });
+
+  // Add meal mutation
+  const addMealMutation = useMutation({
+    mutationFn: ({ dayOfWeek, mealType }: { dayOfWeek: string; mealType: string }) =>
+      weeklyPlanAPI.addMeal(planId!, { dayOfWeek, mealType }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
+      setAddMealDialogOpen(false);
+    }
+  });
+
+  // Remove meal mutation
+  const removeMealMutation = useMutation({
+    mutationFn: (mealId: string) => weeklyPlanAPI.removeMeal(planId!, mealId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
+    }
+  });
+
   const handleSwapClick = (meal: Meal) => {
     setSelectedMeal(meal);
     setSwapDialogOpen(true);
@@ -164,6 +213,37 @@ export default function WeeklyPlanPage() {
     navigate(`/shopping-list/${planData?.id}`);
   };
 
+  const handleSwitchTemplate = () => {
+    setSwitchTemplateDialogOpen(true);
+  };
+
+  const handleConfirmSwitchTemplate = () => {
+    if (selectedTemplate) {
+      switchTemplateMutation.mutate(selectedTemplate);
+    }
+  };
+
+  const handleAddMeal = () => {
+    setAddMealDialogOpen(true);
+  };
+
+  const handleConfirmAddMeal = () => {
+    addMealMutation.mutate({ dayOfWeek: newMealDay, mealType: newMealType });
+  };
+
+  const handleRemoveMeal = (mealId: string) => {
+    if (window.confirm(t('weeklyPlan.dialogs.confirmRemoveMeal'))) {
+      removeMealMutation.mutate(mealId);
+    }
+  };
+
+  const getMealCount = (template: any) => {
+    if (!template.schedule) return 0;
+    return template.schedule.reduce((count: number, day: any) => {
+      return count + (day.mealTypes?.length || 0);
+    }, 0);
+  };
+
   if (isPlanLoading || !planData) {
     return (
       <div className="container mx-auto p-4 flex items-center justify-center min-h-screen">
@@ -186,8 +266,10 @@ export default function WeeklyPlanPage() {
   // Organize meals by day
   const mealsByDay = DAYS.map(day => ({
     day,
+    breakfast: planData.meals.find(m => m.dayOfWeek === day && m.mealType === 'BREAKFAST'),
     lunch: planData.meals.find(m => m.dayOfWeek === day && m.mealType === 'LUNCH'),
-    dinner: planData.meals.find(m => m.dayOfWeek === day && m.mealType === 'DINNER')
+    dinner: planData.meals.find(m => m.dayOfWeek === day && m.mealType === 'DINNER'),
+    snack: planData.meals.find(m => m.dayOfWeek === day && m.mealType === 'SNACK')
   }));
 
   const getStatusText = (status: string): string => {
@@ -196,6 +278,86 @@ export default function WeeklyPlanPage() {
     if (status === 'ARCHIVED') return t('weeklyPlan.status.archived');
     return status;
   };
+
+  const getMealTypeLabel = (mealType: string): string => {
+    const mealTypeMap: Record<string, string> = {
+      BREAKFAST: t('weeklyPlan.mealTypes.breakfast'),
+      LUNCH: t('weeklyPlan.mealTypes.lunch'),
+      DINNER: t('weeklyPlan.mealTypes.dinner'),
+      SNACK: t('weeklyPlan.mealTypes.snack')
+    };
+    return mealTypeMap[mealType] || mealType;
+  };
+
+  const renderMealCard = (meal: Meal) => (
+    <div key={meal.id} className="border rounded-lg p-4">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
+            {meal.recipe.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
+            {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
+          </div>
+          <h3 className="font-semibold">{meal.recipe.title}</h3>
+          <p className="text-sm text-muted-foreground">
+            {t('weeklyPlan.minutes', { count: meal.recipe.prepTime + meal.recipe.cookTime })} · {t('weeklyPlan.portions', { count: meal.portions })}
+          </p>
+          {meal.recipe.category && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              <Badge variant="outline" className="text-xs">
+                {meal.recipe.category}
+              </Badge>
+              {meal.recipe.cuisine && (
+                <Badge variant="outline" className="text-xs">
+                  {meal.recipe.cuisine}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-3">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleSwapClick(meal)}
+          disabled={planData.status !== 'DRAFT'}
+        >
+          <RefreshCw className="h-3 w-3 mr-1" />
+          {t('weeklyPlan.actions.swap')}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handlePortionClick(meal)}
+        >
+          {t('weeklyPlan.actions.adjustPortions')}
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => handleToggleLock(meal)}
+          disabled={planData.status !== 'DRAFT'}
+        >
+          {meal.locked ? (
+            <Unlock className="h-4 w-4" />
+          ) : (
+            <Lock className="h-4 w-4" />
+          )}
+        </Button>
+        {planData.status === 'DRAFT' && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => handleRemoveMeal(meal.id)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="container mx-auto p-4 pb-20">
@@ -276,151 +438,57 @@ export default function WeeklyPlanPage() {
         </Card>
       </div>
 
-      {/* Action Button */}
-      <div className="mb-6">
+      {/* Action Buttons */}
+      <div className="mb-6 flex flex-wrap gap-2">
         {planData.status === 'DRAFT' ? (
-          <Button
-            onClick={handleValidate}
-            className="w-full md:w-auto"
-            disabled={validateMutation.isPending}
-          >
-            {validateMutation.isPending ? t('weeklyPlan.actions.validating') : t('weeklyPlan.actions.validate')}
-          </Button>
+          <>
+            <Button
+              onClick={handleValidate}
+              disabled={validateMutation.isPending}
+            >
+              {validateMutation.isPending ? t('weeklyPlan.actions.validating') : t('weeklyPlan.actions.validate')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSwitchTemplate}
+            >
+              <CalendarDays className="h-4 w-4 mr-2" />
+              {t('weeklyPlan.actions.changePattern')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleAddMeal}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              {t('weeklyPlan.actions.addMeal')}
+            </Button>
+          </>
         ) : (
-          <Button onClick={handleNavigateToShopping} className="w-full md:w-auto">
+          <Button onClick={handleNavigateToShopping}>
             {t('weeklyPlan.actions.viewShoppingList')}
           </Button>
         )}
       </div>
-
       {/* Meal Grid */}
       <div className="space-y-4">
-        {mealsByDay.map(({ day, lunch, dinner }) => (
-          <Card key={day}>
-            <CardHeader>
-              <CardTitle>{getDayName(day)}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Lunch */}
-              {lunch && (
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary">{t('weeklyPlan.mealTypes.lunch')}</Badge>
-                        {lunch.recipe.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
-                        {lunch.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
-                      </div>
-                      <h3 className="font-semibold">{lunch.recipe.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t('weeklyPlan.minutes', { count: lunch.recipe.prepTime + lunch.recipe.cookTime })} · {t('weeklyPlan.portions', { count: lunch.portions })}
-                      </p>
-                      {lunch.recipe.category && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {lunch.recipe.category}
-                          </Badge>
-                          {lunch.recipe.cuisine && (
-                            <Badge variant="outline" className="text-xs">
-                              {lunch.recipe.cuisine}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleSwapClick(lunch)}
-                    >
-                      <RefreshCw className="h-3 w-3 mr-1" />
-                      {t('weeklyPlan.actions.swap')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handlePortionClick(lunch)}
-                    >
-                      {t('weeklyPlan.actions.adjustPortions')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleToggleLock(lunch)}
-                    >
-                      {lunch.locked ? (
-                        <Unlock className="h-4 w-4" />
-                      ) : (
-                        <Lock className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
+        {mealsByDay.map(({ day, breakfast, lunch, dinner, snack }) => {
+          const dayMeals = [breakfast, lunch, dinner, snack].filter(Boolean) as Meal[];
+          if (dayMeals.length === 0) return null;
 
-              {/* Dinner */}
-              {dinner && (
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary">{t('weeklyPlan.mealTypes.dinner')}</Badge>
-                        {dinner.recipe.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
-                        {dinner.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
-                      </div>
-                      <h3 className="font-semibold">{dinner.recipe.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {t('weeklyPlan.minutes', { count: dinner.recipe.prepTime + dinner.recipe.cookTime })} · {t('weeklyPlan.portions', { count: dinner.portions })}
-                      </p>
-                      {dinner.recipe.category && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {dinner.recipe.category}
-                          </Badge>
-                          {dinner.recipe.cuisine && (
-                            <Badge variant="outline" className="text-xs">
-                              {dinner.recipe.cuisine}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleSwapClick(dinner)}
-                    >
-                      <RefreshCw className="h-3 w-3 mr-1" />
-                      {t('weeklyPlan.actions.swap')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handlePortionClick(dinner)}
-                    >
-                      {t('weeklyPlan.actions.adjustPortions')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleToggleLock(dinner)}
-                    >
-                      {dinner.locked ? (
-                        <Unlock className="h-4 w-4" />
-                      ) : (
-                        <Lock className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+          return (
+            <Card key={day}>
+              <CardHeader>
+                <CardTitle>{getDayName(day)}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {breakfast && renderMealCard(breakfast)}
+                {lunch && renderMealCard(lunch)}
+                {dinner && renderMealCard(dinner)}
+                {snack && renderMealCard(snack)}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Swap Recipe Dialog */}
@@ -494,6 +562,146 @@ export default function WeeklyPlanPage() {
               disabled={adjustPortionsMutation.isPending}
             >
               {adjustPortionsMutation.isPending ? t('weeklyPlan.actions.adjusting') : t('weeklyPlan.dialogs.adjustPortions.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Switch Template Dialog */}
+      <Dialog open={switchTemplateDialogOpen} onOpenChange={setSwitchTemplateDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('weeklyPlan.dialogs.switchTemplate.title')}</DialogTitle>
+            <DialogDescription>
+              {t('weeklyPlan.dialogs.switchTemplate.description')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-destructive mb-4">
+              {t('weeklyPlan.dialogs.switchTemplate.warning')}
+            </p>
+            <div className="space-y-3">
+              {templates && templates.map((template: any) => (
+                <button
+                  key={template.id}
+                  onClick={() => setSelectedTemplate(template.id)}
+                  className={`relative flex items-start space-x-4 p-4 rounded-lg border-2 transition-all text-left w-full ${
+                    selectedTemplate === template.id
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex-shrink-0 mt-1">
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                      selectedTemplate === template.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      <CalendarDays className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-semibold text-base">
+                        {template.name}
+                      </h4>
+                      <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full">
+                        {t('mealTemplates.mealCount', { count: getMealCount(template) })}
+                      </span>
+                    </div>
+                    {template.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {template.description}
+                      </p>
+                    )}
+                  </div>
+                  {selectedTemplate === template.id && (
+                    <div className="absolute top-2 right-2 h-5 w-5 bg-primary rounded-full flex items-center justify-center">
+                      <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSwitchTemplateDialogOpen(false);
+                setSelectedTemplate(null);
+              }}
+              disabled={switchTemplateMutation.isPending}
+            >
+              {t('weeklyPlan.dialogs.switchTemplate.cancel')}
+            </Button>
+            <Button
+              onClick={handleConfirmSwitchTemplate}
+              disabled={!selectedTemplate || switchTemplateMutation.isPending}
+            >
+              {switchTemplateMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {t('weeklyPlan.actions.switchingTemplate')}
+                </>
+              ) : (
+                t('weeklyPlan.dialogs.switchTemplate.confirm')
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Meal Dialog */}
+      <Dialog open={addMealDialogOpen} onOpenChange={setAddMealDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('weeklyPlan.dialogs.addMealDialog.title')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {t('weeklyPlan.dialogs.addMealDialog.dayLabel')}
+              </label>
+              <select
+                value={newMealDay}
+                onChange={(e) => setNewMealDay(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                {DAYS.map(day => (
+                  <option key={day} value={day}>{getDayName(day)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {t('weeklyPlan.dialogs.addMealDialog.mealTypeLabel')}
+              </label>
+              <select
+                value={newMealType}
+                onChange={(e) => setNewMealType(e.target.value as 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK')}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="BREAKFAST">{t('weeklyPlan.mealTypes.breakfast')}</option>
+                <option value="LUNCH">{t('weeklyPlan.mealTypes.lunch')}</option>
+                <option value="DINNER">{t('weeklyPlan.mealTypes.dinner')}</option>
+                <option value="SNACK">{t('weeklyPlan.mealTypes.snack')}</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddMealDialogOpen(false)}>
+              {t('weeklyPlan.dialogs.addMealDialog.cancel')}
+            </Button>
+            <Button
+              onClick={handleConfirmAddMeal}
+              disabled={addMealMutation.isPending}
+            >
+              {addMealMutation.isPending ? t('common.loading') : t('weeklyPlan.dialogs.addMealDialog.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

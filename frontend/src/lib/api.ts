@@ -84,7 +84,29 @@ export const weeklyPlanAPI = {
     api.post(`/weekly-plans/${planId}/wishes`, data),
   validate: (planId: string) => api.post(`/weekly-plans/${planId}/validate`),
   adjustPortions: (planId: string, mealId: string, data: any) =>
-    api.post(`/weekly-plans/${planId}/meals/${mealId}/adjust-portions`, data)
+    api.post(`/weekly-plans/${planId}/meals/${mealId}/adjust-portions`, data),
+  // Meal schedule template operations
+  addMeal: (planId: string, data: any) =>
+    api.post(`/weekly-plans/${planId}/meals`, data),
+  removeMeal: (planId: string, mealId: string) =>
+    api.delete(`/weekly-plans/${planId}/meals/${mealId}`),
+  switchTemplate: (planId: string, data: any) =>
+    api.put(`/weekly-plans/${planId}/template`, data)
+};
+
+// Meal Schedule Template API
+export const mealTemplateAPI = {
+  getAll: (familyId: string) => api.get(`/families/${familyId}/meal-templates`),
+  getById: (familyId: string, templateId: string) =>
+    api.get(`/families/${familyId}/meal-templates/${templateId}`),
+  create: (familyId: string, data: any) =>
+    api.post(`/families/${familyId}/meal-templates`, data),
+  update: (familyId: string, templateId: string, data: any) =>
+    api.put(`/families/${familyId}/meal-templates/${templateId}`, data),
+  delete: (familyId: string, templateId: string) =>
+    api.delete(`/families/${familyId}/meal-templates/${templateId}`),
+  setDefault: (familyId: string, data: any) =>
+    api.put(`/families/${familyId}/default-template`, data)
 };
 
 // Shopping List API
@@ -106,4 +128,18 @@ export const schoolMenuAPI = {
     api.get(`/school-menus/family/${familyId}`, { params }),
   update: (id: string, data: any) => api.put(`/school-menus/${id}`, data),
   delete: (id: string) => api.delete(`/school-menus/${id}`)
+};
+
+// Invitation API
+export const invitationAPI = {
+  send: (familyId: string, data: { inviteeEmail: string; role?: string }) =>
+    api.post(`/families/${familyId}/invitations`, data),
+  getReceived: () => api.get('/families/invitations/received'),
+  getSent: (familyId: string) => api.get(`/families/${familyId}/invitations/sent`),
+  accept: (invitationId: string) =>
+    api.post(`/families/invitations/${invitationId}/accept`),
+  decline: (invitationId: string) =>
+    api.post(`/families/invitations/${invitationId}/decline`),
+  cancel: (familyId: string, invitationId: string) =>
+    api.delete(`/families/${familyId}/invitations/${invitationId}`)
 };

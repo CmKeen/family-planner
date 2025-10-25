@@ -12,7 +12,10 @@ import {
   addGuests,
   addVote,
   addWish,
-  validatePlan
+  validatePlan,
+  addMeal,
+  removeMeal,
+  switchTemplate
 } from '../controllers/weeklyPlan.controller.js';
 import { authenticate } from '../middleware/auth.js';
 import { intensiveOperationLimiter } from '../middleware/rateLimiter.js';
@@ -35,5 +38,10 @@ router.post('/:planId/meals/:mealId/guests', addGuests);
 router.post('/:planId/meals/:mealId/vote', addVote);
 router.post('/:planId/wishes', addWish);
 router.post('/:planId/validate', validatePlan);
+
+// Meal schedule template operations for draft plans
+router.post('/:planId/meals', addMeal); // Add single meal
+router.delete('/:planId/meals/:mealId', removeMeal); // Remove meal
+router.put('/:planId/template', switchTemplate); // Switch to different template
 
 export default router;

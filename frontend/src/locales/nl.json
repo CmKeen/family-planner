@@ -1,0 +1,406 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fout",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "back": "Terug",
+    "confirm": "Bevestigen",
+    "close": "Sluiten",
+    "search": "Zoeken",
+    "filter": "Filteren",
+    "reset": "Resetten",
+    "print": "Afdrukken"
+  },
+  "days": {
+    "monday": "Maandag",
+    "tuesday": "Dinsdag",
+    "wednesday": "Woensdag",
+    "thursday": "Donderdag",
+    "friday": "Vrijdag",
+    "saturday": "Zaterdag",
+    "sunday": "Zondag"
+  },
+  "weeklyPlan": {
+    "title": "Weekplan",
+    "week": "Week {{number}} - {{year}}",
+    "loading": "Plan laden...",
+    "stats": {
+      "totalTime": "Totale tijd",
+      "favorites": "Favorieten",
+      "novelties": "Nieuwe gerechten",
+      "meals": "Maaltijden"
+    },
+    "mealTypes": {
+      "breakfast": "Ontbijt",
+      "lunch": "Lunch",
+      "dinner": "Diner",
+      "snack": "Tussendoortje"
+    },
+    "actions": {
+      "validate": "Plan valideren",
+      "validating": "Valideren...",
+      "viewShoppingList": "Boodschappenlijst bekijken",
+      "swap": "Wisselen",
+      "swapping": "Wisselen...",
+      "adjustPortions": "Porties",
+      "adjusting": "Aanpassen...",
+      "lock": "Vergrendelen",
+      "unlock": "Ontgrendelen",
+      "changePattern": "Patroon wijzigen",
+      "addMeal": "Maaltijd toevoegen",
+      "removeMeal": "Verwijderen",
+      "switchingTemplate": "Sjabloon wisselen..."
+    },
+    "dialogs": {
+      "swapRecipe": {
+        "title": "Recept wisselen",
+        "cancel": "Annuleren",
+        "confirm": "Bevestigen"
+      },
+      "adjustPortions": {
+        "title": "Porties aanpassen",
+        "label": "Aantal porties",
+        "cancel": "Annuleren",
+        "confirm": "Bevestigen"
+      },
+      "selectTemplate": {
+        "title": "Kies maaltijdschema",
+        "description": "Selecteer welke maaltijden u deze week wilt plannen",
+        "cancel": "Annuleren",
+        "confirm": "Plan genereren"
+      },
+      "switchTemplate": {
+        "title": "Wijzig maaltijdpatroon",
+        "description": "Dit zal alle maaltijden opnieuw genereren met een ander schema",
+        "warning": "Dit zal alle huidige maaltijden vervangen. Doorgaan?",
+        "cancel": "Annuleren",
+        "confirm": "Patroon wijzigen"
+      },
+      "addMealDialog": {
+        "title": "Voeg een maaltijd toe",
+        "dayLabel": "Dag",
+        "mealTypeLabel": "Type maaltijd",
+        "cancel": "Annuleren",
+        "confirm": "Toevoegen"
+      },
+      "validatePlan": "Dit weekplan valideren? Dit zal de boodschappenlijst genereren.",
+      "confirmRemoveMeal": "Deze maaltijd uit het plan verwijderen?"
+    },
+    "status": {
+      "draft": "Concept",
+      "validated": "Gevalideerd",
+      "archived": "Gearchiveerd"
+    },
+    "portions": "{{count}} porties",
+    "minutes": "{{count}} min",
+    "hours": "{{count}}u"
+  },
+  "recipes": {
+    "title": "Receptencatalogus",
+    "searchPlaceholder": "Zoek een recept...",
+    "loading": "Recepten laden...",
+    "noResults": "Geen recepten gevonden",
+    "categories": {
+      "all": "Alle",
+      "meats": "Vlees",
+      "fish": "Vis",
+      "pasta": "Pasta",
+      "vegetables": "Groenten",
+      "soups": "Soepen",
+      "salads": "Salades"
+    },
+    "filters": {
+      "show": "Filters tonen",
+      "hide": "Filters verbergen",
+      "title": "Filters",
+      "maxTime": "Maximale tijd (minuten)",
+      "maxTimePlaceholder": "Bijv: 60",
+      "dietary": "Dieetwensen",
+      "vegetarian": "Vegetarisch",
+      "vegan": "Veganistisch",
+      "glutenFree": "Glutenvrij",
+      "kosher": "Koosjer",
+      "halal": "Halal",
+      "reset": "Filters resetten"
+    },
+    "card": {
+      "servings": "{{count}} porties",
+      "minutes": "{{count}} min",
+      "more": "+{{count}}"
+    },
+    "detail": {
+      "time": "Tijd",
+      "prepTime": "Voorbereiding: {{time}} min",
+      "cookTime": "Koken: {{time}} min",
+      "servings": "Porties",
+      "ingredients": "Ingrediënten",
+      "instructions": "Instructies"
+    },
+    "kosherCategory": "Koosjer {{category}}"
+  },
+  "shoppingList": {
+    "title": "Boodschappenlijst",
+    "loading": "Lijst laden...",
+    "generatedOn": "Gegenereerd op {{date}}",
+    "progress": {
+      "title": "Voortgang",
+      "items": "{{checked}} van {{total}} items"
+    },
+    "viewModes": {
+      "byCategory": "Per categorie",
+      "byRecipe": "Per recept"
+    },
+    "categories": {
+      "meats": "Vlees",
+      "fish": "Vis",
+      "fruitsVegetables": "Fruit en groenten",
+      "dairy": "Zuivelproducten",
+      "grocery": "Kruidenierswaren",
+      "condiments": "Kruiden",
+      "other": "Overige"
+    },
+    "forRecipes": "Voor: {{recipes}}",
+    "categoryLabel": "Categorie: {{category}}",
+    "articles": "{{count}} item",
+    "articles_plural": "{{count}} items",
+    "empty": "Geen items in de lijst",
+    "actions": {
+      "print": "Afdrukken",
+      "back": "Terug"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Family Planner",
+      "subtitle": "Welkom terug! Meld u aan bij uw account",
+      "email": "E-mail",
+      "emailPlaceholder": "uw@email.nl",
+      "password": "Wachtwoord",
+      "passwordPlaceholder": "••••••••",
+      "signIn": "Aanmelden",
+      "signingIn": "Aanmelden...",
+      "noAccount": "Nog geen account?",
+      "signUp": "Registreren",
+      "loginFailed": "Aanmelden mislukt. Controleer uw inloggegevens.",
+      "submit": "Aanmelden"
+    },
+    "register": {
+      "title": "Family Planner",
+      "subtitle": "Maak uw account aan",
+      "firstName": "Voornaam",
+      "firstNamePlaceholder": "Jan",
+      "lastName": "Achternaam",
+      "lastNamePlaceholder": "Jansen",
+      "name": "Naam",
+      "email": "E-mail",
+      "emailPlaceholder": "uw@email.nl",
+      "password": "Wachtwoord",
+      "passwordPlaceholder": "••••••••",
+      "confirmPassword": "Bevestig wachtwoord",
+      "confirmPasswordPlaceholder": "••••••••",
+      "createAccount": "Account aanmaken",
+      "creating": "Aanmaken...",
+      "hasAccount": "Al een account?",
+      "signIn": "Aanmelden",
+      "passwordMismatch": "Wachtwoorden komen niet overeen",
+      "registrationFailed": "Registratie mislukt. Probeer het opnieuw.",
+      "submit": "Registreren"
+    }
+  },
+  "dashboard": {
+    "title": "Family Planner",
+    "welcome": "Welkom, {{name}}",
+    "loading": "Laden...",
+    "yourPlans": "Uw plannen",
+    "quickActions": "Snelle acties",
+    "newPlan": "Nieuw plan",
+    "recipes": "Recepten",
+    "noPlans": {
+      "title": "Nog geen plannen",
+      "description": "Maak uw eerste wekelijkse maaltijdplan",
+      "button": "Plan maken"
+    },
+    "planCard": {
+      "week": "Week {{weekNumber}}, {{year}}",
+      "mealsPlanned": "{{count}} maaltijd gepland",
+      "mealsPlanned_plural": "{{count}} maaltijden gepland",
+      "viewPlan": "Plan bekijken",
+      "shopping": "Boodschappen"
+    },
+    "status": {
+      "VALIDATED": "Gevalideerd",
+      "DRAFT": "Concept",
+      "ARCHIVED": "Gearchiveerd"
+    }
+  },
+  "mealTemplates": {
+    "title": "Maaltijdschema's",
+    "description": "Beheer uw maaltijdplanningspatronen",
+    "selectTemplate": "Kies een schema",
+    "systemTemplates": "Standaard schema's",
+    "customTemplates": "Mijn schema's",
+    "createNew": "Schema maken",
+    "templates": {
+      "fullWeek": {
+        "name": "Volledige week",
+        "description": "Lunch en diner voor alle 7 dagen (14 maaltijden)"
+      },
+      "standardWorkWeek": {
+        "name": "Standaard werkweek",
+        "description": "Alleen diner op werkdagen, lunch en diner in het weekend (9 maaltijden)"
+      },
+      "vacationMode": {
+        "name": "Vakantiemodus",
+        "description": "Lunch en diner elke dag (14 maaltijden)"
+      }
+    },
+    "mealCount": "{{count}} maaltijd",
+    "mealCount_plural": "{{count}} maaltijden"
+  },
+  "onboarding": {
+    "title": "Welkom",
+    "steps": {
+      "family": "Gezin",
+      "dietary": "Dieetwensen",
+      "preferences": "Voorkeuren"
+    }
+  },
+  "language": {
+    "fr": "Français",
+    "en": "English",
+    "switch": "Taal wijzigen"
+  },
+  "family": {
+    "title": "Gezin",
+    "settings": "Gezinsinstellingen",
+    "members": "Leden",
+    "invitations": "Uitnodigingen",
+    "loading": "Laden...",
+    "membersList": {
+      "title": "Gezinsleden",
+      "name": "Naam",
+      "email": "E-mail",
+      "role": "Rol",
+      "status": "Status",
+      "actions": "Acties",
+      "linked": "Gekoppeld",
+      "notLinked": "Niet gekoppeld",
+      "noMembers": "Nog geen leden"
+    },
+    "roles": {
+      "ADMIN": "Beheerder",
+      "PARENT": "Ouder",
+      "MEMBER": "Lid",
+      "CHILD": "Kind"
+    },
+    "actions": {
+      "inviteMember": "Lid uitnodigen",
+      "addMember": "Gezinslid toevoegen",
+      "editMember": "Lid bewerken",
+      "removeMember": "Lid verwijderen",
+      "viewInvitations": "Uitnodigingen bekijken"
+    },
+    "inviteModal": {
+      "title": "Lid uitnodigen",
+      "description": "Stuur een uitnodiging om lid te worden van uw gezin",
+      "emailLabel": "E-mailadres",
+      "emailPlaceholder": "lid@voorbeeld.nl",
+      "roleLabel": "Rol",
+      "cancel": "Annuleren",
+      "send": "Uitnodiging verzenden",
+      "sending": "Verzenden...",
+      "success": "Uitnodiging succesvol verzonden!",
+      "error": "Kan uitnodiging niet verzenden"
+    },
+    "addMemberModal": {
+      "title": "Gezinslid toevoegen",
+      "description": "Voeg een niet-geregistreerd lid toe (zoals een kind)",
+      "nameLabel": "Naam",
+      "namePlaceholder": "Jan Jansen",
+      "ageLabel": "Leeftijd (optioneel)",
+      "agePlaceholder": "8",
+      "portionFactorLabel": "Portiegrootte",
+      "portionFactorDescription": "1.0 = volwassen portie, 0.7 = kinderportie",
+      "cancel": "Annuleren",
+      "add": "Lid toevoegen",
+      "adding": "Toevoegen...",
+      "success": "Lid succesvol toegevoegd!",
+      "error": "Kan lid niet toevoegen"
+    },
+    "removeConfirm": {
+      "title": "Lid verwijderen",
+      "message": "Weet u zeker dat u {{name}} uit het gezin wilt verwijderen?",
+      "cancel": "Annuleren",
+      "confirm": "Verwijderen"
+    }
+  },
+  "invitations": {
+    "title": "Uitnodigingen",
+    "received": "Ontvangen uitnodigingen",
+    "sent": "Verzonden uitnodigingen",
+    "loading": "Uitnodigingen laden...",
+    "noReceived": "Geen uitnodigingen in behandeling",
+    "noSent": "Geen uitnodigingen verzonden",
+    "receivedList": {
+      "from": "Van",
+      "family": "Gezin",
+      "role": "Rol",
+      "members": "{{count}} lid",
+      "members_plural": "{{count}} leden",
+      "expiresIn": "Verloopt over {{days}} dagen",
+      "actions": "Acties"
+    },
+    "sentList": {
+      "to": "Aan",
+      "role": "Rol",
+      "status": "Status",
+      "sentOn": "Verzonden op",
+      "actions": "Acties"
+    },
+    "status": {
+      "PENDING": "In behandeling",
+      "ACCEPTED": "Geaccepteerd",
+      "DECLINED": "Geweigerd",
+      "CANCELLED": "Geannuleerd"
+    },
+    "actions": {
+      "accept": "Accepteren",
+      "decline": "Weigeren",
+      "cancel": "Uitnodiging annuleren",
+      "accepting": "Accepteren...",
+      "declining": "Weigeren...",
+      "cancelling": "Annuleren..."
+    },
+    "confirmAccept": {
+      "title": "Uitnodiging accepteren",
+      "message": "Wilt u lid worden van {{familyName}}?",
+      "cancel": "Annuleren",
+      "confirm": "Accepteren"
+    },
+    "confirmDecline": {
+      "title": "Uitnodiging weigeren",
+      "message": "Weet u zeker dat u deze uitnodiging wilt weigeren?",
+      "cancel": "Annuleren",
+      "confirm": "Weigeren"
+    },
+    "confirmCancel": {
+      "title": "Uitnodiging annuleren",
+      "message": "Weet u zeker dat u deze uitnodiging aan {{email}} wilt annuleren?",
+      "cancel": "Annuleren",
+      "confirm": "Uitnodiging annuleren"
+    },
+    "notifications": {
+      "accepted": "U bent lid geworden van {{familyName}}!",
+      "declined": "Uitnodiging geweigerd",
+      "cancelled": "Uitnodiging geannuleerd",
+      "acceptError": "Kan uitnodiging niet accepteren",
+      "declineError": "Kan uitnodiging niet weigeren",
+      "cancelError": "Kan uitnodiging niet annuleren"
+    },
+    "badge": "{{count}} nieuw",
+    "badge_plural": "{{count}} nieuwe"
+  }
+}

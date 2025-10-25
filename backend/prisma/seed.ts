@@ -310,29 +310,84 @@ async function main() {
   const existingRecipesCount = await prisma.recipe.count();
 
   if (existingRecipesCount > 0) {
-    console.log('⏭️  Database already has', existingRecipesCount, 'recipes. Skipping seed to avoid duplicates.');
-    console.log('   To re-seed, clear the database first.');
-    return;
-  }
+    console.log('⏭️  Database already has', existingRecipesCount, 'recipes. Skipping recipe seed to avoid duplicates.');
+  } else {
+    for (const recipeData of recipes) {
+      const { ingredients, instructions, ...recipe } = recipeData;
 
-  for (const recipeData of recipes) {
-    const { ingredients, instructions, ...recipe } = recipeData;
-
-    await prisma.recipe.create({
-      data: {
-        ...recipe,
-        totalTime: recipe.prepTime + recipe.cookTime,
-        ingredients: {
-          create: ingredients
-        },
-        instructions: {
-          create: instructions
+      await prisma.recipe.create({
+        data: {
+          ...recipe,
+          totalTime: recipe.prepTime + recipe.cookTime,
+          ingredients: {
+            create: ingredients
+          },
+          instructions: {
+            create: instructions
+          }
         }
-      }
-    });
+      });
+    }
+
+    console.log('✅ Seeded', recipes.length, 'recipes');
   }
 
-  console.log('✅ Seeded', recipes.length, 'recipes');
+  // Seed meal schedule templates
+  const mealScheduleTemplates = [
+    {
+      name: 'Full Week',
+      description: 'Lunch and dinner for all 7 days (14 meals)',
+      isSystem: true,
+      schedule: [
+        { dayOfWeek: 'MONDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'TUESDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'WEDNESDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'THURSDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'FRIDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'SATURDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'SUNDAY', mealTypes: ['LUNCH', 'DINNER'] }
+      ]
+    },
+    {
+      name: 'Standard Work Week',
+      description: 'Dinner only on weekdays, lunch and dinner on weekends (9 meals)',
+      isSystem: true,
+      schedule: [
+        { dayOfWeek: 'MONDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'TUESDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'WEDNESDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'THURSDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'FRIDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'SATURDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'SUNDAY', mealTypes: ['LUNCH', 'DINNER'] }
+      ]
+    },
+    {
+      name: 'Vacation Mode',
+      description: 'Lunch and dinner every day (14 meals)',
+      isSystem: true,
+      schedule: [
+        { dayOfWeek: 'MONDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'TUESDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'WEDNESDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'THURSDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'FRIDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'SATURDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'SUNDAY', mealTypes: ['LUNCH', 'DINNER'] }
+      ]
+    }
+  ];
+
+  const existingTemplatesCount = await prisma.mealScheduleTemplate.count({ where: { isSystem: true } });
+
+  if (existingTemplatesCount === 0) {
+    for (const template of mealScheduleTemplates) {
+      await prisma.mealScheduleTemplate.create({ data: template });
+    }
+    console.log('✅ Seeded', mealScheduleTemplates.length, 'meal schedule templates');
+  } else {
+    console.log('⏭️  System meal schedule templates already exist. Skipping.');
+  }
 }
 
 main()

@@ -34,8 +34,10 @@
       "meals": "Repas"
     },
     "mealTypes": {
+      "breakfast": "Petit-déjeuner",
       "lunch": "Déjeuner",
-      "dinner": "Dîner"
+      "dinner": "Dîner",
+      "snack": "Collation"
     },
     "actions": {
       "validate": "Valider le plan",
@@ -46,7 +48,11 @@
       "adjustPortions": "Portions",
       "adjusting": "Ajustement...",
       "lock": "Verrouiller",
-      "unlock": "Déverrouiller"
+      "unlock": "Déverrouiller",
+      "changePattern": "Changer le modèle",
+      "addMeal": "Ajouter un repas",
+      "removeMeal": "Supprimer",
+      "switchingTemplate": "Changement de modèle..."
     },
     "dialogs": {
       "swapRecipe": {
@@ -60,7 +66,28 @@
         "cancel": "Annuler",
         "confirm": "Confirmer"
       },
-      "validatePlan": "Valider ce plan hebdomadaire ? Cela générera la liste de courses."
+      "selectTemplate": {
+        "title": "Choisir l'horaire des repas",
+        "description": "Sélectionnez les repas que vous souhaitez planifier cette semaine",
+        "cancel": "Annuler",
+        "confirm": "Générer le plan"
+      },
+      "switchTemplate": {
+        "title": "Changer le modèle de repas",
+        "description": "Cela régénérera tous les repas avec un horaire différent",
+        "warning": "Cela remplacera tous les repas actuels. Continuer ?",
+        "cancel": "Annuler",
+        "confirm": "Changer le modèle"
+      },
+      "addMealDialog": {
+        "title": "Ajouter un repas",
+        "dayLabel": "Jour",
+        "mealTypeLabel": "Type de repas",
+        "cancel": "Annuler",
+        "confirm": "Ajouter"
+      },
+      "validatePlan": "Valider ce plan hebdomadaire ? Cela générera la liste de courses.",
+      "confirmRemoveMeal": "Retirer ce repas du plan ?"
     },
     "status": {
       "draft": "Brouillon",
@@ -209,6 +236,30 @@
       "ARCHIVED": "Archivé"
     }
   },
+  "mealTemplates": {
+    "title": "Horaires des repas",
+    "description": "Gérez vos modèles de planification de repas",
+    "selectTemplate": "Choisir un horaire",
+    "systemTemplates": "Horaires par défaut",
+    "customTemplates": "Mes horaires",
+    "createNew": "Créer un horaire",
+    "templates": {
+      "fullWeek": {
+        "name": "Semaine complète",
+        "description": "Déjeuner et dîner pour les 7 jours (14 repas)"
+      },
+      "standardWorkWeek": {
+        "name": "Semaine de travail standard",
+        "description": "Dîner uniquement en semaine, déjeuner et dîner le week-end (9 repas)"
+      },
+      "vacationMode": {
+        "name": "Mode vacances",
+        "description": "Déjeuner et dîner tous les jours (14 repas)"
+      }
+    },
+    "mealCount": "{{count}} repas",
+    "mealCount_plural": "{{count}} repas"
+  },
   "onboarding": {
     "title": "Bienvenue",
     "steps": {
@@ -221,5 +272,135 @@
     "fr": "Français",
     "en": "English",
     "switch": "Changer de langue"
+  },
+  "family": {
+    "title": "Famille",
+    "settings": "Paramètres de la famille",
+    "members": "Membres",
+    "invitations": "Invitations",
+    "loading": "Chargement...",
+    "membersList": {
+      "title": "Membres de la famille",
+      "name": "Nom",
+      "email": "Email",
+      "role": "Rôle",
+      "status": "Statut",
+      "actions": "Actions",
+      "linked": "Lié",
+      "notLinked": "Non lié",
+      "noMembers": "Aucun membre pour le moment"
+    },
+    "roles": {
+      "ADMIN": "Administrateur",
+      "PARENT": "Parent",
+      "MEMBER": "Membre",
+      "CHILD": "Enfant"
+    },
+    "actions": {
+      "inviteMember": "Inviter un membre",
+      "addMember": "Ajouter un membre",
+      "editMember": "Modifier le membre",
+      "removeMember": "Retirer le membre",
+      "viewInvitations": "Voir les invitations"
+    },
+    "inviteModal": {
+      "title": "Inviter un membre",
+      "description": "Envoyer une invitation pour rejoindre votre famille",
+      "emailLabel": "Adresse email",
+      "emailPlaceholder": "membre@exemple.com",
+      "roleLabel": "Rôle",
+      "cancel": "Annuler",
+      "send": "Envoyer l'invitation",
+      "sending": "Envoi...",
+      "success": "Invitation envoyée avec succès !",
+      "error": "Échec de l'envoi de l'invitation"
+    },
+    "addMemberModal": {
+      "title": "Ajouter un membre",
+      "description": "Ajouter un membre non enregistré (comme un enfant)",
+      "nameLabel": "Nom",
+      "namePlaceholder": "Jean Dupont",
+      "ageLabel": "Âge (optionnel)",
+      "agePlaceholder": "8",
+      "portionFactorLabel": "Taille des portions",
+      "portionFactorDescription": "1.0 = portion adulte, 0.7 = portion enfant",
+      "cancel": "Annuler",
+      "add": "Ajouter le membre",
+      "adding": "Ajout...",
+      "success": "Membre ajouté avec succès !",
+      "error": "Échec de l'ajout du membre"
+    },
+    "removeConfirm": {
+      "title": "Retirer le membre",
+      "message": "Êtes-vous sûr de vouloir retirer {{name}} de la famille ?",
+      "cancel": "Annuler",
+      "confirm": "Retirer"
+    }
+  },
+  "invitations": {
+    "title": "Invitations",
+    "received": "Invitations reçues",
+    "sent": "Invitations envoyées",
+    "loading": "Chargement des invitations...",
+    "noReceived": "Aucune invitation en attente",
+    "noSent": "Aucune invitation envoyée",
+    "receivedList": {
+      "from": "De",
+      "family": "Famille",
+      "role": "Rôle",
+      "members": "{{count}} membre",
+      "members_plural": "{{count}} membres",
+      "expiresIn": "Expire dans {{days}} jours",
+      "actions": "Actions"
+    },
+    "sentList": {
+      "to": "À",
+      "role": "Rôle",
+      "status": "Statut",
+      "sentOn": "Envoyée le",
+      "actions": "Actions"
+    },
+    "status": {
+      "PENDING": "En attente",
+      "ACCEPTED": "Acceptée",
+      "DECLINED": "Refusée",
+      "CANCELLED": "Annulée"
+    },
+    "actions": {
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "cancel": "Annuler l'invitation",
+      "accepting": "Acceptation...",
+      "declining": "Refus...",
+      "cancelling": "Annulation..."
+    },
+    "confirmAccept": {
+      "title": "Accepter l'invitation",
+      "message": "Voulez-vous rejoindre {{familyName}} ?",
+      "cancel": "Annuler",
+      "confirm": "Accepter"
+    },
+    "confirmDecline": {
+      "title": "Refuser l'invitation",
+      "message": "Êtes-vous sûr de vouloir refuser cette invitation ?",
+      "cancel": "Annuler",
+      "confirm": "Refuser"
+    },
+    "confirmCancel": {
+      "title": "Annuler l'invitation",
+      "message": "Êtes-vous sûr de vouloir annuler cette invitation pour {{email}} ?",
+      "cancel": "Annuler",
+      "confirm": "Annuler l'invitation"
+    },
+    "notifications": {
+      "accepted": "Vous avez rejoint {{familyName}} !",
+      "declined": "Invitation refusée",
+      "cancelled": "Invitation annulée",
+      "acceptError": "Échec de l'acceptation de l'invitation",
+      "declineError": "Échec du refus de l'invitation",
+      "cancelError": "Échec de l'annulation de l'invitation"
+    },
+    "badge": "{{count}} nouvelle",
+    "badge_plural": "{{count}} nouvelles"
   }
 }
