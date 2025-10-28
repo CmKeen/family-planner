@@ -91,7 +91,10 @@ export const weeklyPlanAPI = {
   removeMeal: (planId: string, mealId: string) =>
     api.delete(`/weekly-plans/${planId}/meals/${mealId}`),
   switchTemplate: (planId: string, data: any) =>
-    api.put(`/weekly-plans/${planId}/template`, data)
+    api.put(`/weekly-plans/${planId}/template`, data),
+  // Component-based meal operations
+  saveAsRecipe: (planId: string, mealId: string, data: any) =>
+    api.post(`/weekly-plans/${planId}/meals/${mealId}/save-as-recipe`, data)
 };
 
 // Meal Schedule Template API

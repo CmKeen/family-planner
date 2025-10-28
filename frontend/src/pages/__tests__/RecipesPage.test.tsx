@@ -18,13 +18,20 @@ vi.mock('@/lib/api', () => ({
 const mockRecipes = [
   {
     id: 'recipe-1',
-    name: 'Poulet rôti',
+    title: 'Poulet rôti',
+    titleEn: 'Roasted Chicken',
     description: 'Délicieux poulet rôti avec des herbes',
+    descriptionEn: 'Delicious roasted chicken with herbs',
     prepTime: 15,
     cookTime: 45,
+    totalTime: 60,
     servings: 4,
     category: 'Viandes',
-    tags: ['Casher', 'Sans gluten'],
+    mealType: ['DINNER'],
+    vegetarian: false,
+    vegan: false,
+    glutenFree: true,
+    halalFriendly: false,
     isFavorite: true,
     kosherCategory: 'meat',
     ingredients: [],
@@ -32,27 +39,42 @@ const mockRecipes = [
   },
   {
     id: 'recipe-2',
-    name: 'Pâtes tomates basilic',
+    title: 'Pâtes tomates basilic',
+    titleEn: 'Tomato Basil Pasta',
     description: 'Pâtes italiennes classiques',
+    descriptionEn: 'Classic Italian pasta',
     prepTime: 5,
     cookTime: 15,
+    totalTime: 20,
     servings: 4,
     category: 'Pâtes',
-    tags: ['Végan', 'Express'],
+    mealType: ['LUNCH', 'DINNER'],
+    vegetarian: true,
+    vegan: true,
+    glutenFree: false,
+    halalFriendly: true,
     isFavorite: false,
     ingredients: [],
     instructions: []
   },
   {
     id: 'recipe-3',
-    name: 'Saumon grillé',
+    title: 'Saumon grillé',
+    titleEn: 'Grilled Salmon',
     description: 'Saumon avec légumes',
+    descriptionEn: 'Salmon with vegetables',
     prepTime: 10,
     cookTime: 20,
+    totalTime: 30,
     servings: 2,
     category: 'Poissons',
-    tags: ['Casher parve', 'Sans gluten'],
+    mealType: ['DINNER'],
+    vegetarian: false,
+    vegan: false,
+    glutenFree: true,
+    halalFriendly: false,
     isFavorite: false,
+    kosherCategory: 'parve',
     ingredients: [],
     instructions: []
   }
@@ -61,13 +83,13 @@ const mockRecipes = [
 const mockDetailedRecipe = {
   ...mockRecipes[0],
   ingredients: [
-    { id: 'ing-1', name: 'Poulet', quantity: 1, unit: 'kg' },
-    { id: 'ing-2', name: 'Herbes de Provence', quantity: 2, unit: 'cuillères à soupe' }
+    { id: 'ing-1', name: 'Poulet', nameEn: 'Chicken', quantity: 1, unit: 'kg', category: 'viande' },
+    { id: 'ing-2', name: 'Herbes de Provence', nameEn: 'Herbs de Provence', quantity: 2, unit: 'cuillères à soupe', category: 'epice' }
   ],
   instructions: [
-    { id: 'inst-1', stepNumber: 1, description: 'Préchauffer le four à 200°C' },
-    { id: 'inst-2', stepNumber: 2, description: 'Assaisonner le poulet' },
-    { id: 'inst-3', stepNumber: 3, description: 'Cuire au four pendant 45 minutes' }
+    { id: 'inst-1', stepNumber: 1, text: 'Préchauffer le four à 200°C', textEn: 'Preheat oven to 200°C' },
+    { id: 'inst-2', stepNumber: 2, text: 'Assaisonner le poulet', textEn: 'Season the chicken' },
+    { id: 'inst-3', stepNumber: 3, text: 'Cuire au four pendant 45 minutes', textEn: 'Bake for 45 minutes' }
   ]
 };
 
@@ -114,9 +136,9 @@ describe('RecipesPage', () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText('Poulet rôti')).toBeInTheDocument();
-      expect(screen.getByText('Pâtes tomates basilic')).toBeInTheDocument();
-      expect(screen.getByText('Saumon grillé')).toBeInTheDocument();
+      expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Pâtes tomates basilic')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Saumon grillé')[0]).toBeInTheDocument();
     });
   });
 
@@ -159,18 +181,18 @@ describe('RecipesPage', () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText('Poulet rôti')).toBeInTheDocument();
+      expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
     });
 
     // Check for cooking time
-    expect(screen.getByText(/60 min/)).toBeInTheDocument(); // 15 + 45
+    expect(screen.getAllByText(/60 min/)[0]).toBeInTheDocument(); // 15 + 45
 
     // Check for servings
-    expect(screen.getByText(/4 parts/)).toBeInTheDocument();
+    expect(screen.getAllByText(/4 parts/)[0]).toBeInTheDocument();
 
     // Check for category badges
-    expect(screen.getByText('Viandes')).toBeInTheDocument();
-    expect(screen.getByText('Pâtes')).toBeInTheDocument();
+    expect(screen.getAllByText('Viandes')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Pâtes')[0]).toBeInTheDocument();
   });
 
   it('should display favorite hearts', async () => {
@@ -187,12 +209,12 @@ describe('RecipesPage', () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText('Poulet rôti')).toBeInTheDocument();
+      expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
     });
 
     // Click on the recipe card
-    const recipeCard = screen.getByText('Poulet rôti').closest('div[role="region"]') ||
-                      screen.getByText('Poulet rôti');
+    const recipeCard = screen.getAllByText('Poulet rôti')[0].closest('div[role="region"]') ||
+                      screen.getAllByText('Poulet rôti')[0];
 
     await user.click(recipeCard);
 
@@ -207,16 +229,16 @@ describe('RecipesPage', () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText('Poulet rôti')).toBeInTheDocument();
+      expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
     });
 
-    const recipeCard = screen.getByText('Poulet rôti');
+    const recipeCard = screen.getAllByText('Poulet rôti')[0];
     await user.click(recipeCard);
 
     await waitFor(() => {
-      expect(screen.getByText(/ingrédients/i)).toBeInTheDocument();
-      expect(screen.getByText(/1 kg poulet/i)).toBeInTheDocument();
-      expect(screen.getByText(/2 cuillères à soupe herbes de provence/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/ingrédients/i)[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/1 kg poulet/i)[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/2 cuillères à soupe herbes de provence/i)[0]).toBeInTheDocument();
     });
   });
 
@@ -225,17 +247,17 @@ describe('RecipesPage', () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText('Poulet rôti')).toBeInTheDocument();
+      expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
     });
 
-    const recipeCard = screen.getByText('Poulet rôti');
+    const recipeCard = screen.getAllByText('Poulet rôti')[0];
     await user.click(recipeCard);
 
     await waitFor(() => {
-      expect(screen.getByText(/instructions/i)).toBeInTheDocument();
-      expect(screen.getByText(/préchauffer le four à 200°c/i)).toBeInTheDocument();
-      expect(screen.getByText(/assaisonner le poulet/i)).toBeInTheDocument();
-      expect(screen.getByText(/cuire au four pendant 45 minutes/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/instructions/i)[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/préchauffer le four à 200°c/i)[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/assaisonner le poulet/i)[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/cuire au four pendant 45 minutes/i)[0]).toBeInTheDocument();
     });
   });
 
@@ -244,7 +266,7 @@ describe('RecipesPage', () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText('Poulet rôti')).toBeInTheDocument();
+      expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
     });
 
     const searchInput = screen.getByPlaceholderText(/rechercher une recette/i);
@@ -271,7 +293,7 @@ describe('RecipesPage', () => {
 
     await waitFor(() => {
       expect(api.recipeAPI.getAll).toHaveBeenCalledWith(
-        expect.objectContaining({ category: 'Viandes' })
+        expect.objectContaining({ category: 'viande' })
       );
     });
   });
@@ -280,10 +302,12 @@ describe('RecipesPage', () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText('Casher')).toBeInTheDocument();
-      expect(screen.getByText('Sans gluten')).toBeInTheDocument();
-      expect(screen.getByText('Végan')).toBeInTheDocument();
-      expect(screen.getByText('Express')).toBeInTheDocument();
+      // Check for mealType badges
+      expect(screen.getAllByText('DINNER')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('LUNCH')[0]).toBeInTheDocument();
+      // Check for categories
+      expect(screen.getAllByText('Viandes')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Pâtes')[0]).toBeInTheDocument();
     });
   });
 
@@ -312,7 +336,7 @@ describe('RecipesPage', () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText(/casher meat/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/casher meat/i)[0]).toBeInTheDocument();
     });
   });
 

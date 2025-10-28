@@ -20,15 +20,34 @@ interface Recipe {
   cuisine?: string;
   isFavorite?: boolean;
   isNovelty?: boolean;
+  isComponentBased?: boolean;
+}
+
+interface FoodComponent {
+  id: string;
+  name: string;
+  nameEn?: string;
+  category: string;
+  unit: string;
+}
+
+interface MealComponent {
+  id: string;
+  componentId: string;
+  quantity: number;
+  unit: string;
+  role: string;
+  component: FoodComponent;
 }
 
 interface Meal {
   id: string;
   dayOfWeek: string;
   mealType: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
-  recipe: Recipe;
+  recipe: Recipe | null;
   portions: number;
   locked: boolean;
+  mealComponents?: MealComponent[];
 }
 
 interface WeeklyPlan {
@@ -58,9 +77,12 @@ export default function WeeklyPlanPage() {
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
   const [switchTemplateDialogOpen, setSwitchTemplateDialogOpen] = useState(false);
   const [addMealDialogOpen, setAddMealDialogOpen] = useState(false);
+  const [saveAsRecipeDialogOpen, setSaveAsRecipeDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [newMealDay, setNewMealDay] = useState('MONDAY');
   const [newMealType, setNewMealType] = useState<'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'>('DINNER');
+  const [recipeName, setRecipeName] = useState('');
+  const [recipeNameEn, setRecipeNameEn] = useState('');
 
   // Day names mapping
   const getDayName = (day: string): string => {
@@ -176,6 +198,19 @@ export default function WeeklyPlanPage() {
     }
   });
 
+  // Save component meal as recipe mutation
+  const saveAsRecipeMutation = useMutation({
+    mutationFn: ({ mealId, recipeName, recipeNameEn }: { mealId: string; recipeName?: string; recipeNameEn?: string }) =>
+      weeklyPlanAPI.saveAsRecipe(planId!, mealId, { recipeName, recipeNameEn }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
+      setSaveAsRecipeDialogOpen(false);
+      setSelectedMeal(null);
+      setRecipeName('');
+      setRecipeNameEn('');
+    }
+  });
+
   const handleSwapClick = (meal: Meal) => {
     setSelectedMeal(meal);
     setSwapDialogOpen(true);
@@ -237,11 +272,48 @@ export default function WeeklyPlanPage() {
     }
   };
 
+  const handleSaveAsRecipe = (meal: Meal) => {
+    setSelectedMeal(meal);
+    // Generate default names from components
+    if (meal.mealComponents && meal.mealComponents.length > 0) {
+      const names = meal.mealComponents.map(mc => mc.component.name);
+      const namesEn = meal.mealComponents.map(mc => mc.component.nameEn || mc.component.name);
+      setRecipeName(names.join(' avec '));
+      setRecipeNameEn(namesEn.join(' with '));
+    }
+    setSaveAsRecipeDialogOpen(true);
+  };
+
+  const handleConfirmSaveAsRecipe = () => {
+    if (selectedMeal) {
+      saveAsRecipeMutation.mutate({
+        mealId: selectedMeal.id,
+        recipeName: recipeName || undefined,
+        recipeNameEn: recipeNameEn || undefined
+      });
+    }
+  };
+
   const getMealCount = (template: any) => {
     if (!template.schedule) return 0;
     return template.schedule.reduce((count: number, day: any) => {
       return count + (day.mealTypes?.length || 0);
     }, 0);
+  };
+
+  // Get component icon/emoji based on category
+  const getComponentIcon = (category: string): string => {
+    const icons: Record<string, string> = {
+      PROTEIN: '🍗',
+      VEGETABLE: '🥦',
+      CARB: '🍚',
+      FRUIT: '🍎',
+      SAUCE: '🥫',
+      CONDIMENT: '🧂',
+      SPICE: '🌶️',
+      OTHER: '🍽️'
+    };
+    return icons[category] || '🍽️';
   };
 
   if (isPlanLoading || !planData) {
@@ -257,11 +329,11 @@ export default function WeeklyPlanPage() {
 
   // Calculate stats
   const totalTime = planData.meals.reduce(
-    (sum, meal) => sum + meal.recipe.prepTime + meal.recipe.cookTime,
+    (sum, meal) => sum + (meal.recipe ? meal.recipe.prepTime + meal.recipe.cookTime : 0),
     0
   );
-  const favoriteCount = planData.meals.filter(m => m.recipe.isFavorite).length;
-  const noveltyCount = planData.meals.filter(m => m.recipe.isNovelty).length;
+  const favoriteCount = planData.meals.filter(m => m.recipe?.isFavorite).length;
+  const noveltyCount = planData.meals.filter(m => m.recipe?.isNovelty).length;
 
   // Organize meals by day
   const mealsByDay = DAYS.map(day => ({
@@ -289,75 +361,194 @@ export default function WeeklyPlanPage() {
     return mealTypeMap[mealType] || mealType;
   };
 
-  const renderMealCard = (meal: Meal) => (
-    <div key={meal.id} className="border rounded-lg p-4">
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
-            {meal.recipe.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
-            {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
-          </div>
-          <h3 className="font-semibold">{meal.recipe.title}</h3>
-          <p className="text-sm text-muted-foreground">
-            {t('weeklyPlan.minutes', { count: meal.recipe.prepTime + meal.recipe.cookTime })} · {t('weeklyPlan.portions', { count: meal.portions })}
-          </p>
-          {meal.recipe.category && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              <Badge variant="outline" className="text-xs">
-                {meal.recipe.category}
-              </Badge>
-              {meal.recipe.cuisine && (
-                <Badge variant="outline" className="text-xs">
-                  {meal.recipe.cuisine}
+  const renderMealCard = (meal: Meal) => {
+    // Component-based meal (has components but no recipe)
+    if (!meal.recipe && meal.mealComponents && meal.mealComponents.length > 0) {
+      const componentNames = meal.mealComponents
+        .map(mc => `${getComponentIcon(mc.component.category)} ${mc.component.name}`)
+        .join(' + ');
+
+      return (
+        <div key={meal.id} className="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-indigo-50">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
+                <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-300">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  {t('mealBuilder.quickMeal')}
                 </Badge>
-              )}
+                {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
+              </div>
+              <h3 className="font-semibold text-lg">{componentNames}</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t('weeklyPlan.portions', { count: meal.portions })} · {meal.mealComponents.length} {t('mealBuilder.preview.components', { count: meal.mealComponents.length })}
+              </p>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {meal.mealComponents.map(mc => (
+                  <Badge key={mc.id} variant="outline" className="text-xs">
+                    {mc.quantity}{mc.unit} {mc.component.name}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          )}
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => handleSaveAsRecipe(meal)}
+              disabled={planData.status !== 'DRAFT'}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Heart className="h-3 w-3 mr-1" />
+              {t('mealBuilder.saveAsRecipe')}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handlePortionClick(meal)}
+            >
+              {t('weeklyPlan.actions.adjustPortions')}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleToggleLock(meal)}
+              disabled={planData.status !== 'DRAFT'}
+            >
+              {meal.locked ? (
+                <Unlock className="h-4 w-4" />
+              ) : (
+                <Lock className="h-4 w-4" />
+              )}
+            </Button>
+            {planData.status === 'DRAFT' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleRemoveMeal(meal.id)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="flex flex-wrap gap-2 mt-3">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => handleSwapClick(meal)}
-          disabled={planData.status !== 'DRAFT'}
-        >
-          <RefreshCw className="h-3 w-3 mr-1" />
-          {t('weeklyPlan.actions.swap')}
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => handlePortionClick(meal)}
-        >
-          {t('weeklyPlan.actions.adjustPortions')}
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => handleToggleLock(meal)}
-          disabled={planData.status !== 'DRAFT'}
-        >
-          {meal.locked ? (
-            <Unlock className="h-4 w-4" />
-          ) : (
-            <Lock className="h-4 w-4" />
-          )}
-        </Button>
-        {planData.status === 'DRAFT' && (
+      );
+    }
+
+    // No recipe and no components
+    if (!meal.recipe) {
+      return (
+        <div key={meal.id} className="border rounded-lg p-4">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
+                {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
+              </div>
+              <h3 className="font-semibold text-muted-foreground">{t('weeklyPlan.noRecipe')}</h3>
+              <p className="text-sm text-muted-foreground">
+                {t('weeklyPlan.portions', { count: meal.portions })}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleSwapClick(meal)}
+              disabled={planData.status !== 'DRAFT'}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              {t('weeklyPlan.actions.selectRecipe')}
+            </Button>
+            {planData.status === 'DRAFT' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleRemoveMeal(meal.id)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={meal.id} className="border rounded-lg p-4">
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
+              {meal.recipe.isFavorite && <Heart className="h-4 w-4 fill-red-500 text-red-500" />}
+              {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
+            </div>
+            <h3 className="font-semibold">{meal.recipe.title}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t('weeklyPlan.minutes', { count: meal.recipe.prepTime + meal.recipe.cookTime })} · {t('weeklyPlan.portions', { count: meal.portions })}
+            </p>
+            {meal.recipe.category && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                <Badge variant="outline" className="text-xs">
+                  {meal.recipe.category}
+                </Badge>
+                {meal.recipe.cuisine && (
+                  <Badge variant="outline" className="text-xs">
+                    {meal.recipe.cuisine}
+                  </Badge>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleSwapClick(meal)}
+            disabled={planData.status !== 'DRAFT'}
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            {t('weeklyPlan.actions.swap')}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handlePortionClick(meal)}
+          >
+            {t('weeklyPlan.actions.adjustPortions')}
+          </Button>
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => handleRemoveMeal(meal.id)}
-            className="text-destructive hover:text-destructive"
+            onClick={() => handleToggleLock(meal)}
+            disabled={planData.status !== 'DRAFT'}
           >
-            <Trash2 className="h-4 w-4" />
+            {meal.locked ? (
+              <Unlock className="h-4 w-4" />
+            ) : (
+              <Lock className="h-4 w-4" />
+            )}
           </Button>
-        )}
+          {planData.status === 'DRAFT' && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleRemoveMeal(meal.id)}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="container mx-auto p-4 pb-20">
@@ -473,7 +664,6 @@ export default function WeeklyPlanPage() {
       <div className="space-y-4">
         {mealsByDay.map(({ day, breakfast, lunch, dinner, snack }) => {
           const dayMeals = [breakfast, lunch, dinner, snack].filter(Boolean) as Meal[];
-          if (dayMeals.length === 0) return null;
 
           return (
             <Card key={day}>
@@ -485,6 +675,38 @@ export default function WeeklyPlanPage() {
                 {lunch && renderMealCard(lunch)}
                 {dinner && renderMealCard(dinner)}
                 {snack && renderMealCard(snack)}
+
+                {/* Empty state or Add Meal button */}
+                {dayMeals.length === 0 && planData.status === 'DRAFT' && (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground text-sm mb-4">{t('weeklyPlan.noMeals')}</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setNewMealDay(day);
+                        setAddMealDialogOpen(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {t('weeklyPlan.actions.addMealForDay')}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Day-specific Add Meal button (when there are existing meals) */}
+                {dayMeals.length > 0 && planData.status === 'DRAFT' && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      setNewMealDay(day);
+                      setAddMealDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('weeklyPlan.actions.addMealForDay')}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           );
@@ -702,6 +924,55 @@ export default function WeeklyPlanPage() {
               disabled={addMealMutation.isPending}
             >
               {addMealMutation.isPending ? t('common.loading') : t('weeklyPlan.dialogs.addMealDialog.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save as Recipe Dialog */}
+      <Dialog open={saveAsRecipeDialogOpen} onOpenChange={setSaveAsRecipeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('mealBuilder.saveRecipeModal.title')}</DialogTitle>
+            <DialogDescription>
+              {t('mealBuilder.saveRecipeModal.description')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {t('mealBuilder.saveRecipeModal.nameLabel')} (FR)
+              </label>
+              <input
+                type="text"
+                value={recipeName}
+                onChange={(e) => setRecipeName(e.target.value)}
+                placeholder={t('mealBuilder.saveRecipeModal.namePlaceholder')}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {t('mealBuilder.saveRecipeModal.nameLabel')} (EN)
+              </label>
+              <input
+                type="text"
+                value={recipeNameEn}
+                onChange={(e) => setRecipeNameEn(e.target.value)}
+                placeholder={t('mealBuilder.saveRecipeModal.namePlaceholder')}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveAsRecipeDialogOpen(false)}>
+              {t('mealBuilder.saveRecipeModal.cancel')}
+            </Button>
+            <Button
+              onClick={handleConfirmSaveAsRecipe}
+              disabled={saveAsRecipeMutation.isPending}
+            >
+              {saveAsRecipeMutation.isPending ? t('common.loading') : t('mealBuilder.saveRecipeModal.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

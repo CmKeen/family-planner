@@ -27,6 +27,8 @@
     "title": "Weekplan",
     "week": "Week {{number}} - {{year}}",
     "loading": "Plan laden...",
+    "noMeals": "Geen maaltijden gepland voor deze dag",
+    "noRecipe": "Geen recept geselecteerd",
     "stats": {
       "totalTime": "Totale tijd",
       "favorites": "Favorieten",
@@ -45,12 +47,14 @@
       "viewShoppingList": "Boodschappenlijst bekijken",
       "swap": "Wisselen",
       "swapping": "Wisselen...",
+      "selectRecipe": "Recept selecteren",
       "adjustPortions": "Porties",
       "adjusting": "Aanpassen...",
       "lock": "Vergrendelen",
       "unlock": "Ontgrendelen",
       "changePattern": "Patroon wijzigen",
       "addMeal": "Maaltijd toevoegen",
+      "addMealForDay": "Maaltijd toevoegen",
       "removeMeal": "Verwijderen",
       "switchingTemplate": "Sjabloon wisselen..."
     },
@@ -172,6 +176,125 @@
       "back": "Terug"
     }
   },
+  "components": {
+    "title": "Componentenbibliotheek",
+    "loading": "Componenten laden...",
+    "categories": {
+      "all": "Alle",
+      "PROTEIN": "Eiwitten",
+      "VEGETABLE": "Groenten",
+      "CARB": "Koolhydraten",
+      "FRUIT": "Fruit",
+      "SAUCE": "Sauzen",
+      "CONDIMENT": "Kruiden",
+      "SPICE": "Specerijen",
+      "OTHER": "Overige"
+    },
+    "roles": {
+      "MAIN_PROTEIN": "Hoofd eiwit",
+      "SECONDARY_PROTEIN": "Secundair eiwit",
+      "PRIMARY_VEGETABLE": "Primaire groente",
+      "SECONDARY_VEGETABLE": "Secundaire groente",
+      "BASE_CARB": "Basis koolhydraat",
+      "SIDE_CARB": "Koolhydraat bijgerecht",
+      "SAUCE": "Saus",
+      "GARNISH": "Garnering",
+      "OTHER": "Overige"
+    },
+    "actions": {
+      "add": "Component toevoegen",
+      "addCustom": "Aangepast component toevoegen",
+      "edit": "Bewerken",
+      "delete": "Verwijderen",
+      "swap": "Wisselen",
+      "remove": "Verwijderen",
+      "save": "Opslaan",
+      "cancel": "Annuleren",
+      "selectComponent": "Component selecteren"
+    },
+    "filters": {
+      "category": "Categorie",
+      "dietary": "Dieet",
+      "vegetarian": "Vegetarisch",
+      "vegan": "Veganistisch",
+      "glutenFree": "Glutenvrij",
+      "lactoseFree": "Lactosevrij",
+      "kosher": "Koosjer",
+      "halal": "Halal"
+    },
+    "addCustomModal": {
+      "title": "Aangepast component toevoegen",
+      "nameLabel": "Naam (Frans)",
+      "namePlaceholder": "bijv., Mijn speciale saus",
+      "nameEnLabel": "Naam (Engels)",
+      "nameEnPlaceholder": "bijv., My special sauce",
+      "nameNlLabel": "Naam (Nederlands)",
+      "nameNlPlaceholder": "bijv., Mijn speciale saus",
+      "categoryLabel": "Categorie",
+      "quantityLabel": "Standaard hoeveelheid per persoon",
+      "quantityPlaceholder": "150",
+      "unitLabel": "Eenheid",
+      "unitPlaceholder": "g, ml, stuk, enz.",
+      "shoppingCategoryLabel": "Boodschappencategorie",
+      "dietaryLabel": "Diëtaire eigenschappen",
+      "success": "Component succesvol aangemaakt!",
+      "error": "Kan component niet aanmaken"
+    },
+    "deleteConfirm": {
+      "title": "Component verwijderen",
+      "message": "Weet u zeker dat u dit component wilt verwijderen?",
+      "cancel": "Annuleren",
+      "confirm": "Verwijderen"
+    },
+    "perPerson": "per persoon",
+    "systemComponent": "Systeemcomponent",
+    "customComponent": "Aangepast component",
+    "noComponents": "Geen componenten gevonden"
+  },
+  "mealBuilder": {
+    "title": "Bouw uw maaltijd",
+    "description": "Maak een maaltijd door componenten te selecteren",
+    "selectProtein": "Selecteer een eiwit",
+    "selectVegetables": "Selecteer groenten",
+    "selectCarbs": "Selecteer koolhydraten",
+    "selectSauces": "Selecteer sauzen (optioneel)",
+    "addToMeal": "Toevoegen aan maaltijd",
+    "saveAsRecipe": "Opslaan als recept",
+    "cancel": "Annuleren",
+    "portions": "Porties: {{count}}",
+    "adjustQuantity": "Hoeveelheid aanpassen",
+    "quickMeal": "Snelle maaltijd",
+    "buildFromScratch": "Vanaf nul opbouwen",
+    "viewComponents": "Componentenbibliotheek bekijken",
+    "totalEstimatedTime": "Geschatte tijd: {{minutes}} min",
+    "preview": {
+      "title": "Maaltijdvoorbeeld",
+      "components_one": "{{count}} component",
+      "components_other": "{{count}} componenten",
+      "estimatedCost": "Geschatte kosten: {{price}}",
+      "nutrition": "Voeding per portie"
+    },
+    "swapComponent": {
+      "title": "{{component}} wisselen",
+      "description": "Kies een vervanging",
+      "similarOptions": "Vergelijkbare opties",
+      "allOptions": "Alle {{category}}",
+      "cancel": "Annuleren",
+      "confirm": "Wisselen"
+    },
+    "saveRecipeModal": {
+      "title": "Opslaan als recept",
+      "description": "Sla deze componentcombinatie op als een herbruikbaar recept",
+      "nameLabel": "Receptnaam",
+      "namePlaceholder": "bijv., Gegrilde kip met rijst",
+      "descriptionLabel": "Beschrijving (optioneel)",
+      "descriptionPlaceholder": "Beschrijf uw recept",
+      "cancel": "Annuleren",
+      "save": "Recept opslaan",
+      "success": "Recept succesvol opgeslagen!",
+      "error": "Kan recept niet opslaan"
+    }
+  },
   "auth": {
     "login": {
       "title": "Family Planner",
@@ -241,24 +364,59 @@
     "description": "Beheer uw maaltijdplanningspatronen",
     "selectTemplate": "Kies een schema",
     "systemTemplates": "Standaard schema's",
-    "customTemplates": "Mijn schema's",
-    "createNew": "Schema maken",
+    "customTemplates": "Mijn aangepaste schema's",
+    "createNew": "Aangepast schema maken",
+    "editTemplate": "Schema bewerken",
+    "deleteTemplate": "Schema verwijderen",
+    "setAsDefault": "Instellen als standaard",
+    "defaultTemplate": "Standaard schema",
     "templates": {
       "fullWeek": {
         "name": "Volledige week",
-        "description": "Lunch en diner voor alle 7 dagen (14 maaltijden)"
+        "description": "Lunch en diner voor alle 7 dagen (14 maaltijden) - Perfect voor gezinnen die de meeste maaltijden thuis koken"
       },
       "standardWorkWeek": {
         "name": "Standaard werkweek",
-        "description": "Alleen diner op werkdagen, lunch en diner in het weekend (9 maaltijden)"
+        "description": "Alleen diner op werkdagen, lunch en diner in het weekend (9 maaltijden) - Beste voor werkende gezinnen"
       },
-      "vacationMode": {
-        "name": "Vakantiemodus",
-        "description": "Lunch en diner elke dag (14 maaltijden)"
+      "weekdayDinnersOnly": {
+        "name": "Alleen avondmaaltijden doordeweeks",
+        "description": "Diner van maandag tot vrijdag (5 maaltijden) - Minimalistische aanpak voor drukke gezinnen"
+      },
+      "weekendOnly": {
+        "name": "Alleen weekend",
+        "description": "Lunch en diner op zaterdag en zondag (4 maaltijden) - Voor gezinnen die doordeweeks maaltijden voorbereiden of uit eten gaan"
+      },
+      "flexibleWeekly": {
+        "name": "Flexibel wekelijks",
+        "description": "Eén diner per dag de hele week (7 maaltijden) - Flexibele planning voor gevarieerde gezinsroutines"
       }
     },
     "mealCount": "{{count}} maaltijd",
-    "mealCount_plural": "{{count}} maaltijden"
+    "mealCount_plural": "{{count}} maaltijden",
+    "builder": {
+      "title": "Schema-bouwer",
+      "step1": "Schema-details",
+      "step2": "Maaltijden selecteren",
+      "step3": "Bevestigen",
+      "nameLabel": "Schema naam",
+      "namePlaceholder": "Bijv., Gourmet weekend",
+      "descriptionLabel": "Beschrijving (optioneel)",
+      "descriptionPlaceholder": "Beschrijf uw aangepaste maaltijdschema",
+      "selectMeals": "Selecteer dagen en maaltijdtypes",
+      "preview": "Voorbeeld: {{count}} maaltijden",
+      "save": "Schema opslaan",
+      "cancel": "Annuleren",
+      "saving": "Opslaan...",
+      "success": "Schema succesvol gemaakt!",
+      "updateSuccess": "Schema succesvol bijgewerkt!",
+      "error": "Kan schema niet maken",
+      "deleteConfirm": "Weet u zeker dat u dit schema wilt verwijderen?",
+      "deleteSuccess": "Schema succesvol verwijderd!",
+      "deleteError": "Kan schema niet verwijderen",
+      "cannotDeleteDefault": "Kan het standaard schema niet verwijderen",
+      "setDefaultSuccess": "Standaard schema bijgewerkt!"
+    }
   },
   "onboarding": {
     "title": "Welkom",
@@ -335,6 +493,21 @@
       "message": "Weet u zeker dat u {{name}} uit het gezin wilt verwijderen?",
       "cancel": "Annuleren",
       "confirm": "Verwijderen"
+    },
+    "templates": {
+      "title": "Maaltijdschema's",
+      "description": "Beheer maaltijdplanningsschema's voor uw gezin",
+      "systemTemplates": "Standaard schema's",
+      "customTemplates": "Aangepaste schema's",
+      "currentDefault": "Huidig standaard schema",
+      "noCustomTemplates": "Geen aangepaste schema's. Maak er een om aan de behoeften van uw gezin te voldoen.",
+      "createButton": "Aangepast schema maken",
+      "actions": {
+        "edit": "Bewerken",
+        "delete": "Verwijderen",
+        "setDefault": "Instellen als standaard",
+        "manage": "Schema's beheren"
+      }
     }
   },
   "invitations": {

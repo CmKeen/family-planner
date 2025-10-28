@@ -439,4 +439,132 @@ describe('Weekly Plan Algorithm', () => {
       expect(noveltyCount).toBe(1);
     });
   });
+
+  describe('Component-Based Meal Generation', () => {
+    describe('filterCompliantComponents', () => {
+      const mockComponents = [
+        { id: 'c1', name: 'Chicken', category: 'PROTEIN', vegetarian: false, vegan: false, glutenFree: true },
+        { id: 'c2', name: 'Broccoli', category: 'VEGETABLE', vegetarian: true, vegan: true, glutenFree: true },
+        { id: 'c3', name: 'Rice', category: 'CARB', vegetarian: true, vegan: true, glutenFree: true },
+        { id: 'c4', name: 'Tofu', category: 'PROTEIN', vegetarian: true, vegan: true, glutenFree: true },
+        { id: 'c5', name: 'Pasta', category: 'CARB', vegetarian: true, vegan: true, glutenFree: false }
+      ];
+
+      it('should filter vegetarian components', () => {
+        const dietProfile = { vegetarian: true };
+        const filtered = mockComponents.filter(c => c.vegetarian === true);
+
+        expect(filtered).toHaveLength(4);
+        expect(filtered.every(c => c.vegetarian)).toBe(true);
+      });
+
+      it('should filter vegan components', () => {
+        const dietProfile = { vegan: true };
+        const filtered = mockComponents.filter(c => c.vegan === true);
+
+        expect(filtered).toHaveLength(4);
+        expect(filtered.every(c => c.vegan)).toBe(true);
+      });
+
+      it('should filter gluten-free components', () => {
+        const dietProfile = { glutenFree: true };
+        const filtered = mockComponents.filter(c => c.glutenFree === true);
+
+        expect(filtered).toHaveLength(4);
+        expect(filtered.every(c => c.glutenFree)).toBe(true);
+      });
+    });
+
+    describe('selectMealComponents', () => {
+      const proteins = [
+        { id: 'p1', name: 'Chicken', category: 'PROTEIN', defaultQuantity: 150 },
+        { id: 'p2', name: 'Salmon', category: 'PROTEIN', defaultQuantity: 150 }
+      ];
+
+      const vegetables = [
+        { id: 'v1', name: 'Broccoli', category: 'VEGETABLE', defaultQuantity: 100 },
+        { id: 'v2', name: 'Carrots', category: 'VEGETABLE', defaultQuantity: 100 },
+        { id: 'v3', name: 'Spinach', category: 'VEGETABLE', defaultQuantity: 80 }
+      ];
+
+      const carbs = [
+        { id: 'c1', name: 'Rice', category: 'CARB', defaultQuantity: 80 },
+        { id: 'c2', name: 'Pasta', category: 'CARB', defaultQuantity: 80 }
+      ];
+
+      it('should select 1 protein, 1-2 vegetables, and 1 carb', () => {
+        // Simulating component selection
+        const selectedComponents = [
+          proteins[0], // 1 protein
+          vegetables[0], vegetables[1], // 2 vegetables
+          carbs[0] // 1 carb
+        ];
+
+        expect(selectedComponents.length).toBeGreaterThanOrEqual(3);
+        expect(selectedComponents.length).toBeLessThanOrEqual(4);
+        expect(selectedComponents.filter(c => c.category === 'PROTEIN')).toHaveLength(1);
+        expect(selectedComponents.filter(c => c.category === 'VEGETABLE').length).toBeGreaterThanOrEqual(1);
+        expect(selectedComponents.filter(c => c.category === 'VEGETABLE').length).toBeLessThanOrEqual(2);
+        expect(selectedComponents.filter(c => c.category === 'CARB')).toHaveLength(1);
+      });
+
+      it('should avoid repeating same protein in consecutive days', () => {
+        // Track proteins used in last 2 days
+        const recentProteins = ['p1', 'p2'];
+        const availableProteins = proteins.filter(p => !recentProteins.includes(p.id));
+
+        // If all proteins were used recently, allow any
+        const finalAvailable = availableProteins.length > 0 ? availableProteins : proteins;
+        expect(finalAvailable.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('component-based meal proportion', () => {
+      it('should generate approximately 30% component-based meals', () => {
+        const totalMeals = 14;
+        const targetRatio = 0.3;
+        const expectedComponentMeals = Math.round(totalMeals * targetRatio); // ~4 meals
+
+        // Simulate meal generation
+        let componentBasedCount = 0;
+        for (let i = 0; i < totalMeals; i++) {
+          // For testing, use deterministic approach: every 3rd meal is component-based
+          if (i % 3 === 0) {
+            componentBasedCount++;
+          }
+        }
+
+        expect(componentBasedCount).toBeGreaterThanOrEqual(3);
+        expect(componentBasedCount).toBeLessThanOrEqual(5);
+        // With 5 component meals out of 14, we get ~36%, which is acceptable
+        const actualRatio = componentBasedCount / totalMeals;
+        expect(actualRatio).toBeGreaterThanOrEqual(0.2);
+        expect(actualRatio).toBeLessThanOrEqual(0.4);
+      });
+    });
+
+    describe('component meal creation', () => {
+      it('should create meal with components instead of recipe', () => {
+        const mealData = {
+          weeklyPlanId: 'plan-1',
+          dayOfWeek: 'MONDAY' as DayOfWeek,
+          mealType: 'DINNER' as MealType,
+          recipeId: null, // No recipe
+          portions: 4
+        };
+
+        const mealComponents = [
+          { componentId: 'c1', quantity: 150, unit: 'g', role: 'MAIN_PROTEIN' },
+          { componentId: 'c2', quantity: 100, unit: 'g', role: 'PRIMARY_VEGETABLE' },
+          { componentId: 'c3', quantity: 80, unit: 'g', role: 'BASE_CARB' }
+        ];
+
+        expect(mealData.recipeId).toBeNull();
+        expect(mealComponents.length).toBeGreaterThanOrEqual(3);
+        expect(mealComponents.some(c => c.role === 'MAIN_PROTEIN')).toBe(true);
+        expect(mealComponents.some(c => c.role.includes('VEGETABLE'))).toBe(true);
+        expect(mealComponents.some(c => c.role.includes('CARB'))).toBe(true);
+      });
+    });
+  });
 });

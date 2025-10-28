@@ -332,11 +332,129 @@ async function main() {
     console.log('✅ Seeded', recipes.length, 'recipes');
   }
 
+  // Seed food components (system components for component-based meals)
+  const foodComponents = [
+    // PROTEINS
+    { name: 'Poulet', nameEn: 'Chicken', nameNl: 'Kip', category: 'PROTEIN', defaultQuantity: 150, unit: 'g', vegetarian: false, vegan: false, pescatarian: false, kosherCategory: 'meat', shoppingCategory: 'meat', seasonality: ['all'] },
+    { name: 'Bœuf', nameEn: 'Beef', nameNl: 'Rundvlees', category: 'PROTEIN', defaultQuantity: 150, unit: 'g', vegetarian: false, vegan: false, pescatarian: false, kosherCategory: 'meat', shoppingCategory: 'meat', seasonality: ['all'] },
+    { name: 'Porc', nameEn: 'Pork', nameNl: 'Varkensvlees', category: 'PROTEIN', defaultQuantity: 150, unit: 'g', vegetarian: false, vegan: false, pescatarian: false, halalFriendly: false, kosherCategory: null, shoppingCategory: 'meat', seasonality: ['all'] },
+    { name: 'Saumon', nameEn: 'Salmon', nameNl: 'Zalm', category: 'PROTEIN', defaultQuantity: 150, unit: 'g', vegetarian: false, vegan: false, pescatarian: true, kosherCategory: 'parve', shoppingCategory: 'meat', seasonality: ['all'] },
+    { name: 'Thon', nameEn: 'Tuna', nameNl: 'Tonijn', category: 'PROTEIN', defaultQuantity: 150, unit: 'g', vegetarian: false, vegan: false, pescatarian: true, kosherCategory: 'parve', shoppingCategory: 'meat', seasonality: ['all'] },
+    { name: 'Crevettes', nameEn: 'Shrimp', nameNl: 'Garnalen', category: 'PROTEIN', defaultQuantity: 150, unit: 'g', vegetarian: false, vegan: false, pescatarian: true, kosherCategory: null, shoppingCategory: 'meat', seasonality: ['all'] },
+    { name: 'Œufs', nameEn: 'Eggs', nameNl: 'Eieren', category: 'PROTEIN', defaultQuantity: 2, unit: 'pièces', vegetarian: true, vegan: false, pescatarian: true, kosherCategory: 'parve', shoppingCategory: 'dairy', allergens: ['eggs'], seasonality: ['all'] },
+    { name: 'Tofu', nameEn: 'Tofu', nameNl: 'Tofu', category: 'PROTEIN', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, pescatarian: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Pois chiches', nameEn: 'Chickpeas', nameNl: 'Kikkererwten', category: 'PROTEIN', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, pescatarian: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Lentilles', nameEn: 'Lentils', nameNl: 'Linzen', category: 'PROTEIN', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, pescatarian: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Haricots noirs', nameEn: 'Black Beans', nameNl: 'Zwarte bonen', category: 'PROTEIN', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, pescatarian: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+
+    // VEGETABLES
+    { name: 'Brocoli', nameEn: 'Broccoli', nameNl: 'Broccoli', category: 'VEGETABLE', defaultQuantity: 200, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['fall', 'winter', 'spring'] },
+    { name: 'Carottes', nameEn: 'Carrots', nameNl: 'Wortelen', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Haricots verts', nameEn: 'Green Beans', nameNl: 'Sperziebonen', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['spring', 'summer'] },
+    { name: 'Courgettes', nameEn: 'Zucchini', nameNl: 'Courgette', category: 'VEGETABLE', defaultQuantity: 200, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['summer', 'fall'] },
+    { name: 'Poivrons', nameEn: 'Bell Peppers', nameNl: 'Paprika', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['summer', 'fall'] },
+    { name: 'Tomates', nameEn: 'Tomatoes', nameNl: 'Tomaten', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['summer', 'fall'] },
+    { name: 'Épinards', nameEn: 'Spinach', nameNl: 'Spinazie', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['spring', 'fall', 'winter'] },
+    { name: 'Chou-fleur', nameEn: 'Cauliflower', nameNl: 'Bloemkool', category: 'VEGETABLE', defaultQuantity: 200, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['fall', 'winter'] },
+    { name: 'Champignons', nameEn: 'Mushrooms', nameNl: 'Champignons', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Oignons', nameEn: 'Onions', nameNl: 'Uien', category: 'VEGETABLE', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Poireaux', nameEn: 'Leeks', nameNl: 'Prei', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['fall', 'winter', 'spring'] },
+    { name: 'Aubergines', nameEn: 'Eggplant', nameNl: 'Aubergine', category: 'VEGETABLE', defaultQuantity: 200, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['summer', 'fall'] },
+    { name: 'Petits pois', nameEn: 'Peas', nameNl: 'Erwten', category: 'VEGETABLE', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['spring', 'summer'] },
+    { name: 'Maïs', nameEn: 'Corn', nameNl: 'Maïs', category: 'VEGETABLE', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['summer', 'fall'] },
+    { name: 'Chou', nameEn: 'Cabbage', nameNl: 'Kool', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['fall', 'winter'] },
+    { name: 'Asperges', nameEn: 'Asparagus', nameNl: 'Asperges', category: 'VEGETABLE', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['spring'] },
+
+    // CARBS
+    { name: 'Riz blanc', nameEn: 'White Rice', nameNl: 'Witte rijst', category: 'CARB', defaultQuantity: 80, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Riz basmati', nameEn: 'Basmati Rice', nameNl: 'Basmati rijst', category: 'CARB', defaultQuantity: 80, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Riz complet', nameEn: 'Brown Rice', nameNl: 'Bruine rijst', category: 'CARB', defaultQuantity: 80, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Pâtes', nameEn: 'Pasta', nameNl: 'Pasta', category: 'CARB', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, glutenFree: false, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Quinoa', nameEn: 'Quinoa', nameNl: 'Quinoa', category: 'CARB', defaultQuantity: 80, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Couscous', nameEn: 'Couscous', nameNl: 'Couscous', category: 'CARB', defaultQuantity: 80, unit: 'g', vegetarian: true, vegan: true, glutenFree: false, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Pommes de terre', nameEn: 'Potatoes', nameNl: 'Aardappelen', category: 'CARB', defaultQuantity: 200, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Patates douces', nameEn: 'Sweet Potatoes', nameNl: 'Zoete aardappelen', category: 'CARB', defaultQuantity: 200, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['fall', 'winter'] },
+    { name: 'Pain', nameEn: 'Bread', nameNl: 'Brood', category: 'CARB', defaultQuantity: 80, unit: 'g', vegetarian: true, vegan: true, glutenFree: false, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Polenta', nameEn: 'Polenta', nameNl: 'Polenta', category: 'CARB', defaultQuantity: 80, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Nouilles', nameEn: 'Noodles', nameNl: 'Noedels', category: 'CARB', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, glutenFree: false, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+
+    // FRUITS
+    { name: 'Pommes', nameEn: 'Apples', nameNl: 'Appels', category: 'FRUIT', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['fall', 'winter'] },
+    { name: 'Bananes', nameEn: 'Bananas', nameNl: 'Bananen', category: 'FRUIT', defaultQuantity: 120, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Oranges', nameEn: 'Oranges', nameNl: 'Sinaasappels', category: 'FRUIT', defaultQuantity: 150, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['winter', 'spring'] },
+    { name: 'Fraises', nameEn: 'Strawberries', nameNl: 'Aardbeien', category: 'FRUIT', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['spring', 'summer'] },
+    { name: 'Raisins', nameEn: 'Grapes', nameNl: 'Druiven', category: 'FRUIT', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['fall'] },
+    { name: 'Citrons', nameEn: 'Lemons', nameNl: 'Citroenen', category: 'FRUIT', defaultQuantity: 50, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Avocats', nameEn: 'Avocados', nameNl: 'Avocado\'s', category: 'FRUIT', defaultQuantity: 100, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+
+    // SAUCES
+    { name: 'Sauce tomate', nameEn: 'Tomato Sauce', nameNl: 'Tomatensaus', category: 'SAUCE', defaultQuantity: 100, unit: 'ml', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Sauce soja', nameEn: 'Soy Sauce', nameNl: 'Sojasaus', category: 'SAUCE', defaultQuantity: 20, unit: 'ml', vegetarian: true, vegan: true, glutenFree: false, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Crème fraîche', nameEn: 'Sour Cream', nameNl: 'Zure room', category: 'SAUCE', defaultQuantity: 50, unit: 'ml', vegetarian: true, vegan: false, lactoseFree: false, kosherCategory: 'dairy', shoppingCategory: 'dairy', allergens: ['milk'], seasonality: ['all'] },
+    { name: 'Sauce curry', nameEn: 'Curry Sauce', nameNl: 'Currysaus', category: 'SAUCE', defaultQuantity: 100, unit: 'ml', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Pesto', nameEn: 'Pesto', nameNl: 'Pesto', category: 'SAUCE', defaultQuantity: 50, unit: 'ml', vegetarian: true, vegan: false, kosherCategory: 'dairy', shoppingCategory: 'pantry', seasonality: ['all'] },
+
+    // CONDIMENTS & SPICES
+    { name: 'Ail', nameEn: 'Garlic', nameNl: 'Knoflook', category: 'CONDIMENT', defaultQuantity: 10, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Gingembre', nameEn: 'Ginger', nameNl: 'Gember', category: 'CONDIMENT', defaultQuantity: 10, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'produce', seasonality: ['all'] },
+    { name: 'Huile d\'olive', nameEn: 'Olive Oil', nameNl: 'Olijfolie', category: 'CONDIMENT', defaultQuantity: 15, unit: 'ml', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Beurre', nameEn: 'Butter', nameNl: 'Boter', category: 'CONDIMENT', defaultQuantity: 15, unit: 'g', vegetarian: true, vegan: false, lactoseFree: false, kosherCategory: 'dairy', shoppingCategory: 'dairy', allergens: ['milk'], seasonality: ['all'] },
+    { name: 'Herbes de Provence', nameEn: 'Herbs de Provence', nameNl: 'Provençaalse kruiden', category: 'SPICE', defaultQuantity: 5, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Paprika', nameEn: 'Paprika', nameNl: 'Paprika', category: 'SPICE', defaultQuantity: 5, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Cumin', nameEn: 'Cumin', nameNl: 'Komijn', category: 'SPICE', defaultQuantity: 5, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] },
+    { name: 'Curry', nameEn: 'Curry Powder', nameNl: 'Kerrie', category: 'SPICE', defaultQuantity: 5, unit: 'g', vegetarian: true, vegan: true, kosherCategory: 'parve', shoppingCategory: 'pantry', seasonality: ['all'] }
+  ];
+
+  const existingComponentsCount = await prisma.foodComponent.count({ where: { isSystemComponent: true } });
+
+  if (existingComponentsCount === 0) {
+    // First time seeding - create all components
+    for (const component of foodComponents) {
+      await prisma.foodComponent.create({
+        data: {
+          ...component,
+          isSystemComponent: true
+        }
+      });
+    }
+    console.log('✅ Seeded', foodComponents.length, 'food components');
+  } else {
+    // Components exist - check if we need to update
+    console.log('🔄 System food components exist. Checking for updates...');
+
+    // Update or create each component
+    for (const component of foodComponents) {
+      const existing = await prisma.foodComponent.findFirst({
+        where: {
+          name: component.name,
+          isSystemComponent: true
+        }
+      });
+
+      if (existing) {
+        // Update existing component
+        await prisma.foodComponent.update({
+          where: { id: existing.id },
+          data: component
+        });
+      } else {
+        // Create new component
+        await prisma.foodComponent.create({
+          data: {
+            ...component,
+            isSystemComponent: true
+          }
+        });
+      }
+    }
+    console.log(`✅ Updated ${foodComponents.length} system food components`);
+  }
+
   // Seed meal schedule templates
   const mealScheduleTemplates = [
     {
       name: 'Full Week',
-      description: 'Lunch and dinner for all 7 days (14 meals)',
+      description: 'Lunch and dinner for all 7 days (14 meals) - Perfect for families who cook most meals at home',
       isSystem: true,
       schedule: [
         { dayOfWeek: 'MONDAY', mealTypes: ['LUNCH', 'DINNER'] },
@@ -350,7 +468,7 @@ async function main() {
     },
     {
       name: 'Standard Work Week',
-      description: 'Dinner only on weekdays, lunch and dinner on weekends (9 meals)',
+      description: 'Dinner only on weekdays, lunch and dinner on weekends (9 meals) - Best for working families',
       isSystem: true,
       schedule: [
         { dayOfWeek: 'MONDAY', mealTypes: ['DINNER'] },
@@ -363,17 +481,38 @@ async function main() {
       ]
     },
     {
-      name: 'Vacation Mode',
-      description: 'Lunch and dinner every day (14 meals)',
+      name: 'Weekday Dinners Only',
+      description: 'Dinner Monday through Friday only (5 meals) - Minimalist approach for busy families',
       isSystem: true,
       schedule: [
-        { dayOfWeek: 'MONDAY', mealTypes: ['LUNCH', 'DINNER'] },
-        { dayOfWeek: 'TUESDAY', mealTypes: ['LUNCH', 'DINNER'] },
-        { dayOfWeek: 'WEDNESDAY', mealTypes: ['LUNCH', 'DINNER'] },
-        { dayOfWeek: 'THURSDAY', mealTypes: ['LUNCH', 'DINNER'] },
-        { dayOfWeek: 'FRIDAY', mealTypes: ['LUNCH', 'DINNER'] },
+        { dayOfWeek: 'MONDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'TUESDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'WEDNESDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'THURSDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'FRIDAY', mealTypes: ['DINNER'] }
+      ]
+    },
+    {
+      name: 'Weekend Only',
+      description: 'Lunch and dinner on Saturday and Sunday (4 meals) - For families who meal prep or eat out during the week',
+      isSystem: true,
+      schedule: [
         { dayOfWeek: 'SATURDAY', mealTypes: ['LUNCH', 'DINNER'] },
         { dayOfWeek: 'SUNDAY', mealTypes: ['LUNCH', 'DINNER'] }
+      ]
+    },
+    {
+      name: 'Flexible Weekly',
+      description: 'One dinner per day for the entire week (7 meals) - Flexible scheduling for varied family routines',
+      isSystem: true,
+      schedule: [
+        { dayOfWeek: 'MONDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'TUESDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'WEDNESDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'THURSDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'FRIDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'SATURDAY', mealTypes: ['DINNER'] },
+        { dayOfWeek: 'SUNDAY', mealTypes: ['DINNER'] }
       ]
     }
   ];
@@ -381,12 +520,52 @@ async function main() {
   const existingTemplatesCount = await prisma.mealScheduleTemplate.count({ where: { isSystem: true } });
 
   if (existingTemplatesCount === 0) {
+    // First time seeding - create all templates
     for (const template of mealScheduleTemplates) {
       await prisma.mealScheduleTemplate.create({ data: template });
     }
     console.log('✅ Seeded', mealScheduleTemplates.length, 'meal schedule templates');
   } else {
-    console.log('⏭️  System meal schedule templates already exist. Skipping.');
+    // Templates exist - check if we need to update
+    console.log('🔄 System templates exist. Checking for updates...');
+
+    // Delete old system templates that are no longer in our list
+    const currentTemplateNames = mealScheduleTemplates.map(t => t.name);
+    const deleted = await prisma.mealScheduleTemplate.deleteMany({
+      where: {
+        isSystem: true,
+        name: { notIn: currentTemplateNames }
+      }
+    });
+
+    if (deleted.count > 0) {
+      console.log(`   Removed ${deleted.count} outdated system template(s)`);
+    }
+
+    // Update or create each template
+    for (const template of mealScheduleTemplates) {
+      const existing = await prisma.mealScheduleTemplate.findFirst({
+        where: {
+          name: template.name,
+          isSystem: true
+        }
+      });
+
+      if (existing) {
+        // Update existing template
+        await prisma.mealScheduleTemplate.update({
+          where: { id: existing.id },
+          data: {
+            description: template.description,
+            schedule: template.schedule
+          }
+        });
+      } else {
+        // Create new template
+        await prisma.mealScheduleTemplate.create({ data: template });
+      }
+    }
+    console.log(`✅ Updated ${mealScheduleTemplates.length} system meal schedule templates`);
   }
 }
 

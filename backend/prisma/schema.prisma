@@ -51,6 +51,7 @@ model Family {
   inventory         InventoryItem[]
   mealTemplates     MealScheduleTemplate[] @relation("FamilyTemplates")
   invitations       FamilyInvitation[]
+  customComponents  FoodComponent[]
 
   creatorId         String
   creator           User     @relation("FamilyCreator", fields: [creatorId], references: [id])
@@ -168,6 +169,9 @@ model Recipe {
   isNovelty         Boolean     @default(false)
   timesCooked       Int         @default(0)
   avgRating         Float?
+
+  // Component-based recipes
+  isComponentBased  Boolean     @default(false) // true if created from saved component combo
 
   // Source
   source            String?     // original, user, imported
@@ -301,6 +305,7 @@ model Meal {
   guests            Guest[]
   votes             Vote[]
   feedbacks         Feedback[]
+  mealComponents    MealComponent[]
 }
 
 enum AttendanceStatus {
@@ -464,6 +469,102 @@ model InventoryItem {
 
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+}
+
+enum ComponentCategory {
+  PROTEIN
+  VEGETABLE
+  CARB
+  FRUIT
+  SAUCE
+  CONDIMENT
+  SPICE
+  OTHER
+}
+
+enum ComponentRole {
+  MAIN_PROTEIN
+  SECONDARY_PROTEIN
+  PRIMARY_VEGETABLE
+  SECONDARY_VEGETABLE
+  BASE_CARB
+  SIDE_CARB
+  SAUCE
+  GARNISH
+  OTHER
+}
+
+model FoodComponent {
+  id                String              @id @default(uuid())
+
+  // Multilingual names
+  name              String
+  nameEn            String?
+  nameNl            String?
+
+  // Categorization
+  category          ComponentCategory   @default(OTHER)
+
+  // Default quantity per person
+  defaultQuantity   Float               @default(1.0)
+  unit              String              // g, kg, ml, L, piece, etc.
+
+  // Dietary flags
+  vegetarian        Boolean             @default(true)
+  vegan             Boolean             @default(false)
+  pescatarian       Boolean             @default(false)
+  glutenFree        Boolean             @default(true)
+  lactoseFree       Boolean             @default(true)
+  kosherCategory    String?             // meat, dairy, parve
+  halalFriendly     Boolean             @default(true)
+  allergens         String[]
+
+  // Shopping info
+  shoppingCategory  String              @default("produce") // produce, meat, dairy, pantry, etc.
+  defaultPricePerUnit Float?            // for budget tracking
+  seasonality       String[]            // spring, summer, fall, winter, all
+
+  // System vs custom
+  isSystemComponent Boolean             @default(false)
+  familyId          String?
+  family            Family?             @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  // Popularity tracking
+  timesUsed         Int                 @default(0)
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  mealComponents    MealComponent[]
+
+  @@index([category])
+  @@index([isSystemComponent, familyId])
+}
+
+model MealComponent {
+  id                String          @id @default(uuid())
+
+  mealId            String
+  meal              Meal            @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  componentId       String
+  component         FoodComponent   @relation(fields: [componentId], references: [id])
+
+  // Role in this meal
+  role              ComponentRole   @default(OTHER)
+
+  // Quantity for this specific meal
+  quantity          Float
+  unit              String
+
+  // Order for display
+  order             Int             @default(0)
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([mealId])
+  @@index([componentId])
 }
 
 model MealScheduleTemplate {

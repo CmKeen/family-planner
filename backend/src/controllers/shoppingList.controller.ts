@@ -35,6 +35,11 @@ export const generateShoppingList = asyncHandler(
                 ingredients: true
               }
             },
+            mealComponents: {
+              include: {
+                component: true
+              }
+            },
             guests: true
           }
         }
@@ -45,39 +50,72 @@ export const generateShoppingList = asyncHandler(
       throw new AppError('Weekly plan not found', 404);
     }
 
-    // Aggregate ingredients
+    // Aggregate ingredients from both recipes AND components
     const ingredientMap = new Map<string, AggregatedIngredient>();
 
     for (const meal of plan.meals) {
-      if (!meal.recipe || meal.isSchoolMeal || meal.isExternal) continue;
+      if (meal.isSchoolMeal || meal.isExternal) continue;
 
-      const servingFactor = meal.portions / (meal.recipe.servings || 4);
-
-      // Add guest portions
+      // Calculate scaling factor based on guests
       const totalGuests = meal.guests.reduce(
         (sum: number, g: any) => sum + g.adults + g.children * 0.7,
         0
       );
-      const finalFactor = servingFactor * (1 + totalGuests / meal.portions);
 
-      for (const ingredient of meal.recipe.ingredients) {
-        const key = `${ingredient.name}|${ingredient.unit}|${ingredient.category}`;
+      // Aggregate recipe ingredients (if recipe exists)
+      if (meal.recipe) {
+        const servingFactor = meal.portions / (meal.recipe.servings || 4);
+        const finalFactor = servingFactor * (1 + totalGuests / meal.portions);
 
-        const existing = ingredientMap.get(key);
-        if (existing) {
-          existing.quantity += ingredient.quantity * finalFactor;
-        } else {
-          ingredientMap.set(key, {
-            name: ingredient.name,
-            nameEn: ingredient.nameEn || undefined,
-            quantity: ingredient.quantity * finalFactor,
-            unit: ingredient.unit,
-            category: ingredient.category,
-            alternatives: ingredient.alternatives,
-            containsGluten: ingredient.containsGluten,
-            containsLactose: ingredient.containsLactose,
-            allergens: ingredient.allergens
-          });
+        for (const ingredient of meal.recipe.ingredients) {
+          const key = `${ingredient.name}|${ingredient.unit}|${ingredient.category}`;
+
+          const existing = ingredientMap.get(key);
+          if (existing) {
+            existing.quantity += ingredient.quantity * finalFactor;
+          } else {
+            ingredientMap.set(key, {
+              name: ingredient.name,
+              nameEn: ingredient.nameEn || undefined,
+              quantity: ingredient.quantity * finalFactor,
+              unit: ingredient.unit,
+              category: ingredient.category,
+              alternatives: ingredient.alternatives,
+              containsGluten: ingredient.containsGluten,
+              containsLactose: ingredient.containsLactose,
+              allergens: ingredient.allergens
+            });
+          }
+        }
+      }
+
+      // Aggregate meal components (for component-based meals)
+      if (meal.mealComponents && meal.mealComponents.length > 0) {
+        // Scale components by total servings (meal portions + guests)
+        const totalServings = meal.portions + totalGuests;
+        // Assume default is for 1 person per component quantity
+        const componentFactor = totalServings;
+
+        for (const mealComponent of meal.mealComponents) {
+          const component = mealComponent.component;
+          const key = `${component.name}|${mealComponent.unit}|${component.shoppingCategory}`;
+
+          const existing = ingredientMap.get(key);
+          if (existing) {
+            existing.quantity += mealComponent.quantity * componentFactor;
+          } else {
+            ingredientMap.set(key, {
+              name: component.name,
+              nameEn: component.nameEn || undefined,
+              quantity: mealComponent.quantity * componentFactor,
+              unit: mealComponent.unit,
+              category: component.shoppingCategory,
+              alternatives: [],
+              containsGluten: !component.glutenFree,
+              containsLactose: !component.lactoseFree,
+              allergens: component.allergens
+            });
+          }
         }
       }
     }

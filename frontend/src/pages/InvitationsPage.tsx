@@ -61,7 +61,7 @@ export default function InvitationsPage() {
 
   const acceptMutation = useMutation({
     mutationFn: (invitationId: string) => invitationAPI.accept(invitationId),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['receivedInvitations'] });
       queryClient.invalidateQueries({ queryKey: ['families'] });
       toast({

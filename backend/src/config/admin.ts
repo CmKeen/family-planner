@@ -3,14 +3,25 @@ import bcrypt from 'bcryptjs';
 import AdminJS from 'adminjs';
 import * as AdminJSPrisma from '@adminjs/prisma';
 import { ComponentLoader } from 'adminjs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const { Database, Resource, getModelByName } = AdminJSPrisma;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Component loader for custom components
 const componentLoader = new ComponentLoader();
 
 // Load dashboard component
 const DashboardComponent = componentLoader.add('Dashboard', '../admin/scraper-action');
+
+// Load schedule editor component
+const ScheduleEditorComponent = componentLoader.add(
+  'ScheduleEditor',
+  '../admin/components/ScheduleEditor'
+);
 
 // Register the Prisma adapter
 AdminJS.registerAdapter({ Database, Resource });
@@ -145,6 +156,127 @@ export const createAdminConfig = () => {
           navigation: {
             name: 'Planning',
             icon: 'Coffee',
+          },
+        },
+      },
+      {
+        resource: { model: getModelByName('MealScheduleTemplate'), client: prisma },
+        options: {
+          properties: {
+            // Hide all the flattened schedule properties
+            ...Object.fromEntries(
+              Array.from({ length: 10 }, (_, i) => [
+                `schedule.${i}.dayOfWeek`,
+                { isVisible: false },
+              ])
+            ),
+            ...Object.fromEntries(
+              Array.from({ length: 10 }, (_, i) => [
+                `schedule.${i}.mealTypes`,
+                { isVisible: false },
+              ])
+            ),
+            // Create a custom schedule property with visual editor
+            scheduleJson: {
+              type: 'string',
+              isVisible: { list: false, show: true, edit: true, filter: false },
+              components: {
+                edit: ScheduleEditorComponent,
+              },
+            },
+            isSystem: {
+              isVisible: { list: true, show: true, edit: true, filter: true },
+            },
+            familyId: {
+              isVisible: { list: true, show: true, edit: true, filter: true },
+            },
+            description: {
+              isVisible: { list: false, show: true, edit: true, filter: false },
+            },
+            createdAt: {
+              isVisible: { list: true, show: true, edit: false, filter: true },
+            },
+            updatedAt: {
+              isVisible: { list: true, show: true, edit: false, filter: false },
+            },
+          },
+          actions: {
+            show: {
+              after: async (response: any) => {
+                // Reconstruct schedule from flattened properties
+                const schedule: any[] = [];
+                const params = response.record.params;
+                let i = 0;
+                while (params[`schedule.${i}.dayOfWeek`]) {
+                  const dayOfWeek = params[`schedule.${i}.dayOfWeek`];
+                  const mealTypes: string[] = [];
+                  let j = 0;
+                  while (params[`schedule.${i}.mealTypes.${j}`]) {
+                    mealTypes.push(params[`schedule.${i}.mealTypes.${j}`]);
+                    j++;
+                  }
+                  schedule.push({ dayOfWeek, mealTypes });
+                  i++;
+                }
+                response.record.params.scheduleJson = JSON.stringify(schedule, null, 2);
+                return response;
+              },
+            },
+            edit: {
+              after: async (response: any) => {
+                // Reconstruct schedule from flattened properties
+                const schedule: any[] = [];
+                const params = response.record.params;
+                let i = 0;
+                while (params[`schedule.${i}.dayOfWeek`]) {
+                  const dayOfWeek = params[`schedule.${i}.dayOfWeek`];
+                  const mealTypes: string[] = [];
+                  let j = 0;
+                  while (params[`schedule.${i}.mealTypes.${j}`]) {
+                    mealTypes.push(params[`schedule.${i}.mealTypes.${j}`]);
+                    j++;
+                  }
+                  schedule.push({ dayOfWeek, mealTypes });
+                  i++;
+                }
+                response.record.params.scheduleJson = JSON.stringify(schedule, null, 2);
+                return response;
+              },
+              before: async (request: any, context: any) => {
+                if (request.payload?.scheduleJson) {
+                  try {
+                    const schedule = JSON.parse(request.payload.scheduleJson);
+                    // Update the database directly with Prisma
+                    await prisma.mealScheduleTemplate.update({
+                      where: { id: context.record?.id() },
+                      data: { schedule },
+                    });
+                    // Remove scheduleJson from payload to avoid saving it
+                    delete request.payload.scheduleJson;
+                  } catch (e: any) {
+                    throw new Error('Invalid JSON format for schedule field: ' + e.message);
+                  }
+                }
+                return request;
+              },
+            },
+            new: {
+              before: async (request: any) => {
+                if (request.payload?.scheduleJson) {
+                  try {
+                    request.payload.schedule = JSON.parse(request.payload.scheduleJson);
+                    delete request.payload.scheduleJson;
+                  } catch (e: any) {
+                    throw new Error('Invalid JSON format for schedule field: ' + e.message);
+                  }
+                }
+                return request;
+              },
+            },
+          },
+          navigation: {
+            name: 'Planning',
+            icon: 'Clock',
           },
         },
       },

@@ -18,6 +18,7 @@ import {
   declineInvitation,
   cancelInvitation
 } from '../controllers/invitation.controller.js';
+import { createCustomComponent } from '../controllers/foodComponent.controller.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -42,6 +43,9 @@ router.delete('/:familyId/members/:memberId', removeMember);
 
 // Diet profile
 router.put('/:id/diet-profile', updateDietProfile);
+
+// Custom food components
+router.post('/:familyId/components', createCustomComponent);
 
 // Invitations - family-specific routes
 router.post('/:id/invitations', sendInvitation);

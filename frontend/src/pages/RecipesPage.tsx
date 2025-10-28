@@ -410,14 +410,14 @@ export default function RecipesPage() {
                   {recipe.kosherCategory && (
                     <Badge variant="outline">{t('recipes.kosherCategory', { category: recipe.kosherCategory })}</Badge>
                   )}
-                  {recipe.mealType.slice(0, 2).map(tag => (
+                  {recipe.mealType?.slice(0, 2).map(tag => (
                     <Badge key={tag} variant="outline" className="text-xs">
                       {tag}
                     </Badge>
                   ))}
-                  {recipe.mealType.length > 2 && (
+                  {(recipe.mealType?.length || 0) > 2 && (
                     <Badge variant="outline" className="text-xs">
-                      {t('recipes.card.more', { count: recipe.mealType.length - 2 })}
+                      {t('recipes.card.more', { count: (recipe.mealType?.length || 0) - 2 })}
                     </Badge>
                   )}
                 </div>

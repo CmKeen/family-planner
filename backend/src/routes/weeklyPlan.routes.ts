@@ -15,8 +15,15 @@ import {
   validatePlan,
   addMeal,
   removeMeal,
-  switchTemplate
+  switchTemplate,
+  saveComponentMealAsRecipe
 } from '../controllers/weeklyPlan.controller.js';
+import {
+  addComponentToMeal,
+  swapMealComponent,
+  removeMealComponent,
+  updateMealComponent
+} from '../controllers/mealComponent.controller.js';
 import { authenticate } from '../middleware/auth.js';
 import { intensiveOperationLimiter } from '../middleware/rateLimiter.js';
 
@@ -38,6 +45,13 @@ router.post('/:planId/meals/:mealId/guests', addGuests);
 router.post('/:planId/meals/:mealId/vote', addVote);
 router.post('/:planId/wishes', addWish);
 router.post('/:planId/validate', validatePlan);
+
+// Meal component operations (component-based meals)
+router.post('/:planId/meals/:mealId/components', addComponentToMeal); // Add component to meal
+router.put('/:planId/meals/:mealId/components/:componentId/swap', swapMealComponent); // Swap component
+router.patch('/:planId/meals/:mealId/components/:componentId', updateMealComponent); // Update component
+router.delete('/:planId/meals/:mealId/components/:componentId', removeMealComponent); // Remove component
+router.post('/:planId/meals/:mealId/save-as-recipe', saveComponentMealAsRecipe); // Save component meal as recipe
 
 // Meal schedule template operations for draft plans
 router.post('/:planId/meals', addMeal); // Add single meal

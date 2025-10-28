@@ -144,6 +144,204 @@ describe('Shopping List Algorithm', () => {
     });
   });
 
+  describe('Component-Based Meal Aggregation', () => {
+    it('should aggregate components from component-based meals', () => {
+      const mealComponents = [
+        { component: { name: 'Poulet', shoppingCategory: 'meat' }, quantity: 150, unit: 'g' },
+        { component: { name: 'Brocoli', shoppingCategory: 'produce' }, quantity: 200, unit: 'g' },
+        { component: { name: 'Riz blanc', shoppingCategory: 'pantry' }, quantity: 80, unit: 'g' }
+      ];
+
+      const aggregated = new Map<string, any>();
+
+      mealComponents.forEach(mc => {
+        const key = `${mc.component.name}|${mc.unit}|${mc.component.shoppingCategory}`;
+        if (aggregated.has(key)) {
+          aggregated.get(key).quantity += mc.quantity;
+        } else {
+          aggregated.set(key, {
+            name: mc.component.name,
+            quantity: mc.quantity,
+            unit: mc.unit,
+            category: mc.component.shoppingCategory
+          });
+        }
+      });
+
+      const result = Array.from(aggregated.values());
+      expect(result).toHaveLength(3);
+      expect(result.find(i => i.name === 'Poulet')?.quantity).toBe(150);
+      expect(result.find(i => i.name === 'Brocoli')?.quantity).toBe(200);
+      expect(result.find(i => i.name === 'Riz blanc')?.quantity).toBe(80);
+    });
+
+    it('should aggregate same components across multiple meals', () => {
+      const meal1Components = [
+        { component: { name: 'Poulet', shoppingCategory: 'meat' }, quantity: 150, unit: 'g' }
+      ];
+      const meal2Components = [
+        { component: { name: 'Poulet', shoppingCategory: 'meat' }, quantity: 150, unit: 'g' }
+      ];
+      const meal3Components = [
+        { component: { name: 'Poulet', shoppingCategory: 'meat' }, quantity: 150, unit: 'g' }
+      ];
+
+      const allComponents = [...meal1Components, ...meal2Components, ...meal3Components];
+      const aggregated = new Map<string, any>();
+
+      allComponents.forEach(mc => {
+        const key = `${mc.component.name}|${mc.unit}|${mc.component.shoppingCategory}`;
+        if (aggregated.has(key)) {
+          aggregated.get(key).quantity += mc.quantity;
+        } else {
+          aggregated.set(key, {
+            name: mc.component.name,
+            quantity: mc.quantity,
+            unit: mc.unit,
+            category: mc.component.shoppingCategory
+          });
+        }
+      });
+
+      const result = Array.from(aggregated.values());
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Poulet');
+      expect(result[0].quantity).toBe(450); // 150 * 3
+    });
+
+    it('should combine recipe ingredients AND meal components', () => {
+      // Recipe ingredients
+      const recipeIngredients = [
+        { name: 'Tomates', quantity: 300, unit: 'g', category: 'produce' }
+      ];
+
+      // Component-based meal
+      const mealComponents = [
+        { component: { name: 'Tomates', shoppingCategory: 'produce' }, quantity: 150, unit: 'g' }
+      ];
+
+      const aggregated = new Map<string, any>();
+
+      // Add recipe ingredients
+      recipeIngredients.forEach(ing => {
+        const key = `${ing.name}|${ing.unit}|${ing.category}`;
+        if (aggregated.has(key)) {
+          aggregated.get(key).quantity += ing.quantity;
+        } else {
+          aggregated.set(key, { ...ing });
+        }
+      });
+
+      // Add meal components
+      mealComponents.forEach(mc => {
+        const key = `${mc.component.name}|${mc.unit}|${mc.component.shoppingCategory}`;
+        if (aggregated.has(key)) {
+          aggregated.get(key).quantity += mc.quantity;
+        } else {
+          aggregated.set(key, {
+            name: mc.component.name,
+            quantity: mc.quantity,
+            unit: mc.unit,
+            category: mc.component.shoppingCategory
+          });
+        }
+      });
+
+      const result = Array.from(aggregated.values());
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Tomates');
+      expect(result[0].quantity).toBe(450); // 300 + 150
+    });
+
+    it('should scale components by portions', () => {
+      const mealComponents = [
+        { component: { name: 'Poulet', defaultQuantity: 150 }, quantity: 150, unit: 'g' }
+      ];
+
+      const portions = 4;
+      const familyMembers = 4;
+      const servingFactor = portions / familyMembers;
+
+      const scaled = mealComponents.map(mc => ({
+        ...mc,
+        quantity: mc.quantity * servingFactor
+      }));
+
+      expect(scaled[0].quantity).toBe(150); // 150 * 1.0
+    });
+
+    it('should scale components for larger families', () => {
+      const mealComponents = [
+        { component: { name: 'Poulet', defaultQuantity: 150 }, quantity: 150, unit: 'g' }
+      ];
+
+      const portions = 6; // 6 people
+      const defaultServings = 4;
+      const servingFactor = portions / defaultServings;
+
+      const scaled = mealComponents.map(mc => ({
+        ...mc,
+        quantity: mc.quantity * servingFactor
+      }));
+
+      expect(scaled[0].quantity).toBe(225); // 150 * 1.5
+    });
+
+    it('should handle mixed recipe meals and component meals in same plan', () => {
+      // Meal 1: Recipe-based (has recipe with ingredients)
+      const meal1RecipeIngredients = [
+        { name: 'Pâtes', quantity: 400, unit: 'g', category: 'pantry' },
+        { name: 'Tomates', quantity: 300, unit: 'g', category: 'produce' }
+      ];
+
+      // Meal 2: Component-based (has meal components)
+      const meal2Components = [
+        { component: { name: 'Poulet', shoppingCategory: 'meat' }, quantity: 600, unit: 'g' },
+        { component: { name: 'Riz blanc', shoppingCategory: 'pantry' }, quantity: 320, unit: 'g' }
+      ];
+
+      // Meal 3: Mixed (recipe + extra components)
+      const meal3RecipeIngredients = [
+        { name: 'Saumon', quantity: 600, unit: 'g', category: 'meat' }
+      ];
+      const meal3Components = [
+        { component: { name: 'Brocoli', shoppingCategory: 'produce' }, quantity: 800, unit: 'g' }
+      ];
+
+      const aggregated = new Map<string, any>();
+
+      // Aggregate all sources
+      [...meal1RecipeIngredients, ...meal3RecipeIngredients].forEach(ing => {
+        const key = `${ing.name}|${ing.unit}|${ing.category}`;
+        if (aggregated.has(key)) {
+          aggregated.get(key).quantity += ing.quantity;
+        } else {
+          aggregated.set(key, { ...ing });
+        }
+      });
+
+      [...meal2Components, ...meal3Components].forEach(mc => {
+        const key = `${mc.component.name}|${mc.unit}|${mc.component.shoppingCategory}`;
+        if (aggregated.has(key)) {
+          aggregated.get(key).quantity += mc.quantity;
+        } else {
+          aggregated.set(key, {
+            name: mc.component.name,
+            quantity: mc.quantity,
+            unit: mc.unit,
+            category: mc.component.shoppingCategory
+          });
+        }
+      });
+
+      const result = Array.from(aggregated.values());
+      expect(result).toHaveLength(5);
+      expect(result.find(i => i.name === 'Pâtes')).toBeDefined();
+      expect(result.find(i => i.name === 'Poulet')).toBeDefined();
+      expect(result.find(i => i.name === 'Brocoli')).toBeDefined();
+    });
+  });
+
   describe('Portion Adjustment', () => {
     it('should scale ingredients based on portions', () => {
       const ingredient = { name: 'Riz', quantity: 200, unit: 'g', servings: 4 };

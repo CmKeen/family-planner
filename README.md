@@ -2,363 +2,334 @@
 
 A comprehensive family meal planning application with multi-dietary constraint support (Kosher, Halal, Vegetarian, Vegan, Gluten-Free, Lactose-Free), smart weekly menu generation, school menu integration, and collaborative planning features.
 
+---
+
+## 📚 Documentation
+
+### **Essential Reading (MANDATORY)**
+1. **[CLAUDE.md](CLAUDE.md)** - Main codebase reference & architecture
+2. **[TDD_GUIDE.md](TDD_GUIDE.md)** - Test-driven development workflow
+3. **[VERIFICATION_GUIDE.md](VERIFICATION_GUIDE.md)** - Chrome MCP verification procedures
+4. **[CODING_STANDARDS.md](CODING_STANDARDS.md)** - Coding standards & best practices
+
+---
+
+## 🚨 Critical Requirements
+
+### 1. Test-Driven Development (TDD)
+**You MUST write tests BEFORE implementing features.**
+- Minimum coverage: 80% statements, 75% branches
+- Follow RED → GREEN → REFACTOR cycle
+- See [TDD_GUIDE.md](TDD_GUIDE.md)
+
+### 2. Chrome MCP Verification
+**All features MUST be verified using Chrome MCP.**
+- Test in all 3 languages (FR/EN/NL)
+- Check console errors and network requests
+- See [VERIFICATION_GUIDE.md](VERIFICATION_GUIDE.md)
+
+### 3. Multi-Lingual Support
+**ALL user-facing content MUST be translated** (French, English, Dutch)
+- Frontend: Use `t('key')` from i18next (never hardcode text)
+- Backend: Multi-lingual DB fields (title/titleEn, description/descriptionEn)
+
+### 4. Docker-First Development
+**ALWAYS use Docker** - No local installations required
+- All commands run in containers
+- Hot reloading enabled
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# Start development environment
+docker-compose -f docker-compose.dev.yml up
+
+# Access the application:
+# - Frontend: http://localhost:5173
+# - Backend API: http://localhost:3001/api
+# - API Docs: http://localhost:3001/api-docs
+# - Admin Panel: http://localhost:3001/admin
+```
+
+### Run Tests
+```bash
+# Backend tests
+docker-compose exec backend npm test
+docker-compose exec backend npm run test:coverage
+
+# Frontend tests
+docker-compose exec frontend npm test
+docker-compose exec frontend npm run test:ui
+```
+
+### Common Commands
+```bash
+# Database management
+docker-compose exec backend npm run prisma:studio
+docker-compose exec backend npm run prisma:migrate
+
+# Grant admin privileges
+docker-compose exec backend npm run make-admin -- user@example.com
+
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+# Stop services
+docker-compose down
+```
+
+---
+
 ## ✨ Features
 
-### MVP Features
-- ✅ **Multi-Constraint Dietary Profiles**: Support for Kosher, Halal, Vegetarian, Vegan, Gluten-Free, Lactose-Free, and custom allergies
-- ✅ **Smart Weekly Planning**: Auto-generate weekly meal plans with 60-80% favorites + 1-2 new recipes
-- ✅ **Express Plan**: Quick planning with favorites only (< 5 min validation)
+### MVP Features (V1.0)
+- ✅ **Multi-Constraint Dietary Profiles**: Kosher, Halal, Vegetarian, Vegan, Gluten-Free, Lactose-Free, and custom allergies
+- ✅ **Smart Weekly Planning**: Auto-generate meal plans with 60% favorites + max 2 novelties
+- ✅ **Express Plan**: Quick planning with favorites only
 - ✅ **Recipe Catalog**: Filtered catalog based on family dietary constraints
 - ✅ **Recipe Swapping**: Replace meals with compliant alternatives
 - ✅ **School Menu Integration**: Import school menus and avoid duplication
-- ✅ **Smart Shopping Lists**: Consolidated lists with portion calculations, dietary substitutions, and aisle grouping
+- ✅ **Smart Shopping Lists**: Consolidated lists with portion calculations and dietary substitutions
 - ✅ **PWA Support**: Offline-ready shopping lists
 - ✅ **Mobile-First Design**: Optimized for phones, tablets, and desktop
-- ✅ **Multi-Language**: French & English support (Dutch in V2)
+- ✅ **Multi-Language**: French (default), English, Dutch support
+- ✅ **Family Invitations**: Token-based invitation system
+- ✅ **Flexible Meal Templates**: System and custom family templates
 
-### V1.5 Features (Collaboration)
-- 🔄 Family collaboration with votes, RSVP, and wishes
+### V1.5 Features (In Progress)
+- 🔄 Enhanced family collaboration with votes, RSVP, and wishes
 - 🔄 Guest management and portion recalculation
 - 🔄 Cutoff system with delta mode
 - 🔄 Notifications and reminders
+
+---
 
 ## 🏗️ Architecture
 
 ### Tech Stack
 
 **Backend:**
-- Node.js + Express + TypeScript
-- PostgreSQL with Prisma ORM
+- Node.js 20 + Express + TypeScript
+- PostgreSQL 15 + Prisma ORM 5.7
 - JWT authentication
-- RESTful API
+- AdminJS admin panel
+- Swagger/OpenAPI documentation
+- Zod validation
 
 **Frontend:**
-- React 18 + TypeScript
-- Vite (fast build tool)
-- Tailwind CSS (mobile-first styling)
+- React 18.2 + TypeScript
+- Vite 5.0 (fast build tool)
+- Tailwind CSS 3.4 (mobile-first)
 - Radix UI components (accessible)
-- Zustand (state management)
-- React Query (data fetching)
-- PWA support (offline capability)
+- Zustand (global state) + React Query (server state)
+- i18next (FR/EN/NL internationalization)
+- PWA support
 
-## 🚀 Getting Started
+**Infrastructure:**
+- Docker + Docker Compose
+- GitHub Actions CI/CD
 
-### Prerequisites
-
-- Node.js 18+ and npm
-- PostgreSQL 14+
-- Git
-
-### Installation
-
-1. **Clone the repository**
-```bash
-cd /home/user/family-planner
-```
-
-2. **Install root dependencies**
-```bash
-npm install
-```
-
-3. **Set up the backend**
-
-```bash
-cd backend
-
-# Install dependencies
-npm install
-
-# Copy environment file
-cp .env.example .env
-
-# Edit .env with your database credentials
-# DATABASE_URL="postgresql://user:password@localhost:5432/family_planner"
-# JWT_SECRET="your-super-secret-key"
-
-# Generate Prisma Client
-npm run prisma:generate
-
-# Run database migrations
-npm run prisma:migrate
-
-# Seed sample recipes
-npm run prisma:seed
-```
-
-4. **Set up the frontend**
-
-```bash
-cd ../frontend
-
-# Install dependencies
-npm install
-
-# Copy environment file
-cp .env.example .env
-
-# The default API URL is http://localhost:3001/api
-```
-
-### Running the Application
-
-#### Option 1: Run everything together (from root)
-```bash
-npm run dev
-```
-
-This starts both backend (port 3001) and frontend (port 5173) concurrently.
-
-#### Option 2: Run separately
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-npm run dev
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-
-### Access the Application
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3001
-- **API Health Check**: http://localhost:3001/health
-- **📚 Interactive API Documentation (Swagger)**: http://localhost:3001/api-docs
-- **Swagger JSON**: http://localhost:3001/api-docs.json
-
-### API Documentation
-
-The backend includes **automatic interactive API documentation** using Swagger/OpenAPI:
-
-- **Swagger UI**: http://localhost:3001/api-docs
-  - Interactive interface to explore and test all API endpoints
-  - Try endpoints directly from your browser
-  - See request/response schemas
-  - Authentication testing built-in
-
-- **OpenAPI JSON**: http://localhost:3001/api-docs.json
-  - Machine-readable API specification
-  - Import into Postman, Insomnia, or other tools
-
-For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
-
-### Database Management
-
-```bash
-cd backend
-
-# Open Prisma Studio (visual database editor)
-npm run prisma:studio
-
-# Create a new migration
-npm run prisma:migrate
-
-# Reset database (WARNING: deletes all data)
-npx prisma migrate reset
-```
-
-## 📱 Key Features Guide
-
-### 1. User Registration & Login
-- Create an account with email/password
-- Secure JWT-based authentication
-
-### 2. Family Setup
-- Create your family profile
-- Add family members with roles (admin, parent, member, child)
-- Configure dietary profile:
-  - Kosher settings (meat/dairy/parve, timing between meals)
-  - Halal requirements
-  - Vegetarian/Vegan preferences
-  - Gluten-free and Lactose-free needs
-  - Custom allergies
-
-### 3. Weekly Planning
-
-**Auto-Generate Plan:**
-- Click "New Plan" from dashboard
-- System generates a balanced week with:
-  - 60-80% from your favorite recipes
-  - 1-2 new recipes for variety
-  - No duplication with school menus
-  - Full dietary compliance
-
-**Express Plan:**
-- Quick planning with only favorites
-- 1 novelty recipe maximum
-- Validation in < 5 minutes
-
-**Manual Adjustments:**
-- Swap any meal with alternatives
-- Lock meals to prevent changes
-- Adjust portions per meal
-- Mark meals as "external" (restaurant, delivery)
-
-### 4. Recipe Management
-- Browse recipe catalog (filtered by your dietary constraints)
-- View recipe details (ingredients, instructions, timing)
-- Mark recipes as favorites
-- Rate recipes after cooking
-- Add custom recipes (coming soon)
-
-### 5. Shopping Lists
-- Auto-generated from your weekly plan
-- Grouped by store aisle/department
-- Smart quantity calculation:
-  - Adjusts for portions
-  - Accounts for guests
-  - Deducts from inventory (if tracked)
-  - Rounds to packaging sizes
-- Dietary substitutions suggested automatically
-- Offline-capable (PWA)
-- Check off items as you shop
-
-### 6. School Menu Integration
-- Add school lunch menus manually
-- System automatically avoids serving similar foods at dinner
-- Anti-duplication by food category
+---
 
 ## 🗂️ Project Structure
 
 ```
 family-planner/
-├── backend/
-│   ├── prisma/
-│   │   ├── schema.prisma       # Database schema
-│   │   └── seed.ts             # Sample data
+├── backend/              # Node.js API
 │   ├── src/
-│   │   ├── controllers/        # Request handlers
-│   │   ├── routes/             # API routes
-│   │   ├── middleware/         # Auth, error handling
-│   │   ├── lib/                # Prisma client
-│   │   ├── utils/              # Helper functions
-│   │   └── index.ts            # Server entry point
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── frontend/
+│   │   ├── controllers/  # Business logic
+│   │   ├── routes/       # API routes
+│   │   ├── middleware/   # Auth, error handling
+│   │   ├── config/       # Configuration
+│   │   └── admin/        # AdminJS customizations
+│   └── prisma/           # Database schema & migrations
+├── frontend/             # React SPA
 │   ├── src/
-│   │   ├── components/
-│   │   │   └── ui/             # Reusable UI components
-│   │   ├── pages/              # Page components
-│   │   ├── stores/             # Zustand state management
-│   │   ├── lib/                # API client, utilities
-│   │   ├── App.tsx             # Main app with routing
-│   │   ├── main.tsx            # Entry point
-│   │   └── index.css           # Global styles
-│   ├── index.html
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
-│   └── package.json
-│
-├── package.json                # Root package (scripts)
-└── README.md
+│   │   ├── pages/        # Route pages
+│   │   ├── components/   # React components
+│   │   ├── stores/       # State management
+│   │   ├── lib/          # API client, utilities
+│   │   └── locales/      # Translations (FR/EN/NL)
+├── CLAUDE.md            # Main documentation
+├── TDD_GUIDE.md         # TDD workflow
+├── VERIFICATION_GUIDE.md # Verification procedures
+├── CODING_STANDARDS.md  # Coding standards
+└── docker-compose.dev.yml # Dev environment
 ```
 
-## 🎨 Design System
+See [CLAUDE.md](CLAUDE.md#-directory-structure) for full directory details.
 
-The application uses a custom design system built on Tailwind CSS:
+---
 
-- **Mobile-First**: All components are optimized for mobile devices first
-- **Touch-Friendly**: Minimum 44x44px touch targets
-- **Accessible**: Built with Radix UI for WCAG 2.2 AA compliance
-- **Responsive**: Adapts seamlessly from phone to desktop
-- **Dark Mode Support**: Automatic theme switching
+## 💾 Database
 
-**Color Palette:**
-- Primary: Green (#22c55e) - Represents freshness and health
-- Secondary: Slate grays for neutral backgrounds
-- Semantic colors for success, warning, error states
+**19 Models:** User, Family, FamilyMember, FamilyInvitation, DietProfile, Recipe, Ingredient, Instruction, WeeklyPlan, Meal, MealScheduleTemplate, Attendance, Guest, Vote, Wish, ShoppingList, ShoppingItem, InventoryItem, Feedback, SchoolMenu
+
+See [backend/prisma/schema.prisma](backend/prisma/schema.prisma) for full schema.
+
+---
+
+## 🔌 API Endpoints
+
+**Base URL:** `http://localhost:3001/api`
+
+### Main Endpoints
+- `/api/auth` - Register, login, logout
+- `/api/families` - Family CRUD, members, diet profile
+- `/api/families/:id/invitations` - Family invitation system
+- `/api/recipes` - Recipe CRUD, catalog, favorites
+- `/api/weekly-plans` - Plan generation & management
+- `/api/shopping-lists` - Shopping list generation
+- `/api/school-menus` - School menu integration
+- `/api/families/:familyId/meal-templates` - Template management
+
+**Interactive API Docs:** http://localhost:3001/api-docs
+
+See [CLAUDE.md](CLAUDE.md#-api-endpoints) for full API reference.
+
+---
 
 ## 🔒 Security
 
-- **Authentication**: JWT with HTTP-only cookies
-- **Password**: Bcrypt hashing with salt
-- **CORS**: Configured for frontend origin only
-- **Input Validation**: Zod schemas on all endpoints
-- **SQL Injection**: Protected via Prisma ORM
-- **RGPD Compliant**: Data stored in EU, user consent, export/deletion capabilities
+- JWT authentication (7-day expiration)
+- bcrypt password hashing (10 rounds)
+- Rate limiting (multiple tiers)
+- Helmet.js security headers
+- CORS whitelist
+- Input validation with Zod
+- RGPD compliant
 
-## 📊 Database Schema
+---
 
-Key entities:
-- **User**: Account credentials and preferences
-- **Family**: Family unit with dietary profile
-- **FamilyMember**: Family members with roles and portion factors
-- **Recipe**: Recipes with ingredients, instructions, and dietary tags
-- **WeeklyPlan**: Weekly meal plans with status
-- **Meal**: Individual meals within a plan
-- **ShoppingList**: Generated shopping lists with items
-- **SchoolMenu**: Imported school menus
+## 🎯 Key Features Guide
+
+### 1. User Registration & Login
+- Create account with email/password
+- Secure JWT-based authentication
+
+### 2. Family Setup
+- Create family profile
+- Add family members with roles (admin, parent, member, child)
+- Configure comprehensive dietary profile
+
+### 3. Weekly Planning
+
+**Auto-Generate Plan:**
+- System generates balanced week with 60% favorites + max 2 novelties
+- Full dietary compliance
+- No duplication with school menus
+
+**Express Plan:**
+- Quick planning with only favorites
+- 1 novelty maximum
+
+**Manual Adjustments:**
+- Swap meals with alternatives
+- Lock meals to prevent changes
+- Adjust portions per meal
+
+### 4. Recipe Management
+- Browse filtered recipe catalog
+- View details (ingredients, instructions, timing)
+- Mark favorites and rate recipes
+- Multilingual support (FR/EN)
+
+### 5. Shopping Lists
+- Auto-generated from weekly plan
+- Grouped by aisle/department
+- Smart quantity calculation (portions, guests, inventory)
+- Dietary substitutions
+- Offline-capable (PWA)
+
+### 6. School Menu Integration
+- Add school lunch menus
+- Automatic anti-duplication by food category
+
+---
+
+## 👨‍💼 Admin Panel
+
+**Access:** `http://localhost:3001/admin` (requires admin privileges)
+
+**Features:**
+- Full CRUD for all database models
+- HelloFresh recipe scraper
+- Fix broken images action
+- Export to CSV
+
+**Grant Admin:**
+```bash
+docker-compose exec backend npm run make-admin -- user@example.com
+```
+
+---
 
 ## 🧪 Testing
 
-```bash
-# Backend
-cd backend
-npm test
-
-# Frontend
-cd frontend
-npm test
-```
-
-## 📦 Building for Production
+**Coverage Requirements:**
+- Statements: 80%
+- Branches: 75%
+- Functions: 80%
+- Lines: 80%
 
 ```bash
-# Build everything
-npm run build
+# Run tests
+docker-compose exec backend npm test
+docker-compose exec frontend npm test
 
-# Or build individually
-cd backend && npm run build
-cd frontend && npm run build
+# Coverage reports
+docker-compose exec backend npm run test:coverage
+docker-compose exec frontend npm run test:coverage
+
+# Watch mode (for TDD)
+docker-compose exec backend npm run test:watch
 ```
+
+---
+
+## 📝 Git Workflow
+
+```bash
+# Create feature branch
+git checkout -b feature/your-feature
+
+# Commit with conventional commits
+git commit -m "feat(recipes): add multilingual search"
+git commit -m "fix(auth): resolve JWT expiration"
+git commit -m "test(weeklyPlan): add integration tests"
+
+# Push and create PR
+git push origin feature/your-feature
+```
+
+See [CODING_STANDARDS.md](CODING_STANDARDS.md) for full conventions.
+
+---
 
 ## 🚀 Deployment
 
-### Backend Deployment (e.g., Railway, Render, Heroku)
+### Production Checklist
 
-1. Set environment variables:
-   - `DATABASE_URL`: PostgreSQL connection string
-   - `JWT_SECRET`: Strong secret key
-   - `NODE_ENV=production`
-   - `CORS_ORIGIN`: Your frontend URL
+**Backend:**
+- ✓ Set NODE_ENV=production
+- ✓ Configure secure JWT_SECRET (256-bit)
+- ✓ Set production DATABASE_URL
+- ✓ Configure CORS_ORIGIN whitelist
+- ✓ Run migrations: `npx prisma migrate deploy`
+- ✓ Build: `npm run build`
 
-2. Run migrations:
-```bash
-npx prisma migrate deploy
-```
+**Frontend:**
+- ✓ Set VITE_API_URL to production API
+- ✓ Build: `npm run build`
+- ✓ Serve with nginx/CDN
+- ✓ Configure CSP headers
 
-3. Start server:
-```bash
-npm start
-```
+See [CLAUDE.md](CLAUDE.md#-deployment) for full deployment guide.
 
-### Frontend Deployment (e.g., Vercel, Netlify)
-
-1. Set environment variable:
-   - `VITE_API_URL`: Your backend API URL
-
-2. Build:
-```bash
-npm run build
-```
-
-3. Deploy the `dist` folder
-
-## 🌍 Internationalization
-
-The app supports multiple languages:
-- French (fr)
-- English (en)
-- Dutch (nl) - Coming in V2
-
-To add translations, edit files in `frontend/src/i18n/`
+---
 
 ## 🛣️ Roadmap
 
@@ -367,10 +338,11 @@ To add translations, edit files in `frontend/src/i18n/`
 - ✅ Multi-dietary constraints
 - ✅ Shopping list generation
 - ✅ School menu integration
-- ✅ Mobile-first design
+- ✅ Family invitation system
+- ✅ Flexible meal templates
 
 ### V1.5 (Q2 2025)
-- 🔄 Family collaboration features
+- 🔄 Enhanced family collaboration
 - 🔄 RSVP and guest management
 - 🔄 Voting on meals
 - 🔄 Wish list
@@ -378,36 +350,53 @@ To add translations, edit files in `frontend/src/i18n/`
 
 ### V2.0 (Q3 2025)
 - 📋 Grocery store integrations
-- 📋 Dutch language support
 - 📋 Hebrew calendar integration
 - 📋 Passover planning
 - 📋 Weather-based suggestions
 - 📋 Gamification
 
+---
+
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+**Before contributing:**
+1. Read [CODING_STANDARDS.md](CODING_STANDARDS.md)
+2. Follow TDD workflow in [TDD_GUIDE.md](TDD_GUIDE.md)
+3. Verify with Chrome MCP per [VERIFICATION_GUIDE.md](VERIFICATION_GUIDE.md)
+4. Add translations for all 3 languages (FR/EN/NL)
+5. Ensure tests pass and coverage meets thresholds
 
+**Process:**
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create feature branch
+3. Write tests FIRST (TDD)
+4. Implement feature
+5. Verify with Chrome MCP
+6. Submit PR with conventional commit messages
+
+---
+
+## 📚 Additional Resources
+
+- **Main Documentation:** [CLAUDE.md](CLAUDE.md)
+- **API Documentation:** http://localhost:3001/api-docs
+- **Prisma Studio:** `docker-compose exec backend npm run prisma:studio`
+
+---
+
+## 💬 Support
+
+- **Issues:** [GitHub Issues](https://github.com/yourusername/family-planner/issues)
+- **Documentation:** [CLAUDE.md](CLAUDE.md)
+
+---
 
 ## 📝 License
 
 This project is licensed under the MIT License.
 
-## 💬 Support
-
-For support, please:
-- Open an issue on GitHub
-- Email: support@familyplanner.com (if applicable)
-
-## 👥 Authors
-
-Created with ❤️ for families who want to simplify meal planning while respecting dietary needs.
-
 ---
+
+**Remember: Write tests FIRST, verify with Chrome MCP, translate EVERYTHING!** 🚀
 
 **Happy Planning! 🍽️**

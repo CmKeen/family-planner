@@ -27,6 +27,8 @@
     "title": "Weekly Plan",
     "week": "Week {{number}} - {{year}}",
     "loading": "Loading plan...",
+    "noMeals": "No meals planned for this day",
+    "noRecipe": "No recipe selected",
     "stats": {
       "totalTime": "Total time",
       "favorites": "Favorites",
@@ -45,12 +47,14 @@
       "viewShoppingList": "View shopping list",
       "swap": "Swap",
       "swapping": "Swapping...",
+      "selectRecipe": "Select recipe",
       "adjustPortions": "Portions",
       "adjusting": "Adjusting...",
       "lock": "Lock",
       "unlock": "Unlock",
       "changePattern": "Change pattern",
       "addMeal": "Add meal",
+      "addMealForDay": "Add meal",
       "removeMeal": "Remove",
       "switchingTemplate": "Switching template..."
     },
@@ -172,6 +176,125 @@
       "back": "Back"
     }
   },
+  "components": {
+    "title": "Component Library",
+    "loading": "Loading components...",
+    "categories": {
+      "all": "All",
+      "PROTEIN": "Proteins",
+      "VEGETABLE": "Vegetables",
+      "CARB": "Carbohydrates",
+      "FRUIT": "Fruits",
+      "SAUCE": "Sauces",
+      "CONDIMENT": "Condiments",
+      "SPICE": "Spices",
+      "OTHER": "Other"
+    },
+    "roles": {
+      "MAIN_PROTEIN": "Main Protein",
+      "SECONDARY_PROTEIN": "Secondary Protein",
+      "PRIMARY_VEGETABLE": "Primary Vegetable",
+      "SECONDARY_VEGETABLE": "Secondary Vegetable",
+      "BASE_CARB": "Base Carb",
+      "SIDE_CARB": "Side Carb",
+      "SAUCE": "Sauce",
+      "GARNISH": "Garnish",
+      "OTHER": "Other"
+    },
+    "actions": {
+      "add": "Add component",
+      "addCustom": "Add custom component",
+      "edit": "Edit",
+      "delete": "Delete",
+      "swap": "Swap",
+      "remove": "Remove",
+      "save": "Save",
+      "cancel": "Cancel",
+      "selectComponent": "Select component"
+    },
+    "filters": {
+      "category": "Category",
+      "dietary": "Dietary",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "glutenFree": "Gluten-free",
+      "lactoseFree": "Lactose-free",
+      "kosher": "Kosher",
+      "halal": "Halal"
+    },
+    "addCustomModal": {
+      "title": "Add custom component",
+      "nameLabel": "Name (French)",
+      "namePlaceholder": "e.g., My special sauce",
+      "nameEnLabel": "Name (English)",
+      "nameEnPlaceholder": "e.g., My special sauce",
+      "nameNlLabel": "Name (Dutch)",
+      "nameNlPlaceholder": "e.g., Mijn speciale saus",
+      "categoryLabel": "Category",
+      "quantityLabel": "Default quantity per person",
+      "quantityPlaceholder": "150",
+      "unitLabel": "Unit",
+      "unitPlaceholder": "g, ml, piece, etc.",
+      "shoppingCategoryLabel": "Shopping category",
+      "dietaryLabel": "Dietary properties",
+      "success": "Component created successfully!",
+      "error": "Failed to create component"
+    },
+    "deleteConfirm": {
+      "title": "Delete component",
+      "message": "Are you sure you want to delete this component?",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "perPerson": "per person",
+    "systemComponent": "System component",
+    "customComponent": "Custom component",
+    "noComponents": "No components found"
+  },
+  "mealBuilder": {
+    "title": "Build Your Meal",
+    "description": "Create a meal by selecting components",
+    "selectProtein": "Select a protein",
+    "selectVegetables": "Select vegetables",
+    "selectCarbs": "Select carbohydrates",
+    "selectSauces": "Select sauces (optional)",
+    "addToMeal": "Add to meal",
+    "saveAsRecipe": "Save as recipe",
+    "cancel": "Cancel",
+    "portions": "Portions: {{count}}",
+    "adjustQuantity": "Adjust quantity",
+    "quickMeal": "Quick meal",
+    "buildFromScratch": "Build from scratch",
+    "viewComponents": "View component library",
+    "totalEstimatedTime": "Estimated time: {{minutes}} min",
+    "preview": {
+      "title": "Meal preview",
+      "components_one": "{{count}} component",
+      "components_other": "{{count}} components",
+      "estimatedCost": "Est. cost: {{price}}",
+      "nutrition": "Nutrition per serving"
+    },
+    "swapComponent": {
+      "title": "Swap {{component}}",
+      "description": "Choose a replacement",
+      "similarOptions": "Similar options",
+      "allOptions": "All {{category}}",
+      "cancel": "Cancel",
+      "confirm": "Swap"
+    },
+    "saveRecipeModal": {
+      "title": "Save as recipe",
+      "description": "Save this component combination as a reusable recipe",
+      "nameLabel": "Recipe name",
+      "namePlaceholder": "e.g., Grilled chicken with rice",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "Describe your recipe",
+      "cancel": "Cancel",
+      "save": "Save recipe",
+      "success": "Recipe saved successfully!",
+      "error": "Failed to save recipe"
+    }
+  },
   "auth": {
     "login": {
       "title": "Family Planner",
@@ -241,24 +364,59 @@
     "description": "Manage your meal planning patterns",
     "selectTemplate": "Choose a schedule",
     "systemTemplates": "Default schedules",
-    "customTemplates": "My schedules",
-    "createNew": "Create schedule",
+    "customTemplates": "My custom schedules",
+    "createNew": "Create custom schedule",
+    "editTemplate": "Edit schedule",
+    "deleteTemplate": "Delete schedule",
+    "setAsDefault": "Set as default",
+    "defaultTemplate": "Default schedule",
     "templates": {
       "fullWeek": {
         "name": "Full Week",
-        "description": "Lunch and dinner for all 7 days (14 meals)"
+        "description": "Lunch and dinner for all 7 days (14 meals) - Perfect for families who cook most meals at home"
       },
       "standardWorkWeek": {
         "name": "Standard Work Week",
-        "description": "Dinner only on weekdays, lunch and dinner on weekends (9 meals)"
+        "description": "Dinner only on weekdays, lunch and dinner on weekends (9 meals) - Best for working families"
       },
-      "vacationMode": {
-        "name": "Vacation Mode",
-        "description": "Lunch and dinner every day (14 meals)"
+      "weekdayDinnersOnly": {
+        "name": "Weekday Dinners Only",
+        "description": "Dinner Monday through Friday only (5 meals) - Minimalist approach for busy families"
+      },
+      "weekendOnly": {
+        "name": "Weekend Only",
+        "description": "Lunch and dinner on Saturday and Sunday (4 meals) - For families who meal prep or eat out during the week"
+      },
+      "flexibleWeekly": {
+        "name": "Flexible Weekly",
+        "description": "One dinner per day for the entire week (7 meals) - Flexible scheduling for varied family routines"
       }
     },
     "mealCount": "{{count}} meal",
-    "mealCount_plural": "{{count}} meals"
+    "mealCount_plural": "{{count}} meals",
+    "builder": {
+      "title": "Schedule Builder",
+      "step1": "Schedule Details",
+      "step2": "Select Meals",
+      "step3": "Confirm",
+      "nameLabel": "Schedule Name",
+      "namePlaceholder": "E.g., Gourmet Weekend",
+      "descriptionLabel": "Description (optional)",
+      "descriptionPlaceholder": "Describe your custom meal schedule",
+      "selectMeals": "Select days and meal types",
+      "preview": "Preview: {{count}} meals",
+      "save": "Save Schedule",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "success": "Schedule created successfully!",
+      "updateSuccess": "Schedule updated successfully!",
+      "error": "Failed to create schedule",
+      "deleteConfirm": "Are you sure you want to delete this schedule?",
+      "deleteSuccess": "Schedule deleted successfully!",
+      "deleteError": "Failed to delete schedule",
+      "cannotDeleteDefault": "Cannot delete the default schedule",
+      "setDefaultSuccess": "Default schedule updated!"
+    }
   },
   "onboarding": {
     "title": "Welcome",
@@ -335,6 +493,21 @@
       "message": "Are you sure you want to remove {{name}} from the family?",
       "cancel": "Cancel",
       "confirm": "Remove"
+    },
+    "templates": {
+      "title": "Meal Schedules",
+      "description": "Manage meal planning schedules for your family",
+      "systemTemplates": "Default schedules",
+      "customTemplates": "Custom schedules",
+      "currentDefault": "Current default schedule",
+      "noCustomTemplates": "No custom schedules. Create one to fit your family's needs.",
+      "createButton": "Create custom schedule",
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "setDefault": "Set as default",
+        "manage": "Manage schedules"
+      }
     }
   },
   "invitations": {

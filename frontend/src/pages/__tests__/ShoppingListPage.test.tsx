@@ -106,12 +106,12 @@ describe('ShoppingListPage', () => {
     renderWithProviders(<ShoppingListPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/liste de courses/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/liste de courses/i)[0]).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/1.5 kg poulet/i)).toBeInTheDocument();
-    expect(screen.getByText(/500 g tomates/i)).toBeInTheDocument();
-    expect(screen.getByText(/400 g riz/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/1.5 kg poulet/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/500 g tomates/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/400 g riz/i)[0]).toBeInTheDocument();
   });
 
   it('should display generation date', async () => {
@@ -119,7 +119,7 @@ describe('ShoppingListPage', () => {
     renderWithProviders(<ShoppingListPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/générée le/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/générée le/i)[0]).toBeInTheDocument();
     });
   });
 
@@ -128,12 +128,12 @@ describe('ShoppingListPage', () => {
     renderWithProviders(<ShoppingListPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/progression/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/progression/i)[0]).toBeInTheDocument();
     });
 
     // 1 out of 4 items checked = 25%
-    expect(screen.getByText(/1 sur 4 articles/i)).toBeInTheDocument();
-    expect(screen.getByText(/25%/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/1 sur 4 articles/i)[0]).toBeInTheDocument();
+    expect(screen.getAllByText(/25%/i)[0]).toBeInTheDocument();
   });
 
   it('should display view mode tabs', async () => {
@@ -151,10 +151,10 @@ describe('ShoppingListPage', () => {
     renderWithProviders(<ShoppingListPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Viandes')).toBeInTheDocument();
-      expect(screen.getByText('Fruits et légumes')).toBeInTheDocument();
-      expect(screen.getByText('Épicerie')).toBeInTheDocument();
-      expect(screen.getByText('Produits laitiers')).toBeInTheDocument();
+      expect(screen.getAllByText('Viandes')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Fruits et légumes')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Épicerie')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Produits laitiers')[0]).toBeInTheDocument();
     });
   });
 
@@ -171,17 +171,18 @@ describe('ShoppingListPage', () => {
 
   it('should toggle item checked state when clicked', async () => {
     const user = userEvent.setup();
+    window.print = vi.fn(); // Mock window.print
     window.history.pushState({}, '', '/shopping-list/plan-1');
     renderWithProviders(<ShoppingListPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/poulet/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/poulet/i)[0]).toBeInTheDocument();
     });
 
-    // Find and click a checkbox
+    // Find and click a checkbox (look for square checkboxes, not the print button)
     const checkboxes = screen.getAllByRole('button');
     const itemCheckbox = checkboxes.find(btn =>
-      btn.className.includes('border') && btn.className.includes('rounded')
+      btn.className.includes('h-5 w-5') && btn.className.includes('border-2')
     );
 
     if (itemCheckbox) {
@@ -198,8 +199,8 @@ describe('ShoppingListPage', () => {
     renderWithProviders(<ShoppingListPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/pour: poulet rôti, soupe au poulet/i)).toBeInTheDocument();
-      expect(screen.getByText(/pour: pâtes tomates basilic/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/pour: poulet rôti, soupe au poulet/i)[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/pour: pâtes tomates basilic/i)[0]).toBeInTheDocument();
     });
   });
 
@@ -228,8 +229,8 @@ describe('ShoppingListPage', () => {
 
     await waitFor(() => {
       // Should show recipe names as headers
-      expect(screen.getByText('Poulet rôti')).toBeInTheDocument();
-      expect(screen.getByText('Pâtes tomates basilic')).toBeInTheDocument();
+      expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Pâtes tomates basilic')[0]).toBeInTheDocument();
     });
   });
 
@@ -256,7 +257,7 @@ describe('ShoppingListPage', () => {
     renderWithProviders(<ShoppingListPage />);
 
     await waitFor(() => {
-      const rizItem = screen.getByText(/400 g riz/i);
+      const rizItem = screen.getAllByText(/400 g riz/i)[0];
       // Checked item should have strikethrough styling
       expect(rizItem.className).toContain('line-through');
     });
@@ -268,7 +269,7 @@ describe('ShoppingListPage', () => {
 
     await waitFor(() => {
       // 1 checked out of 4 = 25%
-      expect(screen.getByText(/25%/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/25%/i)[0]).toBeInTheDocument();
     });
   });
 
@@ -318,9 +319,9 @@ describe('ShoppingListPage', () => {
     renderWithProviders(<ShoppingListPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/1.5 kg/i)).toBeInTheDocument();
-      expect(screen.getByText(/500 g/i)).toBeInTheDocument();
-      expect(screen.getByText(/1 l/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/1.5 kg/i)[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/500 g/i)[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/1 l/i)[0]).toBeInTheDocument();
     });
   });
 });

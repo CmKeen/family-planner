@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { familyAPI, invitationAPI } from '@/lib/api';
+import { familyAPI, invitationAPI, mealTemplateAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, UserPlus, Users, Mail, Trash2, Bell } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, UserPlus, Mail, Trash2, Bell, Lock, Calendar, Edit2, Star, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import TemplateBuilder from '@/components/TemplateBuilder';
 
 export default function FamilySettingsPage() {
   const { t } = useTranslation();
@@ -20,6 +22,8 @@ export default function FamilySettingsPage() {
   const { toast } = useToast();
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('MEMBER');
   const [memberName, setMemberName] = useState('');
@@ -35,6 +39,57 @@ export default function FamilySettingsPage() {
   });
 
   const selectedFamily = families?.[0];
+
+  const { data: templatesData } = useQuery({
+    queryKey: ['mealTemplates', selectedFamily?.id],
+    queryFn: async () => {
+      if (!selectedFamily?.id) return null;
+      const response = await mealTemplateAPI.getAll(selectedFamily.id);
+      return response.data.data;
+    },
+    enabled: !!selectedFamily?.id
+  });
+
+  const templates = Array.isArray(templatesData?.templates) ? templatesData.templates : [];
+  const systemTemplates = templates.filter((t: any) => t.isSystem);
+  const customTemplates = templates.filter((t: any) => !t.isSystem);
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (templateId: string) =>
+      mealTemplateAPI.delete(selectedFamily?.id!, templateId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mealTemplates'] });
+      toast({
+        title: t('mealTemplates.builder.deleteSuccess'),
+        variant: 'default'
+      });
+    },
+    onError: () => {
+      toast({
+        title: t('mealTemplates.builder.deleteError'),
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const setDefaultTemplateMutation = useMutation({
+    mutationFn: (templateId: string) =>
+      mealTemplateAPI.setDefault(selectedFamily?.id!, { templateId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['families'] });
+      queryClient.invalidateQueries({ queryKey: ['mealTemplates'] });
+      toast({
+        title: t('mealTemplates.builder.setDefaultSuccess'),
+        variant: 'default'
+      });
+    },
+    onError: () => {
+      toast({
+        title: t('mealTemplates.builder.error'),
+        variant: 'destructive'
+      });
+    }
+  });
 
   const sendInviteMutation = useMutation({
     mutationFn: (data: { inviteeEmail: string; role: string }) =>
@@ -91,6 +146,26 @@ export default function FamilySettingsPage() {
       age: memberAge ? parseInt(memberAge) : undefined,
       role: memberRole
     });
+  };
+
+  const handleCreateTemplate = () => {
+    setEditingTemplate(null);
+    setShowTemplateBuilder(true);
+  };
+
+  const handleEditTemplate = (template: any) => {
+    setEditingTemplate(template);
+    setShowTemplateBuilder(true);
+  };
+
+  const handleDeleteTemplate = (templateId: string) => {
+    if (confirm(t('mealTemplates.builder.deleteConfirm'))) {
+      deleteTemplateMutation.mutate(templateId);
+    }
+  };
+
+  const handleSetDefault = (templateId: string) => {
+    setDefaultTemplateMutation.mutate(templateId);
   };
 
   if (!selectedFamily) {
@@ -183,6 +258,140 @@ export default function FamilySettingsPage() {
                 ))}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+
+        {/* Meal Schedules Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  {t('family.templates.title')}
+                </CardTitle>
+                <CardDescription>{t('family.templates.description')}</CardDescription>
+              </div>
+              <Button onClick={handleCreateTemplate} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                {t('family.templates.createButton')}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* System Templates */}
+            <div>
+              <h3 className="font-semibold text-sm text-gray-700 mb-3 flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                {t('family.templates.systemTemplates')}
+              </h3>
+              <div className="grid gap-3">
+                {systemTemplates.map((template: any) => (
+                  <div
+                    key={template.id}
+                    className="flex items-center justify-between p-4 border rounded-lg bg-gray-50"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-medium text-gray-900">
+                          {String(t(`mealTemplates.templates.${template.name.toLowerCase().replace(/\s+/g, '')}.name`, template.name))}
+                        </h4>
+                        {selectedFamily?.defaultTemplateId === template.id && (
+                          <Badge variant="default" className="bg-orange-500">
+                            <Star className="h-3 w-3 mr-1" />
+                            {t('mealTemplates.defaultTemplate')}
+                          </Badge>
+                        )}
+                        <Badge variant="secondary" className="text-xs">
+                          {t('mealTemplates.mealCount', { count: template.schedule.reduce((sum: number, day: any) => sum + day.mealTypes.length, 0) })}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {String(t(`mealTemplates.templates.${template.name.toLowerCase().replace(/\s+/g, '')}.description`, template.description))}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      {selectedFamily?.defaultTemplateId !== template.id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSetDefault(template.id)}
+                          disabled={setDefaultTemplateMutation.isPending}
+                        >
+                          {t('family.templates.actions.setDefault')}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Templates */}
+            <div>
+              <h3 className="font-semibold text-sm text-gray-700 mb-3">
+                {t('family.templates.customTemplates')}
+              </h3>
+              {customTemplates.length === 0 ? (
+                <p className="text-sm text-gray-500 italic py-4 text-center bg-gray-50 rounded-lg border border-dashed">
+                  {t('family.templates.noCustomTemplates')}
+                </p>
+              ) : (
+                <div className="grid gap-3">
+                  {customTemplates.map((template: any) => (
+                    <div
+                      key={template.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:border-orange-300 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-gray-900">{template.name}</h4>
+                          {selectedFamily?.defaultTemplateId === template.id && (
+                            <Badge variant="default" className="bg-orange-500">
+                              <Star className="h-3 w-3 mr-1" />
+                              {t('mealTemplates.defaultTemplate')}
+                            </Badge>
+                          )}
+                          <Badge variant="secondary" className="text-xs">
+                            {t('mealTemplates.mealCount', { count: template.schedule.reduce((sum: number, day: any) => sum + day.mealTypes.length, 0) })}
+                          </Badge>
+                        </div>
+                        {template.description && (
+                          <p className="text-sm text-gray-600">{template.description}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        {selectedFamily?.defaultTemplateId !== template.id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSetDefault(template.id)}
+                            disabled={setDefaultTemplateMutation.isPending}
+                          >
+                            {t('family.templates.actions.setDefault')}
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditTemplate(template)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteTemplate(template.id)}
+                          disabled={deleteTemplateMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -280,6 +489,18 @@ export default function FamilySettingsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Template Builder Modal */}
+        {showTemplateBuilder && (
+          <TemplateBuilder
+            familyId={selectedFamily.id}
+            template={editingTemplate}
+            onClose={() => {
+              setShowTemplateBuilder(false);
+              setEditingTemplate(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );

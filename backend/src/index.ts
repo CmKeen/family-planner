@@ -14,6 +14,7 @@ import weeklyPlanRoutes from './routes/weeklyPlan.routes.js';
 import shoppingListRoutes from './routes/shoppingList.routes.js';
 import schoolMenuRoutes from './routes/schoolMenu.routes.js';
 import mealScheduleTemplateRoutes from './routes/mealScheduleTemplate.routes.js';
+import foodComponentRoutes from './routes/foodComponent.routes.js';
 import healthRoutes from './routes/health.routes.js';
 import { createAdminRouter } from './routes/admin.routes.js';
 import adminApiRoutes from './routes/admin.api.routes.js';
@@ -99,6 +100,7 @@ app.use('/api/recipes', recipeRoutes);
 app.use('/api/weekly-plans', weeklyPlanRoutes);
 app.use('/api/shopping-lists', shoppingListRoutes);
 app.use('/api/school-menus', schoolMenuRoutes);
+app.use('/api/components', foodComponentRoutes);
 app.use('/api', mealScheduleTemplateRoutes);
 
 // Error handling

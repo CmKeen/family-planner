@@ -27,6 +27,8 @@
     "title": "Plan hebdomadaire",
     "week": "Semaine {{number}} - {{year}}",
     "loading": "Chargement du plan...",
+    "noMeals": "Aucun repas planifié pour ce jour",
+    "noRecipe": "Aucune recette sélectionnée",
     "stats": {
       "totalTime": "Temps total",
       "favorites": "Favoris",
@@ -45,12 +47,14 @@
       "viewShoppingList": "Voir la liste de courses",
       "swap": "Échanger",
       "swapping": "Échange...",
+      "selectRecipe": "Choisir une recette",
       "adjustPortions": "Portions",
       "adjusting": "Ajustement...",
       "lock": "Verrouiller",
       "unlock": "Déverrouiller",
       "changePattern": "Changer le modèle",
       "addMeal": "Ajouter un repas",
+      "addMealForDay": "Ajouter un repas",
       "removeMeal": "Supprimer",
       "switchingTemplate": "Changement de modèle..."
     },
@@ -172,6 +176,125 @@
       "back": "Retour"
     }
   },
+  "components": {
+    "title": "Bibliothèque de composants",
+    "loading": "Chargement des composants...",
+    "categories": {
+      "all": "Tous",
+      "PROTEIN": "Protéines",
+      "VEGETABLE": "Légumes",
+      "CARB": "Glucides",
+      "FRUIT": "Fruits",
+      "SAUCE": "Sauces",
+      "CONDIMENT": "Condiments",
+      "SPICE": "Épices",
+      "OTHER": "Autres"
+    },
+    "roles": {
+      "MAIN_PROTEIN": "Protéine principale",
+      "SECONDARY_PROTEIN": "Protéine secondaire",
+      "PRIMARY_VEGETABLE": "Légume principal",
+      "SECONDARY_VEGETABLE": "Légume secondaire",
+      "BASE_CARB": "Glucide de base",
+      "SIDE_CARB": "Glucide d'accompagnement",
+      "SAUCE": "Sauce",
+      "GARNISH": "Garniture",
+      "OTHER": "Autre"
+    },
+    "actions": {
+      "add": "Ajouter un composant",
+      "addCustom": "Ajouter un composant personnalisé",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "swap": "Échanger",
+      "remove": "Retirer",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "selectComponent": "Sélectionner un composant"
+    },
+    "filters": {
+      "category": "Catégorie",
+      "dietary": "Régime alimentaire",
+      "vegetarian": "Végétarien",
+      "vegan": "Végan",
+      "glutenFree": "Sans gluten",
+      "lactoseFree": "Sans lactose",
+      "kosher": "Casher",
+      "halal": "Halal"
+    },
+    "addCustomModal": {
+      "title": "Ajouter un composant personnalisé",
+      "nameLabel": "Nom (Français)",
+      "namePlaceholder": "p. ex., Ma sauce spéciale",
+      "nameEnLabel": "Nom (Anglais)",
+      "nameEnPlaceholder": "p. ex., My special sauce",
+      "nameNlLabel": "Nom (Néerlandais)",
+      "nameNlPlaceholder": "p. ex., Mijn speciale saus",
+      "categoryLabel": "Catégorie",
+      "quantityLabel": "Quantité par défaut par personne",
+      "quantityPlaceholder": "150",
+      "unitLabel": "Unité",
+      "unitPlaceholder": "g, ml, pièce, etc.",
+      "shoppingCategoryLabel": "Catégorie de courses",
+      "dietaryLabel": "Propriétés diététiques",
+      "success": "Composant créé avec succès !",
+      "error": "Échec de la création du composant"
+    },
+    "deleteConfirm": {
+      "title": "Supprimer le composant",
+      "message": "Êtes-vous sûr de vouloir supprimer ce composant ?",
+      "cancel": "Annuler",
+      "confirm": "Supprimer"
+    },
+    "perPerson": "par personne",
+    "systemComponent": "Composant système",
+    "customComponent": "Composant personnalisé",
+    "noComponents": "Aucun composant trouvé"
+  },
+  "mealBuilder": {
+    "title": "Composez votre repas",
+    "description": "Créez un repas en sélectionnant des composants",
+    "selectProtein": "Sélectionnez une protéine",
+    "selectVegetables": "Sélectionnez des légumes",
+    "selectCarbs": "Sélectionnez des glucides",
+    "selectSauces": "Sélectionnez des sauces (optionnel)",
+    "addToMeal": "Ajouter au repas",
+    "saveAsRecipe": "Enregistrer comme recette",
+    "cancel": "Annuler",
+    "portions": "Portions : {{count}}",
+    "adjustQuantity": "Ajuster la quantité",
+    "quickMeal": "Repas rapide",
+    "buildFromScratch": "Composer depuis zéro",
+    "viewComponents": "Voir la bibliothèque de composants",
+    "totalEstimatedTime": "Temps estimé : {{minutes}} min",
+    "preview": {
+      "title": "Aperçu du repas",
+      "components_one": "{{count}} composant",
+      "components_other": "{{count}} composants",
+      "estimatedCost": "Coût estimé : {{price}}",
+      "nutrition": "Nutrition par portion"
+    },
+    "swapComponent": {
+      "title": "Échanger {{component}}",
+      "description": "Choisissez un remplacement",
+      "similarOptions": "Options similaires",
+      "allOptions": "Tous les {{category}}",
+      "cancel": "Annuler",
+      "confirm": "Échanger"
+    },
+    "saveRecipeModal": {
+      "title": "Enregistrer comme recette",
+      "description": "Enregistrez cette combinaison de composants comme une recette réutilisable",
+      "nameLabel": "Nom de la recette",
+      "namePlaceholder": "p. ex., Poulet grillé avec du riz",
+      "descriptionLabel": "Description (optionnel)",
+      "descriptionPlaceholder": "Décrivez votre recette",
+      "cancel": "Annuler",
+      "save": "Enregistrer la recette",
+      "success": "Recette enregistrée avec succès !",
+      "error": "Échec de l'enregistrement de la recette"
+    }
+  },
   "auth": {
     "login": {
       "title": "Family Planner",
@@ -241,24 +364,59 @@
     "description": "Gérez vos modèles de planification de repas",
     "selectTemplate": "Choisir un horaire",
     "systemTemplates": "Horaires par défaut",
-    "customTemplates": "Mes horaires",
-    "createNew": "Créer un horaire",
+    "customTemplates": "Mes horaires personnalisés",
+    "createNew": "Créer un horaire personnalisé",
+    "editTemplate": "Modifier l'horaire",
+    "deleteTemplate": "Supprimer l'horaire",
+    "setAsDefault": "Définir par défaut",
+    "defaultTemplate": "Horaire par défaut",
     "templates": {
       "fullWeek": {
         "name": "Semaine complète",
-        "description": "Déjeuner et dîner pour les 7 jours (14 repas)"
+        "description": "Déjeuner et dîner pour les 7 jours (14 repas) - Parfait pour les familles qui cuisinent la plupart des repas à la maison"
       },
       "standardWorkWeek": {
         "name": "Semaine de travail standard",
-        "description": "Dîner uniquement en semaine, déjeuner et dîner le week-end (9 repas)"
+        "description": "Dîner uniquement en semaine, déjeuner et dîner le week-end (9 repas) - Idéal pour les familles qui travaillent"
       },
-      "vacationMode": {
-        "name": "Mode vacances",
-        "description": "Déjeuner et dîner tous les jours (14 repas)"
+      "weekdayDinnersOnly": {
+        "name": "Dîners en semaine uniquement",
+        "description": "Dîner du lundi au vendredi (5 repas) - Approche minimaliste pour les familles occupées"
+      },
+      "weekendOnly": {
+        "name": "Week-end uniquement",
+        "description": "Déjeuner et dîner samedi et dimanche (4 repas) - Pour les familles qui préparent leurs repas ou mangent à l'extérieur en semaine"
+      },
+      "flexibleWeekly": {
+        "name": "Flexible hebdomadaire",
+        "description": "Un dîner par jour toute la semaine (7 repas) - Planification flexible pour les routines familiales variées"
       }
     },
     "mealCount": "{{count}} repas",
-    "mealCount_plural": "{{count}} repas"
+    "mealCount_plural": "{{count}} repas",
+    "builder": {
+      "title": "Créateur d'horaire",
+      "step1": "Détails de l'horaire",
+      "step2": "Sélectionner les repas",
+      "step3": "Confirmer",
+      "nameLabel": "Nom de l'horaire",
+      "namePlaceholder": "Ex: Week-end gourmand",
+      "descriptionLabel": "Description (optionnel)",
+      "descriptionPlaceholder": "Décrivez votre horaire de repas personnalisé",
+      "selectMeals": "Sélectionnez les jours et types de repas",
+      "preview": "Aperçu: {{count}} repas",
+      "save": "Enregistrer l'horaire",
+      "cancel": "Annuler",
+      "saving": "Enregistrement...",
+      "success": "Horaire créé avec succès !",
+      "updateSuccess": "Horaire mis à jour avec succès !",
+      "error": "Échec de la création de l'horaire",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet horaire ?",
+      "deleteSuccess": "Horaire supprimé avec succès !",
+      "deleteError": "Échec de la suppression de l'horaire",
+      "cannotDeleteDefault": "Impossible de supprimer l'horaire défini par défaut",
+      "setDefaultSuccess": "Horaire par défaut mis à jour !"
+    }
   },
   "onboarding": {
     "title": "Bienvenue",
@@ -335,6 +493,21 @@
       "message": "Êtes-vous sûr de vouloir retirer {{name}} de la famille ?",
       "cancel": "Annuler",
       "confirm": "Retirer"
+    },
+    "templates": {
+      "title": "Horaires des repas",
+      "description": "Gérez les horaires de planification de repas pour votre famille",
+      "systemTemplates": "Horaires par défaut",
+      "customTemplates": "Horaires personnalisés",
+      "currentDefault": "Horaire par défaut actuel",
+      "noCustomTemplates": "Aucun horaire personnalisé. Créez-en un pour répondre aux besoins de votre famille.",
+      "createButton": "Créer un horaire personnalisé",
+      "actions": {
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "setDefault": "Définir par défaut",
+        "manage": "Gérer les horaires"
+      }
     }
   },
   "invitations": {
