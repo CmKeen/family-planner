@@ -145,7 +145,7 @@ export const getRecipes = asyncHandler(
       const normalizedSearch = normalize(searchTerm);
 
       // Filter recipes based on accent-insensitive search
-      const filteredRecipes = allRecipes.filter((recipe) => {
+      const filteredRecipes = allRecipes.filter((recipe: typeof allRecipes[number]) => {
         if (lang === 'en') {
           // Search in English fields first, then fall back to French
           const searchFields = [
