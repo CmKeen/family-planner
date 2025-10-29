@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto';
 import prisma from '../lib/prisma.js';
 import { AppError, asyncHandler } from '../middleware/errorHandler.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { Prisma } from '@prisma/client';
 
 const sendInvitationSchema = z.object({
   inviteeEmail: z.string().email(),
@@ -258,7 +259,7 @@ export const acceptInvitation = asyncHandler(
     }
 
     // Create family member and update invitation status in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const member = await tx.familyMember.create({
         data: {
           familyId: invitation.familyId,

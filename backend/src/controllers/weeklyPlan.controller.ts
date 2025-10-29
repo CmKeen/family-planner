@@ -827,8 +827,8 @@ export const saveComponentMealAsRecipe = asyncHandler(
     }
 
     // Generate recipe name if not provided
-    const componentNames = meal.mealComponents.map(mc => mc.component.name);
-    const componentNamesEn = meal.mealComponents.map(mc => mc.component.nameEn || mc.component.name);
+    const componentNames = meal.mealComponents.map((mc: typeof meal.mealComponents[number]) => mc.component.name);
+    const componentNamesEn = meal.mealComponents.map((mc: typeof meal.mealComponents[number]) => mc.component.nameEn || mc.component.name);
 
     const defaultTitle = componentNames.join(' avec ');
     const defaultTitleEn = componentNamesEn.join(' with ');
@@ -839,7 +839,7 @@ export const saveComponentMealAsRecipe = asyncHandler(
     const totalTime = prepTime + cookTime;
 
     // Create recipe and ingredients in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create the recipe
       const recipe = await tx.recipe.create({
         data: {
@@ -862,7 +862,7 @@ export const saveComponentMealAsRecipe = asyncHandler(
       });
 
       // Create ingredients from meal components
-      const ingredientsData = meal.mealComponents.map((mc, index) => ({
+      const ingredientsData = meal.mealComponents.map((mc: typeof meal.mealComponents[number], index: number) => ({
         recipeId: recipe.id,
         name: mc.component.name,
         nameEn: mc.component.nameEn || mc.component.name,
