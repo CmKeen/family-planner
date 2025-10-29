@@ -1,42 +1,27 @@
-# Render Blueprint for: family-planner
-# Place this file at the REPO ROOT as `render.yaml`.
-
 services:
-  # === Backend (Node.js API in Docker) ===
   - type: web
     name: family-planner-backend
     plan: free
     runtime: docker
-    # Dockerfile lives under ./backend
     dockerfilePath: backend/Dockerfile
-    # Best practice on Render: listen on 0.0.0.0 and read PORT; default expected port is 10000.
     envVars:
       - key: PORT
         value: "10000"
-
-      # Database URL is injected from the managed Postgres below (internal/private connection).
       - key: DATABASE_URL
         fromDatabase:
           name: family-planner-db
           property: connectionString
-
-      # Secrets – leave empty here; set values in the dashboard after first sync.
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
         value: "7d"
       - key: NODE_ENV
         value: production
-
-      # CORS origin: dynamically point to the static frontend’s public URL
-      # (RENDER_EXTERNAL_URL is provided by the frontend service at runtime).
       - key: CORS_ORIGIN
         fromService:
           type: web
           name: family-planner-frontend
           envVarKey: RENDER_EXTERNAL_URL
-
-      # Optional app metadata
       - key: APP_NAME
         value: "Family Planner"
       - key: APP_URL
@@ -45,36 +30,19 @@ services:
           name: family-planner-frontend
           envVarKey: RENDER_EXTERNAL_URL
 
-    # Optional: run DB migrations before starting (uncomment & adapt)
-    # preDeployCommand: "npm --prefix backend run migrate"
-
-    # Optional: health check path if your API exposes one
-    # healthCheckPath: /api/health
-
-  # === Frontend (Vite) as a Static Site ===
   - type: web
     name: family-planner-frontend
-    env: static              # static site runtime
-    plan: free
-    rootDir: frontend        # build only from ./frontend
+    env: static
+    rootDir: frontend
     buildCommand: "npm ci && npm run build"
-    staticPublishPath: dist  # Vite build output
-
-    # Build-time env for your Vite app:
+    staticPublishPath: dist
     envVars:
-      # Prefer using the backend's generated URL; your frontend can compose paths like `${VITE_API_ORIGIN}/api`
       - key: VITE_API_ORIGIN
         fromService:
           type: web
           name: family-planner-backend
           envVarKey: RENDER_EXTERNAL_URL
 
-      # If your frontend needs a single var with `/api` suffixed, set it manually after first deploy:
-      - key: VITE_API_URL
-        sync: false  # e.g. https://<backend>.onrender.com/api
-
 databases:
-  # === Managed Postgres (free) ===
   - name: family-planner-db
     plan: free
-    # You can also specify databaseName/user/postgresMajorVersion if you want custom values.
