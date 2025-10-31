@@ -10,12 +10,31 @@
     "build": "npm run build:backend && npm run build:frontend",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "setup": "npm install && cd backend && npm install && cd ../frontend && npm install"
+    "setup": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "prepare": "husky"
   },
-  "keywords": ["meal-planning", "family", "dietary-constraints", "kosher", "halal"],
+  "keywords": [
+    "meal-planning",
+    "family",
+    "dietary-constraints",
+    "kosher",
+    "halal"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6"
+  },
+  "lint-staged": {
+    "backend/src/**/*.{ts,js}": [
+      "cd backend && npx eslint --fix",
+      "cd backend && npx tsc --noEmit"
+    ],
+    "frontend/src/**/*.{ts,tsx,js,jsx}": [
+      "cd frontend && npx eslint --fix",
+      "cd frontend && npx tsc --noEmit"
+    ]
   }
 }

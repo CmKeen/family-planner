@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+  echo "⚠️  Docker is not running. Skipping tests."
+  echo "Please ensure Docker is running before pushing."
+  exit 1
+fi
+
+# Check if containers are running
+if ! docker-compose ps | grep -q "Up"; then
+  echo "⚠️  Docker containers are not running. Skipping tests."
+  echo "Please start containers with: docker-compose -f docker-compose.dev.yml up -d"
+  exit 1
+fi
+
+echo "🧪 Running backend tests..."
+if ! docker-compose exec -T backend npm test; then
+  echo "❌ Backend tests failed!"
+  exit 1
+fi
+
+echo "🧪 Running frontend tests..."
+if ! docker-compose exec -T frontend npm test -- --run; then
+  echo "❌ Frontend tests failed!"
+  exit 1
+fi
+
+echo "✅ All tests passed!"
