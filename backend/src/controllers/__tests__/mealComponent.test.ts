@@ -10,7 +10,7 @@ const mockMeal = {
   update: jest.fn() as any
 };
 
-const mockMealComponent = {
+const mockMealComponentModel = {
   create: jest.fn() as any,
   findUnique: jest.fn() as any,
   update: jest.fn() as any,
@@ -35,7 +35,7 @@ jest.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     meal: mockMeal,
-    mealComponent: mockMealComponent,
+    mealComponent: mockMealComponentModel,
     foodComponent: mockFoodComponent,
     familyMember: mockFamilyMember,
     weeklyPlan: mockWeeklyPlan
@@ -104,7 +104,7 @@ describe('Meal Component Controller', () => {
         category: 'PROTEIN'
       };
 
-      const mockMealComponent = {
+      const mockMealComponentData = {
         id: 'mc-1',
         mealId: 'meal-1',
         componentId: 'comp-chicken',
@@ -120,7 +120,7 @@ describe('Meal Component Controller', () => {
       mockMeal.findUnique.mockResolvedValue(mockMealData);
       mockFamilyMember.findFirst.mockResolvedValue(mockMember);
       mockFoodComponent.findUnique.mockResolvedValue(mockComponent);
-      mockMealComponent.create.mockResolvedValue(mockMealComponent);
+      mockMealComponentModel.create.mockResolvedValue(mockMealComponentData);
 
       await addComponentToMeal(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
@@ -130,7 +130,7 @@ describe('Meal Component Controller', () => {
         include: { weeklyPlan: true }
       });
 
-      expect(mockMealComponent.create).toHaveBeenCalledWith({
+      expect(mockMealComponentModel.create).toHaveBeenCalledWith({
         data: {
           mealId: 'meal-1',
           componentId: 'comp-chicken',
@@ -145,7 +145,7 @@ describe('Meal Component Controller', () => {
       });
 
       expect(mockResponse.status).toHaveBeenCalledWith(201);
-      expect(mockResponse.json).toHaveBeenCalledWith(mockMealComponent);
+      expect(mockResponse.json).toHaveBeenCalledWith(mockMealComponentData);
     });
 
     it('should return 404 if meal not found', async () => {
@@ -286,15 +286,15 @@ describe('Meal Component Controller', () => {
 
       const mockMember = { id: 'member-1', role: 'ADMIN', familyId: 'family-1' };
 
-      mockMealComponent.findUnique.mockResolvedValue(existingMealComponent);
+      mockMealComponentModel.findUnique.mockResolvedValue(existingMealComponent);
       mockFamilyMember.findFirst.mockResolvedValue(mockMember);
       mockFoodComponent.findUnique.mockResolvedValue(newComponent);
-      mockMealComponent.update.mockResolvedValue(updatedMealComponent);
+      mockMealComponentModel.update.mockResolvedValue(updatedMealComponent);
 
       await swapMealComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
 
-      expect(mockMealComponent.update).toHaveBeenCalledWith({
+      expect(mockMealComponentModel.update).toHaveBeenCalledWith({
         where: { id: 'mc-chicken' },
         data: {
           componentId: 'comp-salmon',
@@ -342,14 +342,14 @@ describe('Meal Component Controller', () => {
 
       const mockMember = { id: 'member-1', role: 'ADMIN' };
 
-      mockMealComponent.findUnique.mockResolvedValue(existingMealComponent);
+      mockMealComponentModel.findUnique.mockResolvedValue(existingMealComponent);
       mockFamilyMember.findFirst.mockResolvedValue(mockMember);
       mockFoodComponent.findUnique.mockResolvedValue(newComponent);
 
       await swapMealComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
 
-      expect(mockMealComponent.update).toHaveBeenCalledWith({
+      expect(mockMealComponentModel.update).toHaveBeenCalledWith({
         where: { id: 'mc-chicken' },
         data: {
           componentId: 'comp-salmon',
@@ -371,7 +371,7 @@ describe('Meal Component Controller', () => {
         newComponentId: 'comp-salmon'
       };
 
-      mockMealComponent.findUnique.mockResolvedValue(null);
+      mockMealComponentModel.findUnique.mockResolvedValue(null);
 
       await swapMealComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
@@ -401,14 +401,14 @@ describe('Meal Component Controller', () => {
 
       const mockMember = { id: 'member-1', role: 'ADMIN', familyId: 'family-1' };
 
-      mockMealComponent.findUnique.mockResolvedValue(existingMealComponent);
+      mockMealComponentModel.findUnique.mockResolvedValue(existingMealComponent);
       mockFamilyMember.findFirst.mockResolvedValue(mockMember);
-      mockMealComponent.delete.mockResolvedValue(existingMealComponent);
+      mockMealComponentModel.delete.mockResolvedValue(existingMealComponent);
 
       await removeMealComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
 
-      expect(mockMealComponent.delete).toHaveBeenCalledWith({
+      expect(mockMealComponentModel.delete).toHaveBeenCalledWith({
         where: { id: 'mc-chicken' }
       });
 
@@ -424,7 +424,7 @@ describe('Meal Component Controller', () => {
         componentId: 'non-existent'
       };
 
-      mockMealComponent.findUnique.mockResolvedValue(null);
+      mockMealComponentModel.findUnique.mockResolvedValue(null);
 
       await removeMealComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
@@ -450,7 +450,7 @@ describe('Meal Component Controller', () => {
         }
       };
 
-      mockMealComponent.findUnique.mockResolvedValue(existingMealComponent);
+      mockMealComponentModel.findUnique.mockResolvedValue(existingMealComponent);
       mockFamilyMember.findFirst.mockResolvedValue(null);
 
       await removeMealComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
@@ -491,14 +491,14 @@ describe('Meal Component Controller', () => {
 
       const mockMember = { id: 'member-1', role: 'ADMIN' };
 
-      mockMealComponent.findUnique.mockResolvedValue(existingMealComponent);
+      mockMealComponentModel.findUnique.mockResolvedValue(existingMealComponent);
       mockFamilyMember.findFirst.mockResolvedValue(mockMember);
-      mockMealComponent.update.mockResolvedValue(updatedMealComponent);
+      mockMealComponentModel.update.mockResolvedValue(updatedMealComponent);
 
       await updateMealComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
 
-      expect(mockMealComponent.update).toHaveBeenCalledWith({
+      expect(mockMealComponentModel.update).toHaveBeenCalledWith({
         where: { id: 'mc-chicken' },
         data: { quantity: 200 },
         include: {
@@ -532,13 +532,13 @@ describe('Meal Component Controller', () => {
 
       const mockMember = { id: 'member-1', role: 'ADMIN' };
 
-      mockMealComponent.findUnique.mockResolvedValue(existingMealComponent);
+      mockMealComponentModel.findUnique.mockResolvedValue(existingMealComponent);
       mockFamilyMember.findFirst.mockResolvedValue(mockMember);
 
       await updateMealComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
 
-      expect(mockMealComponent.update).toHaveBeenCalledWith({
+      expect(mockMealComponentModel.update).toHaveBeenCalledWith({
         where: { id: 'mc-chicken' },
         data: {
           quantity: 200,

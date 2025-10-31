@@ -15,14 +15,15 @@ describe('Shopping List Algorithm', () => {
         return Math.ceil(quantity / 50) * 50; // Round to 50g
       }
 
-      if (unitLower.includes('l')) {
-        if (quantity < 0.5) return Math.ceil(quantity * 10) / 10; // Round to 0.1L
-        return Math.ceil(quantity * 4) / 4; // Round to 0.25L
-      }
-
+      // Check ml before l to avoid matching 'ml' with 'l'
       if (unitLower.includes('ml')) {
         if (quantity < 100) return Math.ceil(quantity / 10) * 10; // Round to 10ml
         return Math.ceil(quantity / 50) * 50; // Round to 50ml
+      }
+
+      if (unitLower.includes('l')) {
+        if (quantity < 0.5) return Math.ceil(quantity * 10) / 10; // Round to 0.1L
+        return Math.ceil(quantity * 4) / 4; // Round to 0.25L
       }
 
       // For pieces, units, etc.
@@ -335,10 +336,13 @@ describe('Shopping List Algorithm', () => {
       });
 
       const result = Array.from(aggregated.values());
-      expect(result).toHaveLength(5);
+      expect(result).toHaveLength(6); // Pâtes, Tomates, Saumon, Poulet, Riz blanc, Brocoli
       expect(result.find(i => i.name === 'Pâtes')).toBeDefined();
       expect(result.find(i => i.name === 'Poulet')).toBeDefined();
       expect(result.find(i => i.name === 'Brocoli')).toBeDefined();
+      expect(result.find(i => i.name === 'Saumon')).toBeDefined();
+      expect(result.find(i => i.name === 'Riz blanc')).toBeDefined();
+      expect(result.find(i => i.name === 'Tomates')).toBeDefined();
     });
   });
 
@@ -416,7 +420,8 @@ describe('Shopping List Algorithm', () => {
 
       if (dietProfile.lactoseFree && substitutions[ingredient.name]) {
         expect(substitutions[ingredient.name]).toBeDefined();
-        expect(substitutions[ingredient.name]).not.toContain('lactose');
+        // Verify we got a lactose-free substitution (sans lactose, végétale, or non-dairy alternative)
+        expect(substitutions[ingredient.name]).toMatch(/sans lactose|végétal|margarine/i);
       }
     });
 

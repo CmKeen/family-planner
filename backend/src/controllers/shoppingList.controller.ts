@@ -297,13 +297,15 @@ function roundQuantity(quantity: number, unit: string): number {
     return Math.ceil(quantity / 50) * 50; // Round to 50g
   }
 
-  if (unitLower.includes('l')) {
-    return Math.ceil(quantity * 4) / 4; // Round to 0.25 L
-  }
-
+  // Check ml before l to avoid matching 'ml' with 'l'
   if (unitLower.includes('ml')) {
     if (quantity < 100) return Math.ceil(quantity / 10) * 10;
     return Math.ceil(quantity / 50) * 50;
+  }
+
+  if (unitLower.includes('l')) {
+    if (quantity < 0.5) return Math.ceil(quantity * 10) / 10; // Round to 0.1L
+    return Math.ceil(quantity * 4) / 4; // Round to 0.25 L
   }
 
   if (['piece', 'pièce', 'unit', 'unité'].includes(unitLower)) {
