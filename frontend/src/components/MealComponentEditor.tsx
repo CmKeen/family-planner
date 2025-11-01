@@ -40,7 +40,6 @@ interface MealComponent {
   componentId: string;
   quantity: number;
   unit: string;
-  role: string;
   order: number;
   component: FoodComponent;
 }
@@ -64,18 +63,6 @@ const COMPONENT_CATEGORIES = [
   'SAUCE',
   'CONDIMENT',
   'SPICE',
-  'OTHER',
-];
-
-const COMPONENT_ROLES = [
-  'MAIN_PROTEIN',
-  'SECONDARY_PROTEIN',
-  'PRIMARY_VEGETABLE',
-  'SECONDARY_VEGETABLE',
-  'BASE_CARB',
-  'SIDE_CARB',
-  'SAUCE',
-  'GARNISH',
   'OTHER',
 ];
 
@@ -112,7 +99,6 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
   const [selectedComponentId, setSelectedComponentId] = useState<string>('');
   const [newQuantity, setNewQuantity] = useState<string>('');
   const [newUnit, setNewUnit] = useState<string>('');
-  const [newRole, setNewRole] = useState<string>('OTHER');
   const [swapMode, setSwapMode] = useState<{ mealComponentId: string; category: string } | null>(null);
 
   const loadComponents = useCallback(async () => {
@@ -156,7 +142,6 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
         componentId: selectedComponentId,
         quantity: parseFloat(newQuantity) || selectedComponent.defaultQuantity,
         unit: newUnit || selectedComponent.unit,
-        role: newRole,
         order: localMealComponents.length,
       });
       // Optimistically update local state with the new component
@@ -169,7 +154,6 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
       setSelectedComponentId('');
       setNewQuantity('');
       setNewUnit('');
-      setNewRole('OTHER');
       onUpdate();
     } catch (error) {
       console.error('Failed to add component:', error);
@@ -277,8 +261,7 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
                       <div>
                         <p className="font-medium">{getComponentName(mc.component)}</p>
                         <p className="text-sm text-muted-foreground">
-                          {mc.quantity} {mc.unit} {t('components.perPerson')} •{' '}
-                          {t(`components.roles.${mc.role}`)}
+                          {mc.quantity} {mc.unit} {t('components.perPerson')}
                         </p>
                       </div>
                     </div>
@@ -389,22 +372,6 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
                     onChange={(e) => setNewUnit(e.target.value)}
                     placeholder="g, ml, piece"
                   />
-                </div>
-
-                <div className="col-span-2">
-                  <Label>{t('components.roles.MAIN_PROTEIN')}</Label>
-                  <Select value={newRole} onValueChange={setNewRole}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COMPONENT_ROLES.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {t(`components.roles.${role}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 

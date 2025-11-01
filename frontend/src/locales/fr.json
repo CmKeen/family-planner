@@ -193,17 +193,6 @@
       "SPICE": "Épices",
       "OTHER": "Autres"
     },
-    "roles": {
-      "MAIN_PROTEIN": "Protéine principale",
-      "SECONDARY_PROTEIN": "Protéine secondaire",
-      "PRIMARY_VEGETABLE": "Légume principal",
-      "SECONDARY_VEGETABLE": "Légume secondaire",
-      "BASE_CARB": "Glucide de base",
-      "SIDE_CARB": "Glucide d'accompagnement",
-      "SAUCE": "Sauce",
-      "GARNISH": "Garniture",
-      "OTHER": "Autre"
-    },
     "actions": {
       "add": "Ajouter un composant",
       "addCustom": "Ajouter un composant personnalisé",

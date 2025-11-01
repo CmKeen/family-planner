@@ -132,7 +132,6 @@ describe('Meal Component API', () => {
     it('should add a component to a meal', async () => {
       const componentData = {
         componentId: 'comp-chicken',
-        role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g',
         order: 0

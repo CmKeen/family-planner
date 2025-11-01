@@ -193,17 +193,6 @@
       "SPICE": "Spices",
       "OTHER": "Other"
     },
-    "roles": {
-      "MAIN_PROTEIN": "Main Protein",
-      "SECONDARY_PROTEIN": "Secondary Protein",
-      "PRIMARY_VEGETABLE": "Primary Vegetable",
-      "SECONDARY_VEGETABLE": "Secondary Vegetable",
-      "BASE_CARB": "Base Carb",
-      "SIDE_CARB": "Side Carb",
-      "SAUCE": "Sauce",
-      "GARNISH": "Garnish",
-      "OTHER": "Other"
-    },
     "actions": {
       "add": "Add component",
       "addCustom": "Add custom component",

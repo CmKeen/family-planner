@@ -554,16 +554,16 @@ describe('Weekly Plan Algorithm', () => {
         };
 
         const mealComponents = [
-          { componentId: 'c1', quantity: 150, unit: 'g', role: 'MAIN_PROTEIN' },
-          { componentId: 'c2', quantity: 100, unit: 'g', role: 'PRIMARY_VEGETABLE' },
-          { componentId: 'c3', quantity: 80, unit: 'g', role: 'BASE_CARB' }
+          { componentId: 'c1', quantity: 150, unit: 'g', order: 0 },
+          { componentId: 'c2', quantity: 100, unit: 'g', order: 1 },
+          { componentId: 'c3', quantity: 80, unit: 'g', order: 2 }
         ];
 
         expect(mealData.recipeId).toBeNull();
         expect(mealComponents.length).toBeGreaterThanOrEqual(3);
-        expect(mealComponents.some(c => c.role === 'MAIN_PROTEIN')).toBe(true);
-        expect(mealComponents.some(c => c.role.includes('VEGETABLE'))).toBe(true);
-        expect(mealComponents.some(c => c.role.includes('CARB'))).toBe(true);
+        expect(mealComponents.some(c => c.order === 0)).toBe(true);
+        expect(mealComponents.some(c => c.order === 1)).toBe(true);
+        expect(mealComponents.some(c => c.order === 2)).toBe(true);
       });
     });
   });

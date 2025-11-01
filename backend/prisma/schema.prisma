@@ -482,18 +482,6 @@ enum ComponentCategory {
   OTHER
 }
 
-enum ComponentRole {
-  MAIN_PROTEIN
-  SECONDARY_PROTEIN
-  PRIMARY_VEGETABLE
-  SECONDARY_VEGETABLE
-  BASE_CARB
-  SIDE_CARB
-  SAUCE
-  GARNISH
-  OTHER
-}
-
 model FoodComponent {
   id                String              @id @default(uuid())
 
@@ -549,9 +537,6 @@ model MealComponent {
 
   componentId       String
   component         FoodComponent   @relation(fields: [componentId], references: [id])
-
-  // Role in this meal
-  role              ComponentRole   @default(OTHER)
 
   // Quantity for this specific meal
   quantity          Float
