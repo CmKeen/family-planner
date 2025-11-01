@@ -4,8 +4,8 @@ import {
   getShoppingList,
   updateShoppingItem,
   toggleItemChecked
-} from '../controllers/shoppingList.controller.js';
-import { authenticate } from '../middleware/auth.js';
+} from '../controllers/shoppingList.controller';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 

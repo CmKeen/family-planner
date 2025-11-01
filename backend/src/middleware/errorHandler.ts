@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { log } from '../config/logger.js';
-import { trackError } from '../config/errorTracker.js';
+import { log } from '../config/logger';
+import { trackError } from '../config/errorTracker';
 
 export class AppError extends Error {
   statusCode: number;

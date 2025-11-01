@@ -6,8 +6,8 @@ import {
   updateTemplate,
   deleteTemplate,
   setDefaultTemplate
-} from '../controllers/mealScheduleTemplate.controller.js';
-import { authenticate } from '../middleware/auth.js';
+} from '../controllers/mealScheduleTemplate.controller';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 

@@ -25,14 +25,14 @@ jest.mock('../../lib/prisma', () => ({
   }
 }));
 
-import prisma from '../../lib/prisma.js';
+import prisma from '../../lib/prisma';
 import {
   getAllComponents,
   createCustomComponent,
   updateComponent,
   deleteComponent
-} from '../foodComponent.controller.js';
-import { AuthRequest } from '../../middleware/auth.js';
+} from '../foodComponent.controller';
+import { AuthRequest } from '../../middleware/auth';
 
 // Helper to wait for async operations
 const waitForAsync = () => new Promise(resolve => setImmediate(resolve));
