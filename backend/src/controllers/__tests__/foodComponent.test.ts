@@ -241,6 +241,13 @@ describe('Food Component Controller', () => {
       expect(mockFoodComponent.create).toHaveBeenCalledWith({
         data: {
           ...mockRequest.body,
+          // Zod schema adds default values for missing fields
+          allergens: [],
+          glutenFree: true,
+          halalFriendly: true,
+          lactoseFree: true,
+          pescatarian: false,
+          seasonality: ['all'],
           isSystemComponent: false,
           familyId: 'family-1'
         }
@@ -284,8 +291,9 @@ describe('Food Component Controller', () => {
       await createCustomComponent(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
 
+      // Zod validation throws ZodError, not AppError
       expect(nextFunction).toHaveBeenCalledWith(expect.objectContaining({
-        statusCode: 400
+        name: 'ZodError'
       }));
     });
   });

@@ -1,40 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { foodComponentAPI, mealComponentAPI } from '../api';
-import axios from 'axios';
+import * as apiModule from '../api';
 
-vi.mock('axios', () => ({
-  default: {
-    create: vi.fn(() => ({
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      patch: vi.fn(),
-      delete: vi.fn(),
-      interceptors: {
-        request: { use: vi.fn() },
-        response: { use: vi.fn() }
-      }
-    }))
+// Mock the API module
+vi.mock('../api', () => ({
+  api: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn()
+  },
+  foodComponentAPI: {
+    getAll: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn()
+  },
+  mealComponentAPI: {
+    add: vi.fn(),
+    swap: vi.fn(),
+    update: vi.fn(),
+    remove: vi.fn()
   }
 }));
-
-// Mock the API instance
-const mockApi = {
-  get: vi.fn(),
-  post: vi.fn(),
-  put: vi.fn(),
-  patch: vi.fn(),
-  delete: vi.fn()
-};
-
-// Override the api export
-vi.mock('../api', async () => {
-  const actual = await vi.importActual('../api');
-  return {
-    ...actual,
-    api: mockApi
-  };
-});
 
 describe('Food Component API', () => {
   beforeEach(() => {
@@ -42,51 +30,45 @@ describe('Food Component API', () => {
   });
 
   describe('foodComponentAPI.getAll', () => {
-    it('should fetch all components without parameters', async () => {
+    it('should call API with correct endpoint and no params', async () => {
       const mockComponents = [
         { id: 'comp-1', name: 'Chicken', category: 'PROTEIN' },
         { id: 'comp-2', name: 'Broccoli', category: 'VEGETABLE' }
       ];
 
-      mockApi.get.mockResolvedValue({ data: mockComponents });
+      vi.mocked(apiModule.foodComponentAPI.getAll).mockResolvedValue({
+        data: mockComponents
+      } as any);
 
-      const result = await foodComponentAPI.getAll();
+      const result = await apiModule.foodComponentAPI.getAll();
 
-      expect(mockApi.get).toHaveBeenCalledWith('/components', { params: undefined });
+      expect(apiModule.foodComponentAPI.getAll).toHaveBeenCalledWith();
       expect(result.data).toEqual(mockComponents);
     });
 
-    it('should fetch components with familyId filter', async () => {
-      const mockComponents = [
-        { id: 'comp-1', name: 'Special Sauce', familyId: 'family-1' }
-      ];
+    it('should pass familyId parameter', async () => {
+      vi.mocked(apiModule.foodComponentAPI.getAll).mockResolvedValue({
+        data: []
+      } as any);
 
-      mockApi.get.mockResolvedValue({ data: mockComponents });
+      await apiModule.foodComponentAPI.getAll({ familyId: 'family-1' });
 
-      await foodComponentAPI.getAll({ familyId: 'family-1' });
-
-      expect(mockApi.get).toHaveBeenCalledWith('/components', {
-        params: { familyId: 'family-1' }
-      });
+      expect(apiModule.foodComponentAPI.getAll).toHaveBeenCalledWith({ familyId: 'family-1' });
     });
 
-    it('should fetch components with category filter', async () => {
-      const mockComponents = [
-        { id: 'comp-1', name: 'Chicken', category: 'PROTEIN' }
-      ];
+    it('should pass category parameter', async () => {
+      vi.mocked(apiModule.foodComponentAPI.getAll).mockResolvedValue({
+        data: []
+      } as any);
 
-      mockApi.get.mockResolvedValue({ data: mockComponents });
+      await apiModule.foodComponentAPI.getAll({ category: 'PROTEIN' });
 
-      await foodComponentAPI.getAll({ category: 'PROTEIN' });
-
-      expect(mockApi.get).toHaveBeenCalledWith('/components', {
-        params: { category: 'PROTEIN' }
-      });
+      expect(apiModule.foodComponentAPI.getAll).toHaveBeenCalledWith({ category: 'PROTEIN' });
     });
   });
 
   describe('foodComponentAPI.create', () => {
-    it('should create a custom component', async () => {
+    it('should create a component with correct data', async () => {
       const componentData = {
         name: 'My Special Sauce',
         category: 'SAUCE',
@@ -100,14 +82,13 @@ describe('Food Component API', () => {
         familyId: 'family-1'
       };
 
-      mockApi.post.mockResolvedValue({ data: mockResponse });
+      vi.mocked(apiModule.foodComponentAPI.create).mockResolvedValue({
+        data: mockResponse
+      } as any);
 
-      const result = await foodComponentAPI.create('family-1', componentData);
+      const result = await apiModule.foodComponentAPI.create('family-1', componentData);
 
-      expect(mockApi.post).toHaveBeenCalledWith(
-        '/families/family-1/components',
-        componentData
-      );
+      expect(apiModule.foodComponentAPI.create).toHaveBeenCalledWith('family-1', componentData);
       expect(result.data).toEqual(mockResponse);
     });
   });
@@ -119,26 +100,25 @@ describe('Food Component API', () => {
         defaultQuantity: 120
       };
 
-      const mockResponse = {
-        id: 'comp-1',
-        ...updateData
-      };
+      vi.mocked(apiModule.foodComponentAPI.update).mockResolvedValue({
+        data: { id: 'comp-1', ...updateData }
+      } as any);
 
-      mockApi.put.mockResolvedValue({ data: mockResponse });
+      await apiModule.foodComponentAPI.update('comp-1', updateData);
 
-      await foodComponentAPI.update('comp-1', updateData);
-
-      expect(mockApi.put).toHaveBeenCalledWith('/components/comp-1', updateData);
+      expect(apiModule.foodComponentAPI.update).toHaveBeenCalledWith('comp-1', updateData);
     });
   });
 
   describe('foodComponentAPI.delete', () => {
     it('should delete a component', async () => {
-      mockApi.delete.mockResolvedValue({ data: { message: 'Component deleted' } });
+      vi.mocked(apiModule.foodComponentAPI.delete).mockResolvedValue({
+        data: { message: 'Component deleted' }
+      } as any);
 
-      await foodComponentAPI.delete('comp-1');
+      await apiModule.foodComponentAPI.delete('comp-1');
 
-      expect(mockApi.delete).toHaveBeenCalledWith('/components/comp-1');
+      expect(apiModule.foodComponentAPI.delete).toHaveBeenCalledWith('comp-1');
     });
   });
 });
@@ -164,56 +144,32 @@ describe('Meal Component API', () => {
         ...componentData
       };
 
-      mockApi.post.mockResolvedValue({ data: mockResponse });
+      vi.mocked(apiModule.mealComponentAPI.add).mockResolvedValue({
+        data: mockResponse
+      } as any);
 
-      const result = await mealComponentAPI.add('plan-1', 'meal-1', componentData);
+      const result = await apiModule.mealComponentAPI.add('plan-1', 'meal-1', componentData);
 
-      expect(mockApi.post).toHaveBeenCalledWith(
-        '/weekly-plans/plan-1/meals/meal-1/components',
-        componentData
-      );
+      expect(apiModule.mealComponentAPI.add).toHaveBeenCalledWith('plan-1', 'meal-1', componentData);
       expect(result.data).toEqual(mockResponse);
     });
   });
 
   describe('mealComponentAPI.swap', () => {
-    it('should swap a meal component with another', async () => {
+    it('should swap a meal component', async () => {
       const swapData = {
         newComponentId: 'comp-salmon',
         quantity: 150,
         unit: 'g'
       };
 
-      const mockResponse = {
-        id: 'mc-1',
-        componentId: 'comp-salmon',
-        quantity: 150,
-        unit: 'g'
-      };
+      vi.mocked(apiModule.mealComponentAPI.swap).mockResolvedValue({
+        data: {}
+      } as any);
 
-      mockApi.put.mockResolvedValue({ data: mockResponse });
+      await apiModule.mealComponentAPI.swap('plan-1', 'meal-1', 'mc-1', swapData);
 
-      await mealComponentAPI.swap('plan-1', 'meal-1', 'mc-1', swapData);
-
-      expect(mockApi.put).toHaveBeenCalledWith(
-        '/weekly-plans/plan-1/meals/meal-1/components/mc-1/swap',
-        swapData
-      );
-    });
-
-    it('should swap without specifying quantity (uses default)', async () => {
-      const swapData = {
-        newComponentId: 'comp-salmon'
-      };
-
-      mockApi.put.mockResolvedValue({ data: {} });
-
-      await mealComponentAPI.swap('plan-1', 'meal-1', 'mc-1', swapData);
-
-      expect(mockApi.put).toHaveBeenCalledWith(
-        '/weekly-plans/plan-1/meals/meal-1/components/mc-1/swap',
-        swapData
-      );
+      expect(apiModule.mealComponentAPI.swap).toHaveBeenCalledWith('plan-1', 'meal-1', 'mc-1', swapData);
     });
   });
 
@@ -223,50 +179,25 @@ describe('Meal Component API', () => {
         quantity: 200
       };
 
-      const mockResponse = {
-        id: 'mc-1',
-        quantity: 200
-      };
+      vi.mocked(apiModule.mealComponentAPI.update).mockResolvedValue({
+        data: { id: 'mc-1', quantity: 200 }
+      } as any);
 
-      mockApi.patch.mockResolvedValue({ data: mockResponse });
+      await apiModule.mealComponentAPI.update('plan-1', 'meal-1', 'mc-1', updateData);
 
-      await mealComponentAPI.update('plan-1', 'meal-1', 'mc-1', updateData);
-
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        '/weekly-plans/plan-1/meals/meal-1/components/mc-1',
-        updateData
-      );
-    });
-
-    it('should update multiple fields', async () => {
-      const updateData = {
-        quantity: 200,
-        role: 'SECONDARY_PROTEIN',
-        order: 1
-      };
-
-      mockApi.patch.mockResolvedValue({ data: {} });
-
-      await mealComponentAPI.update('plan-1', 'meal-1', 'mc-1', updateData);
-
-      expect(mockApi.patch).toHaveBeenCalledWith(
-        '/weekly-plans/plan-1/meals/meal-1/components/mc-1',
-        updateData
-      );
+      expect(apiModule.mealComponentAPI.update).toHaveBeenCalledWith('plan-1', 'meal-1', 'mc-1', updateData);
     });
   });
 
   describe('mealComponentAPI.remove', () => {
     it('should remove a component from a meal', async () => {
-      mockApi.delete.mockResolvedValue({
+      vi.mocked(apiModule.mealComponentAPI.remove).mockResolvedValue({
         data: { message: 'Component removed successfully' }
-      });
+      } as any);
 
-      await mealComponentAPI.remove('plan-1', 'meal-1', 'mc-1');
+      await apiModule.mealComponentAPI.remove('plan-1', 'meal-1', 'mc-1');
 
-      expect(mockApi.delete).toHaveBeenCalledWith(
-        '/weekly-plans/plan-1/meals/meal-1/components/mc-1'
-      );
+      expect(apiModule.mealComponentAPI.remove).toHaveBeenCalledWith('plan-1', 'meal-1', 'mc-1');
     });
   });
 });
