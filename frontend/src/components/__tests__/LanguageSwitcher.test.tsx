@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 
 // Mock react-i18next
@@ -100,7 +100,7 @@ describe('LanguageSwitcher', () => {
 
   describe('Language Change Handler', () => {
     it('should call changeLanguage when onValueChange is triggered', () => {
-      const { container } = render(<LanguageSwitcher />);
+      render(<LanguageSwitcher />);
 
       // Find the Select root and trigger onValueChange programmatically
       const trigger = screen.getByRole('combobox');
