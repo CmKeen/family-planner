@@ -4,7 +4,7 @@ import {
   detailedHealthCheck,
   readinessCheck,
   livenessCheck,
-} from '../controllers/health.controller.js';
+} from '../controllers/health.controller';
 
 const router = Router();
 

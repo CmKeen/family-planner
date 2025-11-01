@@ -4,8 +4,8 @@ import {
   getSchoolMenus,
   updateSchoolMenu,
   deleteSchoolMenu
-} from '../controllers/schoolMenu.controller.js';
-import { authenticate } from '../middleware/auth.js';
+} from '../controllers/schoolMenu.controller';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 

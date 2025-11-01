@@ -1,5 +1,5 @@
-import { log } from './logger.js';
-import { env } from './env.js';
+import { log } from './logger';
+import { env } from './env';
 
 /**
  * Error Tracking Configuration
