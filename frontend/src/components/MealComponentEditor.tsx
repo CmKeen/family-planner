@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { foodComponentAPI, mealComponentAPI } from '@/lib/api';
-import { useAuthStore } from '@/stores/authStore';
 import { X, Plus, ArrowLeftRight, Trash2 } from 'lucide-react';
 
 interface FoodComponent {
@@ -51,6 +50,7 @@ interface MealComponentEditorProps {
   onOpenChange: (open: boolean) => void;
   planId: string;
   mealId: string;
+  familyId: string;
   mealComponents: MealComponent[];
   portions: number;
   onUpdate: () => void;
@@ -98,12 +98,12 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
   onOpenChange,
   planId,
   mealId,
+  familyId,
   mealComponents,
   portions,
   onUpdate,
 }) => {
   const { t, i18n } = useTranslation();
-  const { family } = useAuthStore();
   const [components, setComponents] = useState<FoodComponent[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -115,15 +115,15 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
   const [swapMode, setSwapMode] = useState<{ mealComponentId: string; category: string } | null>(null);
 
   useEffect(() => {
-    if (open && family) {
+    if (open && familyId) {
       loadComponents();
     }
-  }, [open, family]);
+  }, [open, familyId]);
 
   const loadComponents = async () => {
     try {
       setLoading(true);
-      const response = await foodComponentAPI.getAll({ familyId: family?.id });
+      const response = await foodComponentAPI.getAll({ familyId });
       setComponents(response.data);
     } catch (error) {
       console.error('Failed to load components:', error);
@@ -196,22 +196,6 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
       onUpdate();
     } catch (error) {
       console.error('Failed to swap component:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateQuantity = async (
-    mealComponentId: string,
-    quantity: number,
-    unit: string
-  ) => {
-    try {
-      setLoading(true);
-      await mealComponentAPI.update(planId, mealId, mealComponentId, { quantity, unit });
-      onUpdate();
-    } catch (error) {
-      console.error('Failed to update component:', error);
     } finally {
       setLoading(false);
     }

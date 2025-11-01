@@ -28,8 +28,15 @@ interface FoodComponent {
   id: string;
   name: string;
   nameEn?: string;
+  nameNl?: string;
   category: string;
+  defaultQuantity: number;
   unit: string;
+  vegetarian: boolean;
+  vegan: boolean;
+  glutenFree: boolean;
+  lactoseFree: boolean;
+  isSystemComponent: boolean;
 }
 
 interface MealComponent {
@@ -38,6 +45,7 @@ interface MealComponent {
   quantity: number;
   unit: string;
   role: string;
+  order: number;
   component: FoodComponent;
 }
 
@@ -101,7 +109,7 @@ export default function WeeklyPlanPage() {
   };
 
   // Fetch weekly plan
-  const { data: planData, isLoading: isPlanLoading } = useQuery({
+  const { data: planData, isLoading: isPlanLoading, refetch } = useQuery({
     queryKey: ['weeklyPlan', planId],
     queryFn: async () => {
       const response = await weeklyPlanAPI.getById(planId!);
@@ -1008,12 +1016,13 @@ export default function WeeklyPlanPage() {
       </Dialog>
 
       {/* Meal Component Editor Dialog */}
-      {selectedMeal && planId && (
+      {selectedMeal && planId && planData?.family?.id && (
         <MealComponentEditor
           open={componentEditorOpen}
           onOpenChange={setComponentEditorOpen}
           planId={planId}
           mealId={selectedMeal.id}
+          familyId={planData.family.id}
           mealComponents={selectedMeal.mealComponents || []}
           portions={selectedMeal.portions}
           onUpdate={() => {

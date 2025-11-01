@@ -20,7 +20,7 @@ vi.mock('@/lib/api', () => ({
 // Mock i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, params?: any) => {
+    t: (key: string, _params?: any) => {
       const translations: Record<string, string> = {
         'mealBuilder.title': 'Edit Meal Components',
         'mealBuilder.description': 'Customize your meal',
@@ -68,7 +68,11 @@ const mockFoodComponents = [
     category: 'PROTEIN',
     defaultQuantity: 150,
     unit: 'g',
-    isSystemComponent: true
+    isSystemComponent: true,
+    vegetarian: false,
+    vegan: false,
+    glutenFree: true,
+    lactoseFree: true
   },
   {
     id: 'comp-2',
@@ -77,7 +81,11 @@ const mockFoodComponents = [
     category: 'VEGETABLE',
     defaultQuantity: 200,
     unit: 'g',
-    isSystemComponent: true
+    isSystemComponent: true,
+    vegetarian: true,
+    vegan: true,
+    glutenFree: true,
+    lactoseFree: true
   },
   {
     id: 'comp-3',
@@ -86,7 +94,11 @@ const mockFoodComponents = [
     category: 'CARB',
     defaultQuantity: 100,
     unit: 'g',
-    isSystemComponent: true
+    isSystemComponent: true,
+    vegetarian: true,
+    vegan: true,
+    glutenFree: true,
+    lactoseFree: true
   }
 ];
 
@@ -117,6 +129,7 @@ describe('MealComponentEditor', () => {
     onOpenChange: vi.fn(),
     planId: 'plan-1',
     mealId: 'meal-1',
+    familyId: 'family-1',
     mealComponents: mockMealComponents,
     portions: 4,
     onUpdate: vi.fn()
@@ -257,7 +270,6 @@ describe('MealComponentEditor', () => {
     });
 
     it('should call remove API when clicking remove button', async () => {
-      const user = userEvent.setup();
       const onUpdate = vi.fn();
       vi.mocked(api.mealComponentAPI.remove).mockResolvedValue({
         data: { message: 'Removed' }
