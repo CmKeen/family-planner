@@ -3,19 +3,14 @@ import bcrypt from 'bcryptjs';
 import AdminJS from 'adminjs';
 import * as AdminJSPrisma from '@adminjs/prisma';
 import { ComponentLoader } from 'adminjs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 const { Database, Resource, getModelByName } = AdminJSPrisma;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Component loader for custom components
 const componentLoader = new ComponentLoader();
 
 // Load dashboard component
-const DashboardComponent = componentLoader.add('Dashboard', '../admin/scraper-action');
+const DashboardComponent = componentLoader.add('Dashboard', '../admin/dashboard');
 
 // Load schedule editor component
 const ScheduleEditorComponent = componentLoader.add(
