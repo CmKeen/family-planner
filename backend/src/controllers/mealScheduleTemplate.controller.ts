@@ -1,8 +1,8 @@
 import { Response } from 'express';
 import { z } from 'zod';
-import prisma from '../lib/prisma';
-import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import prisma from '../lib/prisma.js';
+import { AppError, asyncHandler } from '../middleware/errorHandler.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 // Validation schemas
 const dayOfWeekEnum = z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']);

@@ -9,7 +9,7 @@ import {
   updateMember,
   removeMember,
   updateDietProfile
-} from '../controllers/family.controller';
+} from '../controllers/family.controller.js';
 import {
   sendInvitation,
   getReceivedInvitations,
@@ -17,9 +17,9 @@ import {
   acceptInvitation,
   declineInvitation,
   cancelInvitation
-} from '../controllers/invitation.controller';
-import { createCustomComponent } from '../controllers/foodComponent.controller';
-import { authenticate } from '../middleware/auth';
+} from '../controllers/invitation.controller.js';
+import { createCustomComponent } from '../controllers/foodComponent.controller.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 

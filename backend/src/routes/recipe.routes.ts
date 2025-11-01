@@ -8,8 +8,8 @@ import {
   getWeeklyCatalog,
   toggleFavorite,
   submitFeedback
-} from '../controllers/recipe.controller';
-import { authenticate } from '../middleware/auth';
+} from '../controllers/recipe.controller.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 

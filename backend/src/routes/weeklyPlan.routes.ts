@@ -17,15 +17,15 @@ import {
   removeMeal,
   switchTemplate,
   saveComponentMealAsRecipe
-} from '../controllers/weeklyPlan.controller';
+} from '../controllers/weeklyPlan.controller.js';
 import {
   addComponentToMeal,
   swapMealComponent,
   removeMealComponent,
   updateMealComponent
-} from '../controllers/mealComponent.controller';
-import { authenticate } from '../middleware/auth';
-import { intensiveOperationLimiter } from '../middleware/rateLimiter';
+} from '../controllers/mealComponent.controller.js';
+import { authenticate } from '../middleware/auth.js';
+import { intensiveOperationLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
 

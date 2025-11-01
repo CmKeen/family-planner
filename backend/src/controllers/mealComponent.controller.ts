@@ -1,8 +1,8 @@
 import { Response, NextFunction } from 'express';
 import { z } from 'zod';
-import prisma from '../lib/prisma';
-import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import prisma from '../lib/prisma.js';
+import { AppError, asyncHandler } from '../middleware/errorHandler.js';
+import { AuthRequest } from '../middleware/auth.js';
 
 const addComponentSchema = z.object({
   componentId: z.string().uuid('Invalid component ID'),

@@ -1,5 +1,5 @@
 import winston from 'winston';
-import { env } from './env';
+import { env } from './env.js';
 import fs from 'fs';
 
 /**

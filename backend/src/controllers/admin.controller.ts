@@ -1,8 +1,8 @@
 import { Response } from 'express';
 import { z } from 'zod';
-import { HelloFreshScraper } from '../scripts/scrapeHelloFresh';
-import { asyncHandler, AppError } from '../middleware/errorHandler';
-import { AdminAuthRequest } from '../middleware/adminAuth';
+import { HelloFreshScraper } from '../scripts/scrapeHelloFresh.js';
+import { asyncHandler, AppError } from '../middleware/errorHandler.js';
+import { AdminAuthRequest } from '../middleware/adminAuth.js';
 
 // Validation schema for scraping request
 const scrapeRequestSchema = z.object({

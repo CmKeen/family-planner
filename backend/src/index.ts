@@ -4,30 +4,30 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { swaggerSpec } from './config/swagger';
-import { env, logEnvConfig } from './config/env';
-import { log } from './config/logger';
-import authRoutes from './routes/auth.routes';
-import familyRoutes from './routes/family.routes';
-import recipeRoutes from './routes/recipe.routes';
-import weeklyPlanRoutes from './routes/weeklyPlan.routes';
-import shoppingListRoutes from './routes/shoppingList.routes';
-import schoolMenuRoutes from './routes/schoolMenu.routes';
-import mealScheduleTemplateRoutes from './routes/mealScheduleTemplate.routes';
-import foodComponentRoutes from './routes/foodComponent.routes';
-import healthRoutes from './routes/health.routes';
-import { createAdminRouter } from './routes/admin.routes';
-import adminApiRoutes from './routes/admin.api.routes';
-import { authenticateAdmin } from './middleware/adminAuth';
-import { errorHandler } from './middleware/errorHandler';
+import { swaggerSpec } from './config/swagger.js';
+import { env, logEnvConfig } from './config/env.js';
+import { log } from './config/logger.js';
+import authRoutes from './routes/auth.routes.js';
+import familyRoutes from './routes/family.routes.js';
+import recipeRoutes from './routes/recipe.routes.js';
+import weeklyPlanRoutes from './routes/weeklyPlan.routes.js';
+import shoppingListRoutes from './routes/shoppingList.routes.js';
+import schoolMenuRoutes from './routes/schoolMenu.routes.js';
+import mealScheduleTemplateRoutes from './routes/mealScheduleTemplate.routes.js';
+import foodComponentRoutes from './routes/foodComponent.routes.js';
+import healthRoutes from './routes/health.routes.js';
+import { createAdminRouter } from './routes/admin.routes.js';
+import adminApiRoutes from './routes/admin.api.routes.js';
+import { authenticateAdmin } from './middleware/adminAuth.js';
+import { errorHandler } from './middleware/errorHandler.js';
 import {
   securityHeaders,
   additionalSecurityHeaders,
   getCorsOptions,
   sanitizeRequest,
-} from './middleware/security';
-import { getEnvironmentLimiter } from './middleware/rateLimiter';
-import { skipHealthCheck } from './middleware/requestLogger';
+} from './middleware/security.js';
+import { getEnvironmentLimiter } from './middleware/rateLimiter.js';
+import { skipHealthCheck } from './middleware/requestLogger.js';
 
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);

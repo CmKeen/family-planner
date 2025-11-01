@@ -7,7 +7,7 @@
 
 import helmet from 'helmet';
 import { Request, Response, NextFunction } from 'express';
-import { log } from '../config/logger';
+import { log } from '../config/logger.js';
 
 /**
  * Helmet Security Headers Configuration
