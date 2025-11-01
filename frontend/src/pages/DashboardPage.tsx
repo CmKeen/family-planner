@@ -39,12 +39,13 @@ export default function DashboardPage() {
     enabled: !!selectedFamily
   });
 
-  const { data: templates } = useQuery({
+  const { data: templates = [] } = useQuery({
     queryKey: ['mealTemplates', selectedFamily],
     queryFn: async () => {
       if (!selectedFamily) return [];
       const response = await mealTemplateAPI.getAll(selectedFamily);
-      return response.data.data.templates;
+      const templatesData = response.data.data.templates;
+      return Array.isArray(templatesData) ? templatesData : [];
     },
     enabled: !!selectedFamily
   });
@@ -278,7 +279,7 @@ export default function DashboardPage() {
 
           <div className="space-y-6 py-4">
             {/* System Templates */}
-            {templates && templates.filter((t: any) => t.isSystem).length > 0 && (
+            {Array.isArray(templates) && templates.filter((t: any) => t.isSystem).length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   {t('mealTemplates.systemTemplates')}
@@ -330,7 +331,7 @@ export default function DashboardPage() {
             )}
 
             {/* Custom Templates */}
-            {templates && templates.filter((t: any) => !t.isSystem).length > 0 && (
+            {Array.isArray(templates) && templates.filter((t: any) => !t.isSystem).length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                   {t('mealTemplates.customTemplates')}
