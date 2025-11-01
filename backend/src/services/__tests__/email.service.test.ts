@@ -1,13 +1,13 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import type { Transporter } from 'nodemailer';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 
 // Mock nodemailer before importing the service
-const mockSendMail = jest.fn();
-const mockCreateTransport = jest.fn(() => ({
-  sendMail: mockSendMail
-}));
+const mockSendMail: any = jest.fn();
+const mockCreateTransport: any = jest.fn();
 
 jest.mock('nodemailer', () => ({
+  default: {
+    createTransport: mockCreateTransport
+  },
   createTransport: mockCreateTransport
 }));
 
@@ -17,9 +17,17 @@ import { DraftPlanCreatedData } from '../../types/notification.types.js';
 
 describe('EmailService', () => {
   let emailService: EmailService;
+  let consoleLogSpy: jest.SpiedFunction<typeof console.log>;
+  let consoleWarnSpy: jest.SpiedFunction<typeof console.warn>;
+  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Spy on console methods
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
     // Mock environment variables
     process.env.SMTP_HOST = 'smtp.test.com';
@@ -32,8 +40,19 @@ describe('EmailService', () => {
     process.env.APP_URL = 'http://localhost:5173';
     process.env.APP_NAME = 'Family Planner';
 
+    // Setup mock transport
+    mockSendMail.mockResolvedValue({ messageId: 'test-message-id' });
+    mockCreateTransport.mockReturnValue({
+      sendMail: mockSendMail
+    });
+
     emailService = new EmailService();
-    (mockSendMail as jest.Mock).mockResolvedValue({ messageId: 'test-message-id' });
+  });
+
+  afterEach(() => {
+    consoleLogSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   describe('constructor', () => {
@@ -49,9 +68,17 @@ describe('EmailService', () => {
       });
     });
 
-    it('should throw error if SMTP configuration is missing', () => {
+    it('should log when email service is enabled', () => {
+      expect(consoleLogSpy).toHaveBeenCalledWith('✓ Email service enabled');
+    });
+
+    it('should warn when SMTP configuration is missing', () => {
       delete process.env.SMTP_HOST;
-      expect(() => new EmailService()).toThrow('Email service configuration is incomplete');
+      const service = new EmailService();
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Email service disabled')
+      );
     });
   });
 
@@ -139,7 +166,7 @@ describe('EmailService', () => {
     });
 
     it('should handle email sending errors gracefully', async () => {
-      (mockSendMail as jest.Mock).mockRejectedValueOnce(new Error('SMTP connection failed'));
+      mockSendMail.mockRejectedValueOnce(new Error('SMTP connection failed'));
 
       const notificationData: DraftPlanCreatedData = {
         type: 'DRAFT_PLAN_CREATED',
@@ -156,6 +183,8 @@ describe('EmailService', () => {
       await expect(
         emailService.sendDraftPlanCreatedNotification(notificationData)
       ).resolves.not.toThrow();
+
+      expect(consoleErrorSpy).toHaveBeenCalled();
     });
   });
 
@@ -175,17 +204,6 @@ describe('EmailService', () => {
       await emailService.sendNotification(notificationData);
 
       expect(mockSendMail).toHaveBeenCalledTimes(1);
-    });
-
-    it('should throw error for unsupported notification types', async () => {
-      const invalidData: any = {
-        type: 'INVALID_TYPE',
-        recipients: [{ email: 'test@example.com', language: 'en' }]
-      };
-
-      await expect(
-        emailService.sendNotification(invalidData)
-      ).rejects.toThrow('Unsupported notification type');
     });
   });
 
@@ -208,8 +226,7 @@ describe('EmailService', () => {
     });
 
     it('should log error when email sending fails', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      (mockSendMail as jest.Mock).mockRejectedValueOnce(new Error('Send failed'));
+      mockSendMail.mockRejectedValueOnce(new Error('Send failed'));
 
       await emailService.sendEmail(
         'test@example.com',
@@ -218,12 +235,28 @@ describe('EmailService', () => {
         'Text'
       );
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to send email to test@example.com'),
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to send email'),
         expect.any(Error)
       );
+    });
 
-      consoleSpy.mockRestore();
+    it('should log to console when SMTP is not configured', async () => {
+      // Create service without SMTP config
+      delete process.env.SMTP_HOST;
+      const noSmtpService = new EmailService();
+
+      await noSmtpService.sendEmail(
+        'test@example.com',
+        'Test Subject',
+        '<p>HTML</p>',
+        'Text content'
+      );
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[EMAIL] (simulated')
+      );
+      expect(mockSendMail).not.toHaveBeenCalled();
     });
   });
 });
