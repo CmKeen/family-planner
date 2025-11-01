@@ -56,7 +56,10 @@
       "addMeal": "Add meal",
       "addMealForDay": "Add meal",
       "removeMeal": "Remove",
-      "switchingTemplate": "Switching template..."
+      "switchingTemplate": "Switching template...",
+      "editComponents": "Edit components",
+      "convertToComponentMeal": "Convert to component meal",
+      "convertToRecipe": "Save as recipe"
     },
     "dialogs": {
       "swapRecipe": {
