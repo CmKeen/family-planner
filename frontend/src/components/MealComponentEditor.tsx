@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -115,17 +115,7 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
   const [newRole, setNewRole] = useState<string>('OTHER');
   const [swapMode, setSwapMode] = useState<{ mealComponentId: string; category: string } | null>(null);
 
-  useEffect(() => {
-    if (open && familyId) {
-      loadComponents();
-    }
-  }, [open, familyId]);
-
-  useEffect(() => {
-    setLocalMealComponents(mealComponents);
-  }, [mealComponents]);
-
-  const loadComponents = async () => {
+  const loadComponents = useCallback(async () => {
     try {
       setLoading(true);
       const response = await foodComponentAPI.getAll({ familyId });
@@ -135,7 +125,17 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [familyId]);
+
+  useEffect(() => {
+    if (open && familyId) {
+      loadComponents();
+    }
+  }, [open, familyId, loadComponents]);
+
+  useEffect(() => {
+    setLocalMealComponents(mealComponents);
+  }, [mealComponents]);
 
   const getComponentName = (component: FoodComponent): string => {
     const lang = i18n.language;
