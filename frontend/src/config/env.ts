@@ -10,29 +10,40 @@ interface Env {
 }
 
 function validateEnv(): Env {
+  // Support both VITE_API_URL (full URL) and VITE_API_ORIGIN (base URL)
   const apiUrl = import.meta.env.VITE_API_URL;
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN;
 
-  // Validate required variables
-  if (!apiUrl) {
+  let finalApiUrl: string;
+
+  if (apiUrl) {
+    // Use VITE_API_URL directly (for local development)
+    finalApiUrl = apiUrl;
+  } else if (apiOrigin) {
+    // Use VITE_API_ORIGIN and append /api (for Render deployment)
+    finalApiUrl = `${apiOrigin.replace(/\/$/, '')}/api`;
+  } else {
     throw new Error(
-      'Missing required environment variable: VITE_API_URL\n' +
+      'Missing required environment variable: VITE_API_URL or VITE_API_ORIGIN\n' +
       'Please create a .env file in the frontend directory with:\n' +
-      'VITE_API_URL=http://localhost:3001/api'
+      'VITE_API_URL=http://localhost:3001/api\n' +
+      'OR\n' +
+      'VITE_API_ORIGIN=http://localhost:3001'
     );
   }
 
   // Validate format
   try {
-    new URL(apiUrl);
+    new URL(finalApiUrl);
   } catch (error) {
     throw new Error(
-      `Invalid VITE_API_URL format: "${apiUrl}"\n` +
+      `Invalid API URL format: "${finalApiUrl}"\n` +
       'Must be a valid URL (e.g., http://localhost:3001/api)'
     );
   }
 
   return {
-    VITE_API_URL: apiUrl,
+    VITE_API_URL: finalApiUrl,
   };
 }
 
