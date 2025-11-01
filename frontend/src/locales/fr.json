@@ -56,7 +56,10 @@
       "addMeal": "Ajouter un repas",
       "addMealForDay": "Ajouter un repas",
       "removeMeal": "Supprimer",
-      "switchingTemplate": "Changement de modèle..."
+      "switchingTemplate": "Changement de modèle...",
+      "editComponents": "Modifier les composants",
+      "convertToComponentMeal": "Convertir en repas composé",
+      "convertToRecipe": "Enregistrer comme recette"
     },
     "dialogs": {
       "swapRecipe": {

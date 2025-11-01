@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node add-js-extensions.cjs",
     "start": "node dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -69,11 +69,13 @@
     "@types/swagger-ui-express": "^4.1.6",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
+    "cross-env": "^10.1.0",
     "eslint": "^9.38.0",
     "jest": "^29.7.0",
     "prisma": "^5.7.1",
     "supertest": "^7.1.4",
     "ts-jest": "^29.1.1",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },

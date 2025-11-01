@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { authenticateAdmin } from '../middleware/adminAuth.js';
-import { scrapeHelloFreshRecipes } from '../controllers/admin.controller.js';
+import { authenticateAdmin } from '../middleware/adminAuth';
+import { scrapeHelloFreshRecipes } from '../controllers/admin.controller';
 
 const router = Router();
 

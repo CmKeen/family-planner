@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { weeklyPlanAPI, recipeAPI, mealTemplateAPI } from '@/lib/api';
-import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { MealComponentEditor } from '@/components/MealComponentEditor';
 
 interface Recipe {
   id: string;
@@ -27,8 +28,15 @@ interface FoodComponent {
   id: string;
   name: string;
   nameEn?: string;
+  nameNl?: string;
   category: string;
+  defaultQuantity: number;
   unit: string;
+  vegetarian: boolean;
+  vegan: boolean;
+  glutenFree: boolean;
+  lactoseFree: boolean;
+  isSystemComponent: boolean;
 }
 
 interface MealComponent {
@@ -37,6 +45,7 @@ interface MealComponent {
   quantity: number;
   unit: string;
   role: string;
+  order: number;
   component: FoodComponent;
 }
 
@@ -78,6 +87,7 @@ export default function WeeklyPlanPage() {
   const [switchTemplateDialogOpen, setSwitchTemplateDialogOpen] = useState(false);
   const [addMealDialogOpen, setAddMealDialogOpen] = useState(false);
   const [saveAsRecipeDialogOpen, setSaveAsRecipeDialogOpen] = useState(false);
+  const [componentEditorOpen, setComponentEditorOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [newMealDay, setNewMealDay] = useState('MONDAY');
   const [newMealType, setNewMealType] = useState<'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'>('DINNER');
@@ -99,7 +109,7 @@ export default function WeeklyPlanPage() {
   };
 
   // Fetch weekly plan
-  const { data: planData, isLoading: isPlanLoading } = useQuery({
+  const { data: planData, isLoading: isPlanLoading, refetch } = useQuery({
     queryKey: ['weeklyPlan', planId],
     queryFn: async () => {
       const response = await weeklyPlanAPI.getById(planId!);
@@ -394,12 +404,25 @@ export default function WeeklyPlanPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
+            {planData.status === 'DRAFT' && (
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => {
+                  setSelectedMeal(meal);
+                  setComponentEditorOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Edit className="h-3 w-3 mr-1" />
+                {t('weeklyPlan.actions.editComponents')}
+              </Button>
+            )}
             <Button
               size="sm"
-              variant="default"
+              variant="outline"
               onClick={() => handleSaveAsRecipe(meal)}
               disabled={planData.status !== 'DRAFT'}
-              className="bg-blue-600 hover:bg-blue-700"
             >
               <Heart className="h-3 w-3 mr-1" />
               {t('mealBuilder.saveAsRecipe')}
@@ -464,6 +487,20 @@ export default function WeeklyPlanPage() {
               <RefreshCw className="h-3 w-3 mr-1" />
               {t('weeklyPlan.actions.selectRecipe')}
             </Button>
+            {planData.status === 'DRAFT' && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSelectedMeal(meal);
+                  setComponentEditorOpen(true);
+                }}
+                className="bg-blue-50 hover:bg-blue-100"
+              >
+                <Sparkles className="h-3 w-3 mr-1" />
+                {t('mealBuilder.buildFromScratch')}
+              </Button>
+            )}
             {planData.status === 'DRAFT' && (
               <Button
                 size="sm"
@@ -977,6 +1014,22 @@ export default function WeeklyPlanPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Meal Component Editor Dialog */}
+      {selectedMeal && planId && planData?.family?.id && (
+        <MealComponentEditor
+          open={componentEditorOpen}
+          onOpenChange={setComponentEditorOpen}
+          planId={planId}
+          mealId={selectedMeal.id}
+          familyId={planData.family.id}
+          mealComponents={selectedMeal.mealComponents || []}
+          portions={selectedMeal.portions}
+          onUpdate={() => {
+            refetch();
+          }}
+        />
+      )}
     </div>
   );
 }

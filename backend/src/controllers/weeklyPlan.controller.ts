@@ -1,7 +1,7 @@
 import { Response } from 'express';
-import prisma from '../lib/prisma.js';
-import { AppError, asyncHandler } from '../middleware/errorHandler.js';
-import { AuthRequest } from '../middleware/auth.js';
+import prisma from '../lib/prisma';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
+import { AuthRequest } from '../middleware/auth';
 import { Prisma } from '@prisma/client';
 import { notificationService } from '../services/notification.service.js';
 

@@ -4,8 +4,8 @@ import {
   createCustomComponent,
   updateComponent,
   deleteComponent
-} from '../controllers/foodComponent.controller.js';
-import { authenticate } from '../middleware/auth.js';
+} from '../controllers/foodComponent.controller';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
