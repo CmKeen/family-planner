@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { foodComponentAPI, mealComponentAPI } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { X, Plus, ArrowLeftRight, Trash2 } from 'lucide-react';
@@ -237,7 +236,7 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="h-[60vh] pr-4">
+        <div className="h-[60vh] overflow-y-auto pr-4">
           {/* Current Components */}
           <div className="space-y-4 mb-6">
             <div className="flex items-center justify-between">
@@ -453,7 +452,7 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
               </div>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
