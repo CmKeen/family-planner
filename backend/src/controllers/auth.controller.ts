@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import prisma from '../lib/prisma.js';
-import { hashPassword, comparePassword, generateToken } from '../utils/auth.utils.js';
-import { AppError, asyncHandler } from '../middleware/errorHandler.js';
-import { AuthRequest } from '../middleware/auth.js';
-import { log } from '../config/logger.js';
+import prisma from '../lib/prisma';
+import { hashPassword, comparePassword, generateToken } from '../utils/auth.utils';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
+import { AuthRequest } from '../middleware/auth';
+import { log } from '../config/logger';
 
 const registerSchema = z.object({
   email: z.string().email(),

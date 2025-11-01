@@ -1,4 +1,4 @@
-import { createAdminConfig } from '../config/admin.js';
+import { createAdminConfig } from '../config/admin';
 import AdminJSExpress from '@adminjs/express';
 
 /**

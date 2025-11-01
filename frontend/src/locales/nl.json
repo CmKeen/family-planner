@@ -56,7 +56,10 @@
       "addMeal": "Maaltijd toevoegen",
       "addMealForDay": "Maaltijd toevoegen",
       "removeMeal": "Verwijderen",
-      "switchingTemplate": "Sjabloon wisselen..."
+      "switchingTemplate": "Sjabloon wisselen...",
+      "editComponents": "Componenten bewerken",
+      "convertToComponentMeal": "Converteren naar samengestelde maaltijd",
+      "convertToRecipe": "Opslaan als recept"
     },
     "dialogs": {
       "swapRecipe": {

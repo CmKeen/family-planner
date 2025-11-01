@@ -146,3 +146,27 @@ export const invitationAPI = {
   cancel: (familyId: string, invitationId: string) =>
     api.delete(`/families/${familyId}/invitations/${invitationId}`)
 };
+
+// Food Component API
+export const foodComponentAPI = {
+  getAll: (params?: { familyId?: string; category?: string }) =>
+    api.get('/components', { params }),
+  create: (familyId: string, data: any) =>
+    api.post(`/families/${familyId}/components`, data),
+  update: (id: string, data: any) =>
+    api.put(`/components/${id}`, data),
+  delete: (id: string) =>
+    api.delete(`/components/${id}`)
+};
+
+// Meal Component API
+export const mealComponentAPI = {
+  add: (planId: string, mealId: string, data: any) =>
+    api.post(`/weekly-plans/${planId}/meals/${mealId}/components`, data),
+  swap: (planId: string, mealId: string, componentId: string, data: any) =>
+    api.put(`/weekly-plans/${planId}/meals/${mealId}/components/${componentId}/swap`, data),
+  update: (planId: string, mealId: string, componentId: string, data: any) =>
+    api.patch(`/weekly-plans/${planId}/meals/${mealId}/components/${componentId}`, data),
+  remove: (planId: string, mealId: string, componentId: string) =>
+    api.delete(`/weekly-plans/${planId}/meals/${mealId}/components/${componentId}`)
+};

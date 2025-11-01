@@ -42,17 +42,23 @@ jest.mock('../../lib/prisma', () => ({
   }
 }));
 
-import prisma from '../../lib/prisma.js';
+import prisma from '../../lib/prisma';
 import {
   addComponentToMeal,
   swapMealComponent,
   removeMealComponent,
   updateMealComponent
-} from '../mealComponent.controller.js';
-import { AuthRequest } from '../../middleware/auth.js';
+} from '../mealComponent.controller';
+import { AuthRequest } from '../../middleware/auth';
 
 // Helper to wait for async operations
 const waitForAsync = () => new Promise(resolve => setImmediate(resolve));
+
+// Valid UUIDs for testing
+const UUID_COMPONENT_CHICKEN = '550e8400-e29b-41d4-a716-446655440001';
+const UUID_COMPONENT_SALMON = '550e8400-e29b-41d4-a716-446655440002';
+const UUID_MEAL = '550e8400-e29b-41d4-a716-446655440003';
+const UUID_MEAL_COMPONENT = '550e8400-e29b-41d4-a716-446655440004';
 
 describe('Meal Component Controller', () => {
   let mockRequest: Partial<AuthRequest>;
@@ -81,16 +87,20 @@ describe('Meal Component Controller', () => {
 
   describe('addComponentToMeal', () => {
     it('should successfully add a component to a meal', async () => {
-      mockRequest.params = { mealId: 'meal-1' };
+      // Use valid UUIDs for all IDs
+      const componentId = '550e8400-e29b-41d4-a716-446655440001';
+      const mealId = '550e8400-e29b-41d4-a716-446655440002';
+
+      mockRequest.params = { mealId };
       mockRequest.body = {
-        componentId: 'comp-chicken',
+        componentId,
         role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g'
       };
 
       const mockMealData = {
-        id: 'meal-1',
+        id: mealId,
         weeklyPlanId: 'plan-1',
         weeklyPlan: {
           familyId: 'family-1'
@@ -98,16 +108,16 @@ describe('Meal Component Controller', () => {
       };
 
       const mockComponent = {
-        id: 'comp-chicken',
+        id: componentId,
         name: 'Poulet',
         nameEn: 'Chicken',
         category: 'PROTEIN'
       };
 
       const mockMealComponentData = {
-        id: 'mc-1',
-        mealId: 'meal-1',
-        componentId: 'comp-chicken',
+        id: UUID_MEAL_COMPONENT,
+        mealId,
+        componentId,
         role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g',
@@ -126,14 +136,14 @@ describe('Meal Component Controller', () => {
       await waitForAsync();
 
       expect(mockMeal.findUnique).toHaveBeenCalledWith({
-        where: { id: 'meal-1' },
+        where: { id: mealId },
         include: { weeklyPlan: true }
       });
 
       expect(mockMealComponentModel.create).toHaveBeenCalledWith({
         data: {
-          mealId: 'meal-1',
-          componentId: 'comp-chicken',
+          mealId,  // Use the local mealId variable, not UUID_MEAL
+          componentId,  // Use the local componentId variable
           role: 'MAIN_PROTEIN',
           quantity: 150,
           unit: 'g',
@@ -151,7 +161,7 @@ describe('Meal Component Controller', () => {
     it('should return 404 if meal not found', async () => {
       mockRequest.params = { mealId: 'non-existent' };
       mockRequest.body = {
-        componentId: 'comp-chicken',
+        componentId: UUID_COMPONENT_CHICKEN,
         role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g'
@@ -169,9 +179,9 @@ describe('Meal Component Controller', () => {
     });
 
     it('should deny access if user is not a family member', async () => {
-      mockRequest.params = { mealId: 'meal-1' };
+      mockRequest.params = { mealId: UUID_MEAL };
       mockRequest.body = {
-        componentId: 'comp-chicken',
+        componentId: UUID_COMPONENT_CHICKEN,
         role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g'
@@ -197,16 +207,18 @@ describe('Meal Component Controller', () => {
     });
 
     it('should return 404 if component not found', async () => {
-      mockRequest.params = { mealId: 'meal-1' };
+      const nonExistentComponentId = '550e8400-e29b-41d4-a716-999999999999';
+
+      mockRequest.params = { mealId: UUID_MEAL };
       mockRequest.body = {
-        componentId: 'non-existent',
+        componentId: nonExistentComponentId,
         role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g'
       };
 
       const mockMealData = {
-        id: 'meal-1',
+        id: UUID_MEAL,
         weeklyPlanId: 'plan-1',
         weeklyPlan: {
           familyId: 'family-1'
@@ -229,17 +241,18 @@ describe('Meal Component Controller', () => {
     });
 
     it('should validate required fields', async () => {
-      mockRequest.params = { mealId: 'meal-1' };
+      mockRequest.params = { mealId: UUID_MEAL };
       mockRequest.body = {
-        componentId: 'comp-chicken'
+        componentId: UUID_COMPONENT_CHICKEN
         // missing: role, quantity, unit
       };
 
       await addComponentToMeal(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
       await waitForAsync();
 
+      // Zod validation throws ZodError, not AppError
       expect(nextFunction).toHaveBeenCalledWith(expect.objectContaining({
-        statusCode: 400
+        name: 'ZodError'
       }));
     });
   });
@@ -247,17 +260,17 @@ describe('Meal Component Controller', () => {
   describe('swapMealComponent', () => {
     it('should successfully swap a component (e.g., chicken → salmon)', async () => {
       mockRequest.params = {
-        mealId: 'meal-1',
-        componentId: 'mc-chicken'
+        mealId: UUID_MEAL,
+        componentId: UUID_MEAL_COMPONENT
       };
       mockRequest.body = {
-        newComponentId: 'comp-salmon'
+        newComponentId: UUID_COMPONENT_SALMON
       };
 
       const existingMealComponent = {
-        id: 'mc-chicken',
-        mealId: 'meal-1',
-        componentId: 'comp-chicken',
+        id: UUID_MEAL_COMPONENT,
+        mealId: UUID_MEAL,
+        componentId: UUID_COMPONENT_CHICKEN,
         role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g',
@@ -270,7 +283,7 @@ describe('Meal Component Controller', () => {
       };
 
       const newComponent = {
-        id: 'comp-salmon',
+        id: UUID_COMPONENT_SALMON,
         name: 'Saumon',
         nameEn: 'Salmon',
         category: 'PROTEIN',
@@ -280,7 +293,7 @@ describe('Meal Component Controller', () => {
 
       const updatedMealComponent = {
         ...existingMealComponent,
-        componentId: 'comp-salmon',
+        componentId: UUID_COMPONENT_SALMON,
         component: newComponent
       };
 
@@ -295,9 +308,9 @@ describe('Meal Component Controller', () => {
       await waitForAsync();
 
       expect(mockMealComponentModel.update).toHaveBeenCalledWith({
-        where: { id: 'mc-chicken' },
+        where: { id: UUID_MEAL_COMPONENT },
         data: {
-          componentId: 'comp-salmon',
+          componentId: UUID_COMPONENT_SALMON,
           quantity: 150,
           unit: 'g'
         },
@@ -312,18 +325,18 @@ describe('Meal Component Controller', () => {
 
     it('should preserve custom quantity when swapping', async () => {
       mockRequest.params = {
-        mealId: 'meal-1',
-        componentId: 'mc-chicken'
+        mealId: UUID_MEAL,
+        componentId: UUID_MEAL_COMPONENT
       };
       mockRequest.body = {
-        newComponentId: 'comp-salmon',
+        newComponentId: UUID_COMPONENT_SALMON,
         quantity: 200 // custom quantity
       };
 
       const existingMealComponent = {
-        id: 'mc-chicken',
-        mealId: 'meal-1',
-        componentId: 'comp-chicken',
+        id: UUID_MEAL_COMPONENT,
+        mealId: UUID_MEAL,
+        componentId: UUID_COMPONENT_CHICKEN,
         role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g',
@@ -335,7 +348,7 @@ describe('Meal Component Controller', () => {
       };
 
       const newComponent = {
-        id: 'comp-salmon',
+        id: UUID_COMPONENT_SALMON,
         defaultQuantity: 150,
         unit: 'g'
       };
@@ -350,9 +363,9 @@ describe('Meal Component Controller', () => {
       await waitForAsync();
 
       expect(mockMealComponentModel.update).toHaveBeenCalledWith({
-        where: { id: 'mc-chicken' },
+        where: { id: UUID_MEAL_COMPONENT },
         data: {
-          componentId: 'comp-salmon',
+          componentId: UUID_COMPONENT_SALMON,
           quantity: 200, // uses custom quantity
           unit: 'g'
         },
@@ -364,11 +377,11 @@ describe('Meal Component Controller', () => {
 
     it('should return 404 if meal component not found', async () => {
       mockRequest.params = {
-        mealId: 'meal-1',
+        mealId: UUID_MEAL,
         componentId: 'non-existent'
       };
       mockRequest.body = {
-        newComponentId: 'comp-salmon'
+        newComponentId: UUID_COMPONENT_SALMON
       };
 
       mockMealComponentModel.findUnique.mockResolvedValue(null);
@@ -385,13 +398,13 @@ describe('Meal Component Controller', () => {
   describe('removeMealComponent', () => {
     it('should successfully remove a component from a meal', async () => {
       mockRequest.params = {
-        mealId: 'meal-1',
-        componentId: 'mc-chicken'
+        mealId: UUID_MEAL,
+        componentId: UUID_MEAL_COMPONENT
       };
 
       const existingMealComponent = {
-        id: 'mc-chicken',
-        mealId: 'meal-1',
+        id: UUID_MEAL_COMPONENT,
+        mealId: UUID_MEAL,
         meal: {
           weeklyPlan: {
             familyId: 'family-1'
@@ -409,7 +422,7 @@ describe('Meal Component Controller', () => {
       await waitForAsync();
 
       expect(mockMealComponentModel.delete).toHaveBeenCalledWith({
-        where: { id: 'mc-chicken' }
+        where: { id: UUID_MEAL_COMPONENT }
       });
 
       expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -420,7 +433,7 @@ describe('Meal Component Controller', () => {
 
     it('should return 404 if meal component not found', async () => {
       mockRequest.params = {
-        mealId: 'meal-1',
+        mealId: UUID_MEAL,
         componentId: 'non-existent'
       };
 
@@ -436,13 +449,13 @@ describe('Meal Component Controller', () => {
 
     it('should deny access if user is not a family member', async () => {
       mockRequest.params = {
-        mealId: 'meal-1',
-        componentId: 'mc-chicken'
+        mealId: UUID_MEAL,
+        componentId: UUID_MEAL_COMPONENT
       };
 
       const existingMealComponent = {
-        id: 'mc-chicken',
-        mealId: 'meal-1',
+        id: UUID_MEAL_COMPONENT,
+        mealId: UUID_MEAL,
         meal: {
           weeklyPlan: {
             familyId: 'family-1'
@@ -465,16 +478,16 @@ describe('Meal Component Controller', () => {
   describe('updateMealComponent', () => {
     it('should successfully update component quantity', async () => {
       mockRequest.params = {
-        mealId: 'meal-1',
-        componentId: 'mc-chicken'
+        mealId: UUID_MEAL,
+        componentId: UUID_MEAL_COMPONENT
       };
       mockRequest.body = {
         quantity: 200
       };
 
       const existingMealComponent = {
-        id: 'mc-chicken',
-        mealId: 'meal-1',
+        id: UUID_MEAL_COMPONENT,
+        mealId: UUID_MEAL,
         quantity: 150,
         unit: 'g',
         meal: {
@@ -499,7 +512,7 @@ describe('Meal Component Controller', () => {
       await waitForAsync();
 
       expect(mockMealComponentModel.update).toHaveBeenCalledWith({
-        where: { id: 'mc-chicken' },
+        where: { id: UUID_MEAL_COMPONENT },
         data: { quantity: 200 },
         include: {
           component: true
@@ -512,8 +525,8 @@ describe('Meal Component Controller', () => {
 
     it('should update multiple fields at once', async () => {
       mockRequest.params = {
-        mealId: 'meal-1',
-        componentId: 'mc-chicken'
+        mealId: UUID_MEAL,
+        componentId: UUID_MEAL_COMPONENT
       };
       mockRequest.body = {
         quantity: 200,
@@ -522,7 +535,7 @@ describe('Meal Component Controller', () => {
       };
 
       const existingMealComponent = {
-        id: 'mc-chicken',
+        id: UUID_MEAL_COMPONENT,
         meal: {
           weeklyPlan: {
             familyId: 'family-1'
@@ -539,7 +552,7 @@ describe('Meal Component Controller', () => {
       await waitForAsync();
 
       expect(mockMealComponentModel.update).toHaveBeenCalledWith({
-        where: { id: 'mc-chicken' },
+        where: { id: UUID_MEAL_COMPONENT },
         data: {
           quantity: 200,
           role: 'SECONDARY_PROTEIN',

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { log } from '../config/logger.js';
+import { log } from '../config/logger';
 
 /**
  * Request logging middleware
