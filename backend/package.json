@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node add-js-extensions.cjs",
     "start": "node dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -73,6 +73,7 @@
     "prisma": "^5.7.1",
     "supertest": "^7.1.4",
     "ts-jest": "^29.1.1",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
