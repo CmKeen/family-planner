@@ -1027,7 +1027,6 @@ export default function WeeklyPlanPage() {
           portions={selectedMeal.portions}
           onUpdate={() => {
             refetch();
-            setComponentEditorOpen(false);
           }}
         />
       )}

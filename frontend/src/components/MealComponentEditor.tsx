@@ -105,6 +105,7 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [components, setComponents] = useState<FoodComponent[]>([]);
+  const [localMealComponents, setLocalMealComponents] = useState<MealComponent[]>(mealComponents);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showAddComponent, setShowAddComponent] = useState(false);
@@ -119,6 +120,10 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
       loadComponents();
     }
   }, [open, familyId]);
+
+  useEffect(() => {
+    setLocalMealComponents(mealComponents);
+  }, [mealComponents]);
 
   const loadComponents = async () => {
     try {
@@ -147,14 +152,20 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
 
     try {
       setLoading(true);
-      await mealComponentAPI.add(planId, mealId, {
+      const response = await mealComponentAPI.add(planId, mealId, {
         componentId: selectedComponentId,
         quantity: parseFloat(newQuantity) || selectedComponent.defaultQuantity,
         unit: newUnit || selectedComponent.unit,
         role: newRole,
-        order: mealComponents.length,
+        order: localMealComponents.length,
       });
-      setShowAddComponent(false);
+      // Optimistically update local state with the new component
+      const newMealComponent: MealComponent = {
+        ...response.data,
+        component: selectedComponent,
+      };
+      setLocalMealComponents([...localMealComponents, newMealComponent]);
+      // Keep the add form open to allow adding multiple components
       setSelectedComponentId('');
       setNewQuantity('');
       setNewUnit('');
@@ -171,6 +182,8 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
     try {
       setLoading(true);
       await mealComponentAPI.remove(planId, mealId, mealComponentId);
+      // Optimistically update local state
+      setLocalMealComponents(localMealComponents.filter((mc) => mc.id !== mealComponentId));
       onUpdate();
     } catch (error) {
       console.error('Failed to remove component:', error);
@@ -187,11 +200,19 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
 
     try {
       setLoading(true);
-      await mealComponentAPI.swap(planId, mealId, swapMode.mealComponentId, {
+      const response = await mealComponentAPI.swap(planId, mealId, swapMode.mealComponentId, {
         newComponentId,
         quantity: newComponent.defaultQuantity,
         unit: newComponent.unit,
       });
+      // Optimistically update local state
+      setLocalMealComponents(
+        localMealComponents.map((mc) =>
+          mc.id === swapMode.mealComponentId
+            ? { ...response.data, component: newComponent }
+            : mc
+        )
+      );
       setSwapMode(null);
       onUpdate();
     } catch (error) {
@@ -238,13 +259,13 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
               </Button>
             </div>
 
-            {mealComponents.length === 0 ? (
+            {localMealComponents.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {t('components.noComponents')}
               </p>
             ) : (
               <div className="space-y-2">
-                {mealComponents.map((mc) => (
+                {localMealComponents.map((mc) => (
                   <div
                     key={mc.id}
                     className="flex items-center justify-between p-3 bg-muted rounded-lg"
@@ -404,7 +425,7 @@ export const MealComponentEditor: React.FC<MealComponentEditorProps> = ({
                 <h4 className="font-semibold">
                   {t('mealBuilder.swapComponent.title', {
                     component: getComponentName(
-                      mealComponents.find((mc) => mc.id === swapMode.mealComponentId)
+                      localMealComponents.find((mc) => mc.id === swapMode.mealComponentId)
                         ?.component || ({} as FoodComponent)
                     ),
                   })}
