@@ -1,4 +1,8 @@
 // Post-build script: Add .js extensions to relative imports in compiled output
+// CRITICAL: This script is required for Node.js ESM compatibility
+// DO NOT DELETE OR MODIFY without reading backend/ESM_MODULES.md
+// See: backend/ESM_MODULES.md for full documentation
+
 const fs = require('fs');
 const path = require('path');
 

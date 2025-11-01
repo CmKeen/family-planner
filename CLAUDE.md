@@ -11,6 +11,7 @@
 - **[TDD_GUIDE.md](TDD_GUIDE.md)** - Test-driven development workflow (MANDATORY)
 - **[VERIFICATION_GUIDE.md](VERIFICATION_GUIDE.md)** - Chrome MCP verification procedures (MANDATORY)
 - **[CODING_STANDARDS.md](CODING_STANDARDS.md)** - Coding standards and best practices (MANDATORY)
+- **[backend/ESM_MODULES.md](backend/ESM_MODULES.md)** - ESM module resolution configuration (CRITICAL - DO NOT MODIFY)
 
 ---
 
