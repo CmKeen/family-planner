@@ -12,8 +12,8 @@ jest.mock('nodemailer', () => ({
 }));
 
 // Now import after mocking
-import { EmailService } from '../email.service.js';
-import { DraftPlanCreatedData } from '../../types/notification.types.js';
+import { EmailService } from '../email.service';
+import { DraftPlanCreatedData } from '../../types/notification.types';
 
 describe('EmailService', () => {
   let emailService: EmailService;
