@@ -193,17 +193,6 @@
       "SPICE": "Specerijen",
       "OTHER": "Overige"
     },
-    "roles": {
-      "MAIN_PROTEIN": "Hoofd eiwit",
-      "SECONDARY_PROTEIN": "Secundair eiwit",
-      "PRIMARY_VEGETABLE": "Primaire groente",
-      "SECONDARY_VEGETABLE": "Secundaire groente",
-      "BASE_CARB": "Basis koolhydraat",
-      "SIDE_CARB": "Koolhydraat bijgerecht",
-      "SAUCE": "Saus",
-      "GARNISH": "Garnering",
-      "OTHER": "Overige"
-    },
     "actions": {
       "add": "Component toevoegen",
       "addCustom": "Aangepast component toevoegen",

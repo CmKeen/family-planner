@@ -40,9 +40,6 @@ vi.mock('react-i18next', () => ({
         'components.categories.CARB': 'Carbohydrates',
         'components.actions.selectComponent': 'Select component',
         'components.addCustomModal.unitLabel': 'Unit',
-        'components.roles.MAIN_PROTEIN': 'Main Protein',
-        'components.roles.PRIMARY_VEGETABLE': 'Primary Vegetable',
-        'components.roles.BASE_CARB': 'Base Carb',
         'common.close': 'Close'
       };
       return translations[key] || key;
@@ -108,7 +105,6 @@ const mockMealComponents = [
     componentId: 'comp-1',
     quantity: 150,
     unit: 'g',
-    role: 'MAIN_PROTEIN',
     order: 0,
     component: mockFoodComponents[0]
   },
@@ -117,7 +113,6 @@ const mockMealComponents = [
     componentId: 'comp-2',
     quantity: 200,
     unit: 'g',
-    role: 'PRIMARY_VEGETABLE',
     order: 1,
     component: mockFoodComponents[1]
   }
@@ -215,7 +210,6 @@ describe('MealComponentEditor', () => {
           componentId: 'comp-3',
           quantity: 100,
           unit: 'g',
-          role: 'BASE_CARB',
           order: 2,
           component: mockFoodComponents[2]
         }

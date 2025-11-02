@@ -90,7 +90,7 @@ describe('Save Component Combo as Recipe', () => {
       // Verify meal has components
       expect(mockMeal.recipeId).toBeNull();
       expect(mockMeal.mealComponents).toHaveLength(3);
-      expect(mockMeal.mealComponents.some(mc => mc.role === 'MAIN_PROTEIN')).toBe(true);
+      expect(mockMeal.mealComponents.some(mc => mc.component.category === 'PROTEIN')).toBe(true);
     });
 
     it('should create recipe with isComponentBased flag', () => {

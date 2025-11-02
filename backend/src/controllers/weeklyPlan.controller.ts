@@ -294,7 +294,7 @@ export const generateAutoPlan = asyncHandler(
               );
 
               // Track recent proteins (keep last 2)
-              const proteinComponent = selectedComponents.find(c => c.role === 'MAIN_PROTEIN');
+              const proteinComponent = selectedComponents.find(c => c.category === 'PROTEIN');
               if (proteinComponent) {
                 recentProteins.push(proteinComponent.id);
                 if (recentProteins.length > 2) {
@@ -384,13 +384,13 @@ export const generateAutoPlan = asyncHandler(
 
       mealComponentsToCreate.forEach(({ mealIndex: idx, components }) => {
         const meal = createdMeals[idx];
-        components.forEach((comp: any) => {
+        components.forEach((comp: any, order: number) => {
           componentData.push({
             mealId: meal.id,
             componentId: comp.id,
             quantity: comp.defaultQuantity,
             unit: comp.unit,
-            role: comp.role
+            order
           });
         });
       });
@@ -1273,11 +1273,8 @@ function selectMealComponents(
   const selectedCarb = carbs[Math.floor(Math.random() * carbs.length)];
 
   return [
-    { ...selectedProtein, role: 'MAIN_PROTEIN' },
-    ...selectedVegetables.map((v, i) => ({
-      ...v,
-      role: i === 0 ? 'PRIMARY_VEGETABLE' : 'SECONDARY_VEGETABLE'
-    })),
-    { ...selectedCarb, role: 'BASE_CARB' }
+    selectedProtein,
+    ...selectedVegetables,
+    selectedCarb
   ];
 }

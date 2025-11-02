@@ -6,7 +6,6 @@ import { AuthRequest } from '../middleware/auth';
 
 const addComponentSchema = z.object({
   componentId: z.string().uuid('Invalid component ID'),
-  role: z.enum(['MAIN_PROTEIN', 'SECONDARY_PROTEIN', 'PRIMARY_VEGETABLE', 'SECONDARY_VEGETABLE', 'BASE_CARB', 'SIDE_CARB', 'SAUCE', 'GARNISH', 'OTHER']),
   quantity: z.number().positive('Quantity must be positive'),
   unit: z.string().min(1, 'Unit is required'),
   order: z.number().int().min(0).optional()
@@ -21,7 +20,6 @@ const swapComponentSchema = z.object({
 const updateComponentSchema = z.object({
   quantity: z.number().positive().optional(),
   unit: z.string().optional(),
-  role: z.enum(['MAIN_PROTEIN', 'SECONDARY_PROTEIN', 'PRIMARY_VEGETABLE', 'SECONDARY_VEGETABLE', 'BASE_CARB', 'SIDE_CARB', 'SAUCE', 'GARNISH', 'OTHER']).optional(),
   order: z.number().int().min(0).optional()
 }).refine(data => Object.keys(data).length > 0, {
   message: 'At least one field must be provided for update'
@@ -77,7 +75,6 @@ export const addComponentToMeal = asyncHandler(
       data: {
         mealId,
         componentId: data.componentId,
-        role: data.role,
         quantity: data.quantity,
         unit: data.unit,
         order: data.order ?? 0
@@ -210,7 +207,7 @@ export const removeMealComponent = asyncHandler(
 );
 
 /**
- * Update a meal component (quantity, role, order)
+ * Update a meal component (quantity, unit, order)
  * PATCH /api/weekly-plans/:planId/meals/:mealId/components/:componentId
  */
 export const updateMealComponent = asyncHandler(

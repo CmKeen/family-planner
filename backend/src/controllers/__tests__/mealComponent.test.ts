@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { Request, Response } from 'express';
 
-// Type aliases for Prisma enums
-type ComponentRole = 'MAIN_PROTEIN' | 'SECONDARY_PROTEIN' | 'PRIMARY_VEGETABLE' | 'SECONDARY_VEGETABLE' | 'BASE_CARB' | 'SIDE_CARB' | 'SAUCE' | 'GARNISH' | 'OTHER';
-
 // Mock Prisma client
 const mockMeal = {
   findUnique: jest.fn() as any,
@@ -94,7 +91,6 @@ describe('Meal Component Controller', () => {
       mockRequest.params = { mealId };
       mockRequest.body = {
         componentId,
-        role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g'
       };
@@ -118,7 +114,6 @@ describe('Meal Component Controller', () => {
         id: UUID_MEAL_COMPONENT,
         mealId,
         componentId,
-        role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g',
         order: 0,
@@ -144,7 +139,6 @@ describe('Meal Component Controller', () => {
         data: {
           mealId,  // Use the local mealId variable, not UUID_MEAL
           componentId,  // Use the local componentId variable
-          role: 'MAIN_PROTEIN',
           quantity: 150,
           unit: 'g',
           order: 0
@@ -162,7 +156,6 @@ describe('Meal Component Controller', () => {
       mockRequest.params = { mealId: 'non-existent' };
       mockRequest.body = {
         componentId: UUID_COMPONENT_CHICKEN,
-        role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g'
       };
@@ -182,7 +175,6 @@ describe('Meal Component Controller', () => {
       mockRequest.params = { mealId: UUID_MEAL };
       mockRequest.body = {
         componentId: UUID_COMPONENT_CHICKEN,
-        role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g'
       };
@@ -244,7 +236,7 @@ describe('Meal Component Controller', () => {
       mockRequest.params = { mealId: UUID_MEAL };
       mockRequest.body = {
         componentId: UUID_COMPONENT_CHICKEN
-        // missing: role, quantity, unit
+        // missing: quantity, unit
       };
 
       await addComponentToMeal(mockRequest as AuthRequest, mockResponse as Response, nextFunction);
@@ -271,7 +263,6 @@ describe('Meal Component Controller', () => {
         id: UUID_MEAL_COMPONENT,
         mealId: UUID_MEAL,
         componentId: UUID_COMPONENT_CHICKEN,
-        role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g',
         order: 0,
@@ -337,7 +328,6 @@ describe('Meal Component Controller', () => {
         id: UUID_MEAL_COMPONENT,
         mealId: UUID_MEAL,
         componentId: UUID_COMPONENT_CHICKEN,
-        role: 'MAIN_PROTEIN',
         quantity: 150,
         unit: 'g',
         meal: {
@@ -530,7 +520,6 @@ describe('Meal Component Controller', () => {
       };
       mockRequest.body = {
         quantity: 200,
-        role: 'SECONDARY_PROTEIN',
         order: 1
       };
 
@@ -555,7 +544,6 @@ describe('Meal Component Controller', () => {
         where: { id: UUID_MEAL_COMPONENT },
         data: {
           quantity: 200,
-          role: 'SECONDARY_PROTEIN',
           order: 1
         },
         include: {
