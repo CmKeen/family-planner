@@ -66,8 +66,135 @@ router.put('/:planId/template', switchTemplate); // Switch to different template
 // Meal comments (nested routes)
 router.use('/:planId/meals/:mealId/comments', mealCommentRoutes);
 
-// Audit log endpoints
-router.get('/:planId/audit-log', getPlanAuditLog); // Get plan audit log
-router.get('/:planId/meals/:mealId/audit-log', getMealAuditLog); // Get meal audit log
+/**
+ * @swagger
+ * /api/weekly-plans/{planId}/audit-log:
+ *   get:
+ *     summary: Get audit log for a weekly plan
+ *     description: Returns complete change history for the plan. Requires permission to view audit log (canViewAuditLog)
+ *     tags: [Audit Trail]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: planId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: memberId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by specific member
+ *       - in: query
+ *         name: changeType
+ *         schema:
+ *           type: string
+ *           enum: [PLAN_CREATED, PLAN_VALIDATED, PLAN_LOCKED, MEAL_ADDED, MEAL_REMOVED, MEAL_RECIPE_CHANGED, MEAL_PORTIONS_CHANGED, MEAL_LOCKED, MEAL_UNLOCKED, MEAL_COMMENT_ADDED, MEAL_COMMENT_EDITED, MEAL_COMMENT_DELETED]
+ *         description: Filter by change type
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *           maximum: 100
+ *         description: Number of entries to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of entries to skip
+ *     responses:
+ *       200:
+ *         description: Audit log entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     logs:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/PlanChangeLog'
+ *                     total:
+ *                       type: integer
+ *       403:
+ *         description: Not authorized to view audit log
+ */
+router.get('/:planId/audit-log', getPlanAuditLog);
+
+/**
+ * @swagger
+ * /api/weekly-plans/{planId}/meals/{mealId}/audit-log:
+ *   get:
+ *     summary: Get audit log for a specific meal
+ *     description: Returns change history for a specific meal only
+ *     tags: [Audit Trail]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: planId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: mealId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: query
+ *         name: memberId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by specific member
+ *       - in: query
+ *         name: changeType
+ *         schema:
+ *           type: string
+ *         description: Filter by change type
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *           maximum: 100
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *     responses:
+ *       200:
+ *         description: Meal audit log entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     logs:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/PlanChangeLog'
+ *                     total:
+ *                       type: integer
+ */
+router.get('/:planId/meals/:mealId/audit-log', getMealAuditLog);
 
 export default router;
