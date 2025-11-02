@@ -170,3 +170,32 @@ export const mealComponentAPI = {
   remove: (planId: string, mealId: string, componentId: string) =>
     api.delete(`/weekly-plans/${planId}/meals/${mealId}/components/${componentId}`)
 };
+
+// Comment API
+export const commentAPI = {
+  getComments: (planId: string, mealId: string) =>
+    api.get(`/weekly-plans/${planId}/meals/${mealId}/comments`),
+  addComment: (planId: string, mealId: string, data: { content: string }) =>
+    api.post(`/weekly-plans/${planId}/meals/${mealId}/comments`, data),
+  updateComment: (planId: string, mealId: string, commentId: string, data: { content: string }) =>
+    api.put(`/weekly-plans/${planId}/meals/${mealId}/comments/${commentId}`, data),
+  deleteComment: (planId: string, mealId: string, commentId: string) =>
+    api.delete(`/weekly-plans/${planId}/meals/${mealId}/comments/${commentId}`)
+};
+
+// Audit Log API
+export const auditLogAPI = {
+  getPlanAuditLog: (planId: string, params?: {
+    mealId?: string;
+    memberId?: string;
+    changeType?: string;
+    limit?: number;
+    offset?: number;
+  }) =>
+    api.get(`/weekly-plans/${planId}/audit-log`, { params }),
+  getMealAuditLog: (planId: string, mealId: string, params?: {
+    limit?: number;
+    offset?: number;
+  }) =>
+    api.get(`/weekly-plans/${planId}/meals/${mealId}/audit-log`, { params })
+};
