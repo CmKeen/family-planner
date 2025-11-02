@@ -34,6 +34,21 @@ services:
           type: web
           name: family-planner-frontend
           envVarKey: RENDER_EXTERNAL_URL
+      # Email / SMTP Configuration (optional - system works without it)
+      - key: SMTP_HOST
+        sync: false  # Set in Render dashboard when ready (e.g., smtp.gmail.com)
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false  # Set in Render dashboard when ready
+      - key: SMTP_PASS
+        sync: false  # Set in Render dashboard when ready (use app-specific password)
+      - key: EMAIL_FROM_NAME
+        value: "Family Planner"
+      - key: EMAIL_FROM_ADDRESS
+        value: "noreply@familyplanner.com"
 
   - type: web
     name: family-planner-frontend
