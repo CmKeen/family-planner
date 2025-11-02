@@ -4,8 +4,8 @@ import {
   DraftPlanCreatedData,
   EmailConfig,
   EmailRecipient
-} from '../types/notification.types.js';
-import { getEmailTemplate } from '../templates/emailTemplates.js';
+} from '../types/notification.types';
+import { getEmailTemplate } from '../templates/emailTemplates';
 
 export class EmailService {
   private transporter: Transporter | null = null;

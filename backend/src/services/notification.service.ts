@@ -1,10 +1,10 @@
-import prisma from '../lib/prisma.js';
-import { emailService } from './email.service.js';
+import prisma from '../lib/prisma';
+import { emailService } from './email.service';
 import {
   DraftPlanCreatedData,
   EmailRecipient,
   Language
-} from '../types/notification.types.js';
+} from '../types/notification.types';
 
 /**
  * Notification Service

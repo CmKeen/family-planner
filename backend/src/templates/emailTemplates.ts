@@ -1,4 +1,4 @@
-import { Language, EmailTemplate, NotificationData } from '../types/notification.types.js';
+import { Language, EmailTemplate, NotificationData } from '../types/notification.types';
 
 interface TemplateOptions {
   appUrl: string;
