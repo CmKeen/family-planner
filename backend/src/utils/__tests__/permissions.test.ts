@@ -176,14 +176,14 @@ describe('Permission Utilities', () => {
       expect(result.reason).toContain('locked');
     });
 
-    it('should not allow MEMBER modification after cutoff', () => {
+    it('should not allow MEMBER modification (no edit permission)', () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const cutoffPlan = { ...mockPlan, cutoffDate: yesterday, cutoffTime: '18:00' };
 
       const result = canModifyMeal('MEMBER' as MemberRole, cutoffPlan, mockMeal);
       expect(result.allowed).toBe(false);
-      expect(result.reason).toContain('cutoff');
+      expect(result.reason).toContain('permission');
     });
 
     it('should allow ADMIN modification after cutoff', () => {

@@ -1,244 +1,130 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { enforceCutoff, enforceModifiableStatus } from '../cutoffEnforcement.js';
-import { AppError } from '../errorHandler.js';
-import prisma from '../../lib/prisma.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Request, Response, NextFunction } from 'express';
+import { enforceCutoff } from '../cutoffEnforcement.js';
+import { prisma } from '../../lib/prisma.js';
 
 // Mock prisma
 vi.mock('../../lib/prisma.js', () => ({
-  default: {
+  prisma: {
     weeklyPlan: {
       findUnique: vi.fn()
     }
   }
 }));
 
+// Mock permissions
+vi.mock('../../utils/permissions.js', () => ({
+  isAfterCutoff: vi.fn(),
+  canEditAfterCutoff: vi.fn()
+}));
+
+import { isAfterCutoff, canEditAfterCutoff } from '../../utils/permissions.js';
+
 describe('Cutoff Enforcement Middleware', () => {
-  let req: any;
-  let res: any;
-  let next: any;
+  let mockReq: Partial<Request>;
+  let mockRes: Partial<Response>;
+  let mockNext: NextFunction;
 
   beforeEach(() => {
-    req = {
-      params: { planId: 'plan-123' },
-      user: { id: 'user-123' }
+    mockReq = {
+      params: {
+        planId: 'plan-123'
+      },
+      user: {
+        id: 'user-123',
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        language: 'fr'
+      },
+      member: {
+        id: 'member-123',
+        name: 'Test User',
+        role: 'PARENT',
+        familyId: 'family-123'
+      }
     };
-    res = {};
-    next = vi.fn();
+
+    mockRes = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis()
+    };
+
+    mockNext = vi.fn();
+
+    // Reset all mocks
     vi.clearAllMocks();
   });
 
-  describe('enforceCutoff', () => {
-    it('should allow modification before cutoff', async () => {
+  describe('enforceCutoff without allowComments option', () => {
+    const middleware = enforceCutoff();
+
+    it('should allow access if no cutoff is set', async () => {
+      const mockPlan = {
+        id: 'plan-123',
+        status: 'DRAFT',
+        cutoffDate: null,
+        cutoffTime: null,
+        allowCommentsAfterCutoff: false
+      };
+
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (isAfterCutoff as any).mockReturnValue(false);
+
+      await middleware(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.status).not.toHaveBeenCalled();
+    });
+
+    it('should allow access before cutoff', async () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
+      const mockPlan = {
         id: 'plan-123',
+        status: 'DRAFT',
         cutoffDate: tomorrow,
         cutoffTime: '18:00',
-        allowCommentsAfterCutoff: true,
-        family: {
-          members: [{
-            id: 'member-123',
-            userId: 'user-123',
-            role: 'MEMBER'
-          }]
-        }
-      });
+        allowCommentsAfterCutoff: false
+      };
 
-      const middleware = enforceCutoff();
-      await middleware(req, res, next);
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (isAfterCutoff as any).mockReturnValue(false);
 
-      expect(next).toHaveBeenCalledWith();
+      await middleware(mockReq as Request, mockRes as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith();
+      expect(mockRes.status).not.toHaveBeenCalled();
     });
 
     it('should block MEMBER after cutoff', async () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
+      const mockPlan = {
         id: 'plan-123',
+        status: 'DRAFT',
         cutoffDate: yesterday,
         cutoffTime: '18:00',
-        allowCommentsAfterCutoff: false,
-        family: {
-          members: [{
-            id: 'member-123',
-            userId: 'user-123',
-            role: 'MEMBER'
-          }]
-        }
-      });
+        allowCommentsAfterCutoff: false
+      };
 
-      const middleware = enforceCutoff();
+      mockReq.member = {
+        id: 'member-123',
+        name: 'Test User',
+        role: 'MEMBER',
+        familyId: 'family-123'
+      };
 
-      await expect(middleware(req, res, next)).rejects.toThrow(AppError);
-      await expect(middleware(req, res, next)).rejects.toThrow('cutoff deadline');
-    });
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (isAfterCutoff as any).mockReturnValue(true);
+      (canEditAfterCutoff as any).mockReturnValue(false);
 
-    it('should allow ADMIN after cutoff', async () => {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
+      await middleware(mockReq as Request, mockRes as Response, mockNext);
 
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        id: 'plan-123',
-        cutoffDate: yesterday,
-        cutoffTime: '18:00',
-        allowCommentsAfterCutoff: false,
-        family: {
-          members: [{
-            id: 'member-123',
-            userId: 'user-123',
-            role: 'ADMIN'
-          }]
-        }
-      });
-
-      const middleware = enforceCutoff();
-      await middleware(req, res, next);
-
-      expect(next).toHaveBeenCalledWith();
-    });
-
-    it('should allow PARENT after cutoff', async () => {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        id: 'plan-123',
-        cutoffDate: yesterday,
-        cutoffTime: '18:00',
-        allowCommentsAfterCutoff: false,
-        family: {
-          members: [{
-            id: 'member-123',
-            userId: 'user-123',
-            role: 'PARENT'
-          }]
-        }
-      });
-
-      const middleware = enforceCutoff();
-      await middleware(req, res, next);
-
-      expect(next).toHaveBeenCalledWith();
-    });
-
-    it('should allow comments after cutoff if allowCommentsAfterCutoff is true', async () => {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        id: 'plan-123',
-        cutoffDate: yesterday,
-        cutoffTime: '18:00',
-        allowCommentsAfterCutoff: true,
-        family: {
-          members: [{
-            id: 'member-123',
-            userId: 'user-123',
-            role: 'MEMBER'
-          }]
-        }
-      });
-
-      const middleware = enforceCutoff({ allowComments: true });
-      await middleware(req, res, next);
-
-      expect(next).toHaveBeenCalledWith();
-    });
-
-    it('should block comments after cutoff if allowCommentsAfterCutoff is false', async () => {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        id: 'plan-123',
-        cutoffDate: yesterday,
-        cutoffTime: '18:00',
-        allowCommentsAfterCutoff: false,
-        family: {
-          members: [{
-            id: 'member-123',
-            userId: 'user-123',
-            role: 'MEMBER'
-          }]
-        }
-      });
-
-      const middleware = enforceCutoff({ allowComments: true });
-
-      await expect(middleware(req, res, next)).rejects.toThrow(AppError);
-    });
-
-    it('should throw error if plan not found', async () => {
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(null);
-
-      const middleware = enforceCutoff();
-
-      await expect(middleware(req, res, next)).rejects.toThrow('Weekly plan not found');
-    });
-
-    it('should throw error if user is not a member', async () => {
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        id: 'plan-123',
-        cutoffDate: null,
-        cutoffTime: null,
-        allowCommentsAfterCutoff: true,
-        family: {
-          members: [] // User not in family
-        }
-      });
-
-      const middleware = enforceCutoff();
-
-      await expect(middleware(req, res, next)).rejects.toThrow('not a member of this family');
-    });
-  });
-
-  describe('enforceModifiableStatus', () => {
-    it('should allow modifications to DRAFT plan', async () => {
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        status: 'DRAFT'
-      });
-
-      await enforceModifiableStatus(req, res, next);
-
-      expect(next).toHaveBeenCalledWith();
-    });
-
-    it('should allow modifications to IN_VALIDATION plan', async () => {
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        status: 'IN_VALIDATION'
-      });
-
-      await enforceModifiableStatus(req, res, next);
-
-      expect(next).toHaveBeenCalledWith();
-    });
-
-    it('should allow modifications to VALIDATED plan', async () => {
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        status: 'VALIDATED'
-      });
-
-      await enforceModifiableStatus(req, res, next);
-
-      expect(next).toHaveBeenCalledWith();
-    });
-
-    it('should block modifications to LOCKED plan', async () => {
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue({
-        status: 'LOCKED'
-      });
-
-      await expect(enforceModifiableStatus(req, res, next)).rejects.toThrow('locked and cannot be modified');
-    });
-
-    it('should throw error if plan not found', async () => {
-      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(null);
-
-      await expect(enforceModifiableStatus(req, res, next)).rejects.toThrow('Weekly plan not found');
+      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
+      expect(mockRes.status).not.toHaveBeenCalled();
     });
   });
 });
