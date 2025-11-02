@@ -24,8 +24,13 @@ import {
   removeMealComponent,
   updateMealComponent
 } from '../controllers/mealComponent.controller';
+import {
+  getPlanAuditLog,
+  getMealAuditLog
+} from '../controllers/auditLog.controller';
 import { authenticate } from '../middleware/auth';
 import { intensiveOperationLimiter } from '../middleware/rateLimiter';
+import mealCommentRoutes from './mealComment.routes.js';
 
 const router = Router();
 
@@ -57,5 +62,12 @@ router.post('/:planId/meals/:mealId/save-as-recipe', saveComponentMealAsRecipe);
 router.post('/:planId/meals', addMeal); // Add single meal
 router.delete('/:planId/meals/:mealId', removeMeal); // Remove meal
 router.put('/:planId/template', switchTemplate); // Switch to different template
+
+// Meal comments (nested routes)
+router.use('/:planId/meals/:mealId/comments', mealCommentRoutes);
+
+// Audit log endpoints
+router.get('/:planId/audit-log', getPlanAuditLog); // Get plan audit log
+router.get('/:planId/meals/:mealId/audit-log', getMealAuditLog); // Get meal audit log
 
 export default router;

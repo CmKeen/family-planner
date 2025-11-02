@@ -114,11 +114,16 @@ model FamilyMember {
   aversions         String[]
   favorites         String[]
 
+  // Permissions
+  canViewAuditLog   Boolean     @default(true) // Can view plan change history
+
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
   attendance        Attendance[]
   votes             Vote[]
+  comments          MealComment[]
+  planChanges       PlanChangeLog[]
 }
 
 model Recipe {
@@ -250,7 +255,7 @@ model WeeklyPlan {
   // Cutoff management
   cutoffDate        DateTime?
   cutoffTime        String?     // e.g., "20:00"
-  allowDeltaAfterCutoff Boolean @default(true)
+  allowCommentsAfterCutoff Boolean @default(true) // Allow comments after cutoff
 
   validatedAt       DateTime?
 
@@ -260,6 +265,7 @@ model WeeklyPlan {
   meals             Meal[]
   shoppingLists     ShoppingList[]
   wishes            Wish[]
+  changeLogs        PlanChangeLog[]
 }
 
 enum MealType {
@@ -306,6 +312,8 @@ model Meal {
   votes             Vote[]
   feedbacks         Feedback[]
   mealComponents    MealComponent[]
+  comments          MealComment[]
+  changeLogs        PlanChangeLog[]
 }
 
 enum AttendanceStatus {
@@ -601,4 +609,79 @@ model FamilyInvitation {
   @@unique([familyId, inviteeEmail, status])
   @@index([inviteeEmail, status])
   @@index([token])
+}
+
+// ============================================
+// Commenting and Audit Trail System
+// ============================================
+
+model MealComment {
+  id                String       @id @default(uuid())
+
+  mealId            String
+  meal              Meal         @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  memberId          String
+  member            FamilyMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  content           String       // Comment text
+  isEdited          Boolean      @default(false)
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([mealId])
+  @@index([memberId])
+  @@index([createdAt])
+}
+
+enum ChangeType {
+  PLAN_CREATED
+  PLAN_STATUS_CHANGED
+  MEAL_ADDED
+  MEAL_REMOVED
+  RECIPE_CHANGED
+  PORTIONS_CHANGED
+  MEAL_LOCKED
+  MEAL_UNLOCKED
+  COMPONENT_ADDED
+  COMPONENT_REMOVED
+  COMPONENT_CHANGED
+  COMMENT_ADDED
+  COMMENT_EDITED
+  COMMENT_DELETED
+  VOTE_ADDED
+  VOTE_CHANGED
+  TEMPLATE_SWITCHED
+  CUTOFF_CHANGED
+  ATTENDANCE_CHANGED
+}
+
+model PlanChangeLog {
+  id                String      @id @default(uuid())
+
+  weeklyPlanId      String
+  weeklyPlan        WeeklyPlan  @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+
+  mealId            String?     // Null for plan-level changes
+  meal              Meal?       @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  memberId          String?     // Who made the change
+  member            FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  changeType        ChangeType
+  description       String      // Human-readable (multilingual key)
+  descriptionEn     String?
+  descriptionNl     String?
+
+  oldValue          Json?       // Previous state
+  newValue          Json?       // New state
+
+  createdAt         DateTime    @default(now())
+
+  @@index([weeklyPlanId])
+  @@index([mealId])
+  @@index([memberId])
+  @@index([changeType])
+  @@index([createdAt])
 }
