@@ -98,8 +98,13 @@
     },
     "status": {
       "draft": "Concept",
+      "inValidation": "In validatie",
       "validated": "Gevalideerd",
-      "archived": "Gearchiveerd"
+      "locked": "Vergrendeld"
+    },
+    "tabs": {
+      "plan": "Planning",
+      "activity": "Activiteit"
     },
     "portions": "{{count}} porties",
     "minutes": "{{count}} min",
@@ -573,6 +578,8 @@
     "title": "Opmerkingen",
     "count": "{{count}} opmerking",
     "count_plural": "{{count}} opmerkingen",
+    "show": "Toon opmerkingen",
+    "hide": "Verberg opmerkingen",
     "add": "Opmerking toevoegen",
     "edit": "Bewerken",
     "delete": "Verwijderen",
@@ -688,9 +695,11 @@
     "mealLocked": "Deze maaltijd is vergrendeld en kan niet worden gewijzigd",
     "commentsAllowed": "Opmerkingen zijn nog steeds toegestaan",
     "commentsNotAllowed": "Opmerkingen zijn niet meer toegestaan na de deadline",
+    "commentsStillAllowed": "Opmerkingen blijven toegestaan na de deadline",
+    "noChangesAllowed": "Er zijn geen wijzigingen toegestaan na de deadline",
     "cutoffWarning": "Deadline: {{date}} om {{time}}",
-    "cutoffPassed": "Deadline verstreken",
-    "cutoffSoon": "Deadline over {{hours}} uur",
+    "cutoffPassed": "De deadline voor wijzigingen is verstreken",
+    "cutoffSoon": "Deadline over {{hours}} uur ({{date}})",
     "rolesExplained": {
       "ADMIN": "Kan alles wijzigen, zelfs na deadline",
       "PARENT": "Kan alles wijzigen, zelfs na deadline",

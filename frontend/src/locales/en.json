@@ -98,8 +98,13 @@
     },
     "status": {
       "draft": "Draft",
+      "inValidation": "In Validation",
       "validated": "Validated",
-      "archived": "Archived"
+      "locked": "Locked"
+    },
+    "tabs": {
+      "plan": "Plan",
+      "activity": "Activity"
     },
     "portions": "{{count}} portions",
     "minutes": "{{count}} min",
@@ -572,6 +577,8 @@
     "title": "Comments",
     "count": "{{count}} comment",
     "count_plural": "{{count}} comments",
+    "show": "Show comments",
+    "hide": "Hide comments",
     "add": "Add comment",
     "edit": "Edit",
     "delete": "Delete",
@@ -687,9 +694,11 @@
     "mealLocked": "This meal is locked and cannot be modified",
     "commentsAllowed": "Comments are still allowed",
     "commentsNotAllowed": "Comments are no longer allowed after the cutoff",
+    "commentsStillAllowed": "Comments remain allowed after the cutoff",
+    "noChangesAllowed": "No changes are allowed after the cutoff",
     "cutoffWarning": "Cutoff: {{date}} at {{time}}",
-    "cutoffPassed": "Cutoff passed",
-    "cutoffSoon": "Cutoff in {{hours}} hours",
+    "cutoffPassed": "The cutoff deadline for changes has passed",
+    "cutoffSoon": "Cutoff in {{hours}} hours ({{date}})",
     "rolesExplained": {
       "ADMIN": "Can modify everything, even after cutoff",
       "PARENT": "Can modify everything, even after cutoff",

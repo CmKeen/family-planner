@@ -98,8 +98,13 @@
     },
     "status": {
       "draft": "Brouillon",
+      "inValidation": "En validation",
       "validated": "Validé",
-      "archived": "Archivé"
+      "locked": "Verrouillé"
+    },
+    "tabs": {
+      "plan": "Planning",
+      "activity": "Activité"
     },
     "portions": "{{count}} portions",
     "minutes": "{{count}} min",
@@ -573,6 +578,8 @@
     "title": "Commentaires",
     "count": "{{count}} commentaire",
     "count_plural": "{{count}} commentaires",
+    "show": "Voir les commentaires",
+    "hide": "Masquer les commentaires",
     "add": "Ajouter un commentaire",
     "edit": "Modifier",
     "delete": "Supprimer",
@@ -688,9 +695,11 @@
     "mealLocked": "Ce repas est verrouillé et ne peut pas être modifié",
     "commentsAllowed": "Les commentaires sont toujours autorisés",
     "commentsNotAllowed": "Les commentaires ne sont plus autorisés après la date limite",
+    "commentsStillAllowed": "Les commentaires restent autorisés après la date limite",
+    "noChangesAllowed": "Aucune modification n'est autorisée après la date limite",
     "cutoffWarning": "Date limite : {{date}} à {{time}}",
-    "cutoffPassed": "Date limite dépassée",
-    "cutoffSoon": "Date limite dans {{hours}} heures",
+    "cutoffPassed": "La date limite pour les modifications est dépassée",
+    "cutoffSoon": "Date limite dans {{hours}} heures ({{date}})",
     "rolesExplained": {
       "ADMIN": "Peut tout modifier, même après la date limite",
       "PARENT": "Peut tout modifier, même après la date limite",
