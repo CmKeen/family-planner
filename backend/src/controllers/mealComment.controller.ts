@@ -1,9 +1,9 @@
 import { Response } from 'express';
-import prisma from '../lib/prisma.js';
-import { AppError, asyncHandler } from '../middleware/errorHandler.js';
-import { AuthRequest } from '../middleware/auth.js';
-import { canDeleteComment } from '../utils/permissions.js';
-import { logChange, generateChangeDescription } from '../utils/auditLogger.js';
+import prisma from '../lib/prisma';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
+import { AuthRequest } from '../middleware/auth';
+import { canDeleteComment } from '../utils/permissions';
+import { logChange, generateChangeDescription } from '../utils/auditLogger';
 
 /**
  * Get all comments for a meal

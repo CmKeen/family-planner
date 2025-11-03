@@ -4,9 +4,9 @@ import {
   addComment,
   updateComment,
   deleteComment
-} from '../controllers/mealComment.controller.js';
-import { authenticate } from '../middleware/auth.js';
-import { enforceCutoff } from '../middleware/cutoffEnforcement.js';
+} from '../controllers/mealComment.controller';
+import { authenticate } from '../middleware/auth';
+import { enforceCutoff } from '../middleware/cutoffEnforcement';
 
 const router = Router({ mergeParams: true }); // mergeParams allows access to parent route params
 

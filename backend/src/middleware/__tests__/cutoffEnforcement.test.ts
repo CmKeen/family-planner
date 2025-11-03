@@ -1,11 +1,12 @@
-import { AuthRequest } from '../auth.js';
+import { AuthRequest } from '../auth';
 
 import { Request, Response, NextFunction } from 'express';
-import { enforceCutoff } from '../cutoffEnforcement.js';
-import { prisma } from '../../lib/prisma.js';
+import { enforceCutoff } from '../cutoffEnforcement';
+import { prisma } from '../../lib/prisma';
 
 // Mock prisma
-jest.mock('../../lib/prisma.js', () => ({
+jest.mock('../../lib/prisma', () => ({
+  __esModule: true,
   prisma: {
     weeklyPlan: {
       findUnique: jest.fn()
@@ -19,7 +20,7 @@ jest.mock('../../utils/permissions.js', () => ({
   canEditAfterCutoff: jest.fn()
 }));
 
-import { isAfterCutoff, canEditAfterCutoff } from '../../utils/permissions.js';
+import { isAfterCutoff, canEditAfterCutoff } from '../../utils/permissions';
 
 describe('Cutoff Enforcement Middleware', () => {
   let mockReq: AuthRequest;

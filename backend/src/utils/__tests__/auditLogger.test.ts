@@ -1,10 +1,11 @@
 
-import { logChange, generateChangeDescription } from '../auditLogger.js';
+import { logChange, generateChangeDescription } from '../auditLogger';
 import { ChangeType } from '@prisma/client';
-import prisma from '../../lib/prisma.js';
+import prisma from '../../lib/prisma';
 
 // Mock prisma
-jest.mock('../../lib/prisma.js', () => ({
+jest.mock('../../lib/prisma', () => ({
+  __esModule: true,
   default: {
     planChangeLog: {
       create: jest.fn()

@@ -1,16 +1,17 @@
 
 import { Response } from 'express';
-import { AuthRequest } from '../../middleware/auth.js';
+import { AuthRequest } from '../../middleware/auth';
 import {
   getComments,
   addComment,
   updateComment,
   deleteComment
-} from '../mealComment.controller.js';
-import { prisma } from '../../lib/prisma.js';
+} from '../mealComment.controller';
+import { prisma } from '../../lib/prisma';
 
 // Mock prisma
-jest.mock('../../lib/prisma.js', () => ({
+jest.mock('../../lib/prisma', () => ({
+  __esModule: true,
   prisma: {
     mealComment: {
       findMany: jest.fn(),
@@ -29,7 +30,7 @@ jest.mock('../../lib/prisma.js', () => ({
 }));
 
 // Mock audit logger
-jest.mock('../../utils/auditLogger.js', () => ({
+jest.mock('../../utils/auditLogger', () => ({
   logChange: jest.fn()
 }));
 

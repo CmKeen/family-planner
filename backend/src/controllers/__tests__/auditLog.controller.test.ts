@@ -1,11 +1,12 @@
 
 import { Response } from 'express';
-import { AuthRequest } from '../../middleware/auth.js';
-import { getPlanAuditLog, getMealAuditLog } from '../auditLog.controller.js';
-import { prisma } from '../../lib/prisma.js';
+import { AuthRequest } from '../../middleware/auth';
+import { getPlanAuditLog, getMealAuditLog } from '../auditLog.controller';
+import { prisma } from '../../lib/prisma';
 
 // Mock prisma
-jest.mock('../../lib/prisma.js', () => ({
+jest.mock('../../lib/prisma', () => ({
+  __esModule: true,
   prisma: {
     planChangeLog: {
       findMany: jest.fn()

@@ -1,8 +1,8 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from './auth.js';
-import prisma from '../lib/prisma.js';
-import { AppError, asyncHandler } from './errorHandler.js';
-import { canEditAfterCutoff, isAfterCutoff } from '../utils/permissions.js';
+import { AuthRequest } from './auth';
+import prisma from '../lib/prisma';
+import { AppError, asyncHandler } from './errorHandler';
+import { canEditAfterCutoff, isAfterCutoff } from '../utils/permissions';
 
 /**
  * Middleware to enforce cutoff deadlines for meal plan modifications

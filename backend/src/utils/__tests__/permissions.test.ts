@@ -8,7 +8,7 @@ import {
   canModifyMeal,
   canComment,
   isAfterCutoff
-} from '../permissions.js';
+} from '../permissions';
 import { MemberRole, PlanStatus } from '@prisma/client';
 
 describe('Permission Utilities', () => {
