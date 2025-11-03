@@ -1,27 +1,28 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { AuthRequest } from '../auth.js';
+
 import { Request, Response, NextFunction } from 'express';
 import { enforceCutoff } from '../cutoffEnforcement.js';
 import { prisma } from '../../lib/prisma.js';
 
 // Mock prisma
-vi.mock('../../lib/prisma.js', () => ({
+jest.mock('../../lib/prisma.js', () => ({
   prisma: {
     weeklyPlan: {
-      findUnique: vi.fn()
+      findUnique: jest.fn()
     }
   }
 }));
 
 // Mock permissions
-vi.mock('../../utils/permissions.js', () => ({
-  isAfterCutoff: vi.fn(),
-  canEditAfterCutoff: vi.fn()
+jest.mock('../../utils/permissions.js', () => ({
+  isAfterCutoff: jest.fn(),
+  canEditAfterCutoff: jest.fn()
 }));
 
 import { isAfterCutoff, canEditAfterCutoff } from '../../utils/permissions.js';
 
 describe('Cutoff Enforcement Middleware', () => {
-  let mockReq: Partial<Request>;
+  let mockReq: AuthRequest;
   let mockRes: Partial<Response>;
   let mockNext: NextFunction;
 
@@ -32,10 +33,7 @@ describe('Cutoff Enforcement Middleware', () => {
       },
       user: {
         id: 'user-123',
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
-        language: 'fr'
+        email: 'test@example.com'
       },
       member: {
         id: 'member-123',
@@ -43,17 +41,17 @@ describe('Cutoff Enforcement Middleware', () => {
         role: 'PARENT',
         familyId: 'family-123'
       }
-    };
+    } as unknown as AuthRequest;
 
     mockRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis()
     };
 
-    mockNext = vi.fn();
+    mockNext = jest.fn();
 
     // Reset all mocks
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('enforceCutoff without allowComments option', () => {
@@ -71,7 +69,7 @@ describe('Cutoff Enforcement Middleware', () => {
       (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
       (isAfterCutoff as any).mockReturnValue(false);
 
-      await middleware(mockReq as Request, mockRes as Response, mockNext);
+      await middleware(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith();
       expect(mockRes.status).not.toHaveBeenCalled();
@@ -92,7 +90,7 @@ describe('Cutoff Enforcement Middleware', () => {
       (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
       (isAfterCutoff as any).mockReturnValue(false);
 
-      await middleware(mockReq as Request, mockRes as Response, mockNext);
+      await middleware(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith();
       expect(mockRes.status).not.toHaveBeenCalled();
@@ -121,7 +119,7 @@ describe('Cutoff Enforcement Middleware', () => {
       (isAfterCutoff as any).mockReturnValue(true);
       (canEditAfterCutoff as any).mockReturnValue(false);
 
-      await middleware(mockReq as Request, mockRes as Response, mockNext);
+      await middleware(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
       expect(mockRes.status).not.toHaveBeenCalled();

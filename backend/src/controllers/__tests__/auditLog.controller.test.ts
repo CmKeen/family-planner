@@ -1,22 +1,23 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Request, Response } from 'express';
+
+import { Response } from 'express';
+import { AuthRequest } from '../../middleware/auth.js';
 import { getPlanAuditLog, getMealAuditLog } from '../auditLog.controller.js';
 import { prisma } from '../../lib/prisma.js';
 
 // Mock prisma
-vi.mock('../../lib/prisma.js', () => ({
+jest.mock('../../lib/prisma.js', () => ({
   prisma: {
     planChangeLog: {
-      findMany: vi.fn()
+      findMany: jest.fn()
     },
     familyMember: {
-      findUnique: vi.fn()
+      findUnique: jest.fn()
     }
   }
 }));
 
 describe('AuditLog Controller', () => {
-  let mockReq: Partial<Request>;
+  let mockReq: AuthRequest;
   let mockRes: Partial<Response>;
   let mockNext: any;
 
@@ -28,10 +29,7 @@ describe('AuditLog Controller', () => {
       query: {},
       user: {
         id: 'user-123',
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
-        language: 'fr'
+        email: 'test@example.com'
       },
       member: {
         id: 'member-123',
@@ -40,17 +38,17 @@ describe('AuditLog Controller', () => {
         familyId: 'family-123',
         canViewAuditLog: true
       }
-    };
+    } as unknown as AuthRequest;
 
     mockRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis()
     };
 
-    mockNext = vi.fn();
+    mockNext = jest.fn();
 
     // Reset all mocks
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('getPlanAuditLog', () => {
@@ -81,7 +79,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockResolvedValue(mockLogs);
 
-      await getPlanAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: { planId: 'plan-123' },
@@ -116,7 +114,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
-      await getPlanAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: {
@@ -138,7 +136,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
-      await getPlanAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: {
@@ -160,7 +158,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
-      await getPlanAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: expect.any(Object),
@@ -179,7 +177,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
-      await getPlanAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -201,7 +199,7 @@ describe('AuditLog Controller', () => {
         canViewAuditLog: false
       });
 
-      await getPlanAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.planChangeLog.findMany).not.toHaveBeenCalled();
@@ -213,7 +211,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
-      await getPlanAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -231,7 +229,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockRejectedValue(error);
 
-      await getPlanAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });
@@ -272,7 +270,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockResolvedValue(mockLogs);
 
-      await getMealAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getMealAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: {
@@ -314,7 +312,7 @@ describe('AuditLog Controller', () => {
       });
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
-      await getMealAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getMealAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: {
@@ -342,7 +340,7 @@ describe('AuditLog Controller', () => {
         canViewAuditLog: false
       });
 
-      await getMealAuditLog(mockReq as Request, mockRes as Response, mockNext);
+      await getMealAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.planChangeLog.findMany).not.toHaveBeenCalled();

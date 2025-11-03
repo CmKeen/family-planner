@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Request, Response } from 'express';
+
+import { Response } from 'express';
+import { AuthRequest } from '../../middleware/auth.js';
 import {
   getComments,
   addComment,
@@ -9,31 +10,31 @@ import {
 import { prisma } from '../../lib/prisma.js';
 
 // Mock prisma
-vi.mock('../../lib/prisma.js', () => ({
+jest.mock('../../lib/prisma.js', () => ({
   prisma: {
     mealComment: {
-      findMany: vi.fn(),
-      create: vi.fn(),
-      findUnique: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn()
+      findMany: jest.fn(),
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn()
     },
     meal: {
-      findUnique: vi.fn()
+      findUnique: jest.fn()
     },
     familyMember: {
-      findUnique: vi.fn()
+      findUnique: jest.fn()
     }
   }
 }));
 
 // Mock audit logger
-vi.mock('../../utils/auditLogger.js', () => ({
-  logChange: vi.fn()
+jest.mock('../../utils/auditLogger.js', () => ({
+  logChange: jest.fn()
 }));
 
 describe('MealComment Controller', () => {
-  let mockReq: Partial<Request>;
+  let mockReq: AuthRequest;
   let mockRes: Partial<Response>;
   let mockNext: any;
 
@@ -46,10 +47,7 @@ describe('MealComment Controller', () => {
       body: {},
       user: {
         id: 'user-123',
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
-        language: 'fr'
+        email: 'test@example.com'
       },
       member: {
         id: 'member-123',
@@ -57,17 +55,17 @@ describe('MealComment Controller', () => {
         role: 'PARENT',
         familyId: 'family-123'
       }
-    };
+    } as unknown as AuthRequest;
 
     mockRes = {
-      status: vi.fn().mockReturnThis(),
-      json: vi.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis()
     };
 
-    mockNext = vi.fn();
+    mockNext = jest.fn();
 
     // Reset all mocks
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('getComments', () => {
@@ -91,7 +89,7 @@ describe('MealComment Controller', () => {
 
       (prisma.mealComment.findMany as any).mockResolvedValue(mockComments);
 
-      await getComments(mockReq as Request, mockRes as Response, mockNext);
+      await getComments(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.mealComment.findMany).toHaveBeenCalledWith({
         where: { mealId: 'meal-123' },
@@ -116,7 +114,7 @@ describe('MealComment Controller', () => {
     it('should return empty array if no comments', async () => {
       (prisma.mealComment.findMany as any).mockResolvedValue([]);
 
-      await getComments(mockReq as Request, mockRes as Response, mockNext);
+      await getComments(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -128,7 +126,7 @@ describe('MealComment Controller', () => {
       const error = new Error('Database error');
       (prisma.mealComment.findMany as any).mockRejectedValue(error);
 
-      await getComments(mockReq as Request, mockRes as Response, mockNext);
+      await getComments(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });
@@ -155,7 +153,7 @@ describe('MealComment Controller', () => {
 
       (prisma.mealComment.create as any).mockResolvedValue(mockComment);
 
-      await addComment(mockReq as Request, mockRes as Response, mockNext);
+      await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.mealComment.create).toHaveBeenCalledWith({
         data: {
@@ -184,7 +182,7 @@ describe('MealComment Controller', () => {
     it('should validate content is not empty', async () => {
       mockReq.body = { content: '' };
 
-      await addComment(mockReq as Request, mockRes as Response, mockNext);
+      await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.create).not.toHaveBeenCalled();
@@ -193,7 +191,7 @@ describe('MealComment Controller', () => {
     it('should validate content length (max 2000 chars)', async () => {
       mockReq.body = { content: 'a'.repeat(2001) };
 
-      await addComment(mockReq as Request, mockRes as Response, mockNext);
+      await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.create).not.toHaveBeenCalled();
@@ -204,7 +202,7 @@ describe('MealComment Controller', () => {
       const error = new Error('Database error');
       (prisma.mealComment.create as any).mockRejectedValue(error);
 
-      await addComment(mockReq as Request, mockRes as Response, mockNext);
+      await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });
@@ -242,7 +240,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
       (prisma.mealComment.update as any).mockResolvedValue(updatedComment);
 
-      await updateComment(mockReq as Request, mockRes as Response, mockNext);
+      await updateComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.mealComment.update).toHaveBeenCalledWith({
         where: { id: 'comment-1' },
@@ -278,7 +276,7 @@ describe('MealComment Controller', () => {
 
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
 
-      await updateComment(mockReq as Request, mockRes as Response, mockNext);
+      await updateComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.update).not.toHaveBeenCalled();
@@ -287,7 +285,7 @@ describe('MealComment Controller', () => {
     it('should return 404 if comment not found', async () => {
       (prisma.mealComment.findUnique as any).mockResolvedValue(null);
 
-      await updateComment(mockReq as Request, mockRes as Response, mockNext);
+      await updateComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.update).not.toHaveBeenCalled();
@@ -296,7 +294,7 @@ describe('MealComment Controller', () => {
     it('should validate content on update', async () => {
       mockReq.body = { content: '' };
 
-      await updateComment(mockReq as Request, mockRes as Response, mockNext);
+      await updateComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.findUnique).not.toHaveBeenCalled();
@@ -322,7 +320,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
       (prisma.mealComment.delete as any).mockResolvedValue(existingComment);
 
-      await deleteComment(mockReq as Request, mockRes as Response, mockNext);
+      await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.mealComment.delete).toHaveBeenCalledWith({
         where: { id: 'comment-1' }
@@ -352,7 +350,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
       (prisma.mealComment.delete as any).mockResolvedValue(existingComment);
 
-      await deleteComment(mockReq as Request, mockRes as Response, mockNext);
+      await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.mealComment.delete).toHaveBeenCalled();
       expect(mockRes.json).toHaveBeenCalled();
@@ -376,7 +374,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
       (prisma.mealComment.delete as any).mockResolvedValue(existingComment);
 
-      await deleteComment(mockReq as Request, mockRes as Response, mockNext);
+      await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(prisma.mealComment.delete).toHaveBeenCalled();
     });
@@ -398,7 +396,7 @@ describe('MealComment Controller', () => {
 
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
 
-      await deleteComment(mockReq as Request, mockRes as Response, mockNext);
+      await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.delete).not.toHaveBeenCalled();
@@ -407,7 +405,7 @@ describe('MealComment Controller', () => {
     it('should return 404 if comment not found', async () => {
       (prisma.mealComment.findUnique as any).mockResolvedValue(null);
 
-      await deleteComment(mockReq as Request, mockRes as Response, mockNext);
+      await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.delete).not.toHaveBeenCalled();
