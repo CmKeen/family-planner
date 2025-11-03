@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { weeklyPlanAPI, recipeAPI, mealTemplateAPI, familyAPI } from '@/lib/api';
-import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, MessageCircle, History, AlertCircle } from 'lucide-react';
+import { weeklyPlanAPI, recipeAPI, mealTemplateAPI } from '@/lib/api';
+import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, History, AlertCircle } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { MealComponentEditor } from '@/components/MealComponentEditor';
 import { MealComments } from '@/components/MealComments';
+import { CommentButton } from '@/components/CommentButton';
 import { PlanActivityFeed } from '@/components/PlanActivityFeed';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuthStore } from '@/stores/authStore';
@@ -128,19 +129,8 @@ export default function WeeklyPlanPage() {
     enabled: !!planId
   });
 
-  // Fetch family data to get current user's member info
-  const { data: familyData } = useQuery({
-    queryKey: ['family', planData?.family?.id],
-    queryFn: async () => {
-      if (!planData?.family?.id) return null;
-      const response = await familyAPI.getById(planData.family.id);
-      return response.data.data.family;
-    },
-    enabled: !!planData?.family?.id
-  });
-
-  // Get current user's family member
-  const currentMember = familyData?.members?.find((m: any) => m.userId === user?.id);
+  // Get current user's family member from plan data (already includes family.members)
+  const currentMember = planData?.family?.members?.find((m: any) => m.userId === user?.id);
 
   // Use permissions hook
   const permissions = usePermissions(
@@ -500,15 +490,12 @@ export default function WeeklyPlanPage() {
           {/* Comments Section */}
           {permissions.canComment && (
             <div className="mt-3 pt-3 border-t">
-              <Button
-                size="sm"
-                variant="ghost"
+              <CommentButton
+                planId={planId!}
+                mealId={meal.id}
+                isExpanded={expandedComments[meal.id] || false}
                 onClick={() => toggleComments(meal.id)}
-                className="w-full flex items-center justify-center gap-2"
-              >
-                <MessageCircle className="h-4 w-4" />
-                {expandedComments[meal.id] ? t('comments.hide') : t('comments.show')}
-              </Button>
+              />
               {expandedComments[meal.id] && (
                 <div className="mt-3">
                   <MealComments
@@ -580,15 +567,12 @@ export default function WeeklyPlanPage() {
           {/* Comments Section */}
           {permissions.canComment && (
             <div className="mt-3 pt-3 border-t">
-              <Button
-                size="sm"
-                variant="ghost"
+              <CommentButton
+                planId={planId!}
+                mealId={meal.id}
+                isExpanded={expandedComments[meal.id] || false}
                 onClick={() => toggleComments(meal.id)}
-                className="w-full flex items-center justify-center gap-2"
-              >
-                <MessageCircle className="h-4 w-4" />
-                {expandedComments[meal.id] ? t('comments.hide') : t('comments.show')}
-              </Button>
+              />
               {expandedComments[meal.id] && (
                 <div className="mt-3">
                   <MealComments
@@ -676,15 +660,12 @@ export default function WeeklyPlanPage() {
         {/* Comments Section */}
         {permissions.canComment && (
           <div className="mt-3 pt-3 border-t">
-            <Button
-              size="sm"
-              variant="ghost"
+            <CommentButton
+              planId={planId!}
+              mealId={meal.id}
+              isExpanded={expandedComments[meal.id] || false}
               onClick={() => toggleComments(meal.id)}
-              className="w-full flex items-center justify-center gap-2"
-            >
-              <MessageCircle className="h-4 w-4" />
-              {expandedComments[meal.id] ? t('comments.hide') : t('comments.show')}
-            </Button>
+            />
             {expandedComments[meal.id] && (
               <div className="mt-3">
                 <MealComments
