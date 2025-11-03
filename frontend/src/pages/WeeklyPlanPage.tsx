@@ -76,6 +76,13 @@ interface WeeklyPlan {
   family?: {
     id: string;
     name: string;
+    members?: Array<{
+      id: string;
+      userId?: string;
+      name: string;
+      role: string;
+      canViewAuditLog?: boolean;
+    }>;
   };
 }
 
@@ -134,7 +141,7 @@ export default function WeeklyPlanPage() {
 
   // Use permissions hook
   const permissions = usePermissions(
-    currentMember?.role,
+    currentMember?.role as 'ADMIN' | 'PARENT' | 'MEMBER' | 'CHILD' | undefined,
     planData,
     currentMember?.canViewAuditLog ?? true
   );
