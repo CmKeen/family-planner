@@ -98,8 +98,13 @@
     },
     "status": {
       "draft": "Concept",
+      "inValidation": "In validatie",
       "validated": "Gevalideerd",
-      "archived": "Gearchiveerd"
+      "locked": "Vergrendeld"
+    },
+    "tabs": {
+      "plan": "Planning",
+      "activity": "Activiteit"
     },
     "portions": "{{count}} porties",
     "minutes": "{{count}} min",
@@ -568,5 +573,138 @@
     },
     "badge": "{{count}} nieuw",
     "badge_plural": "{{count}} nieuwe"
+  },
+  "comments": {
+    "title": "Opmerkingen",
+    "count": "{{count}} opmerking",
+    "count_plural": "{{count}} opmerkingen",
+    "show": "Toon opmerkingen",
+    "hide": "Verberg opmerkingen",
+    "add": "Opmerking toevoegen",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "edited": "Bewerkt",
+    "empty": "Nog geen opmerkingen voor deze maaltijd",
+    "placeholder": "Deel uw gedachten over deze maaltijd...",
+    "loading": "Opmerkingen laden...",
+    "posting": "Plaatsen...",
+    "updating": "Bijwerken...",
+    "deleting": "Verwijderen...",
+    "characterCount": "{{count}}/2000 tekens",
+    "tooLong": "Opmerking moet minder dan 2000 tekens zijn",
+    "required": "Opmerking kan niet leeg zijn",
+    "deleteConfirm": {
+      "title": "Opmerking verwijderen",
+      "message": "Weet u zeker dat u deze opmerking wilt verwijderen?",
+      "cancel": "Annuleren",
+      "confirm": "Verwijderen"
+    },
+    "errors": {
+      "loadFailed": "Laden van opmerkingen mislukt",
+      "addFailed": "Toevoegen van opmerking mislukt",
+      "updateFailed": "Bijwerken van opmerking mislukt",
+      "deleteFailed": "Verwijderen van opmerking mislukt",
+      "notAllowed": "U bent niet gemachtigd om deze actie uit te voeren",
+      "afterCutoff": "Opmerkingen zijn niet toegestaan na de deadline"
+    },
+    "success": {
+      "added": "Opmerking toegevoegd",
+      "updated": "Opmerking bijgewerkt",
+      "deleted": "Opmerking verwijderd"
+    }
+  },
+  "activity": {
+    "title": "Activiteitsgeschiedenis",
+    "subtitle": "Zie wie wat en wanneer heeft gewijzigd",
+    "loading": "Activiteit laden...",
+    "empty": "Nog geen wijzigingen vastgelegd",
+    "showMore": "Meer tonen",
+    "showLess": "Minder tonen",
+    "filterBy": "Filteren op",
+    "allMembers": "Alle leden",
+    "allChanges": "Alle wijzigingen",
+    "changeTypes": {
+      "PLAN_CREATED": "Plan aangemaakt",
+      "PLAN_STATUS_CHANGED": "Status gewijzigd",
+      "MEAL_ADDED": "Maaltijd toegevoegd",
+      "MEAL_REMOVED": "Maaltijd verwijderd",
+      "RECIPE_CHANGED": "Recept gewijzigd",
+      "PORTIONS_CHANGED": "Porties gewijzigd",
+      "MEAL_LOCKED": "Maaltijd vergrendeld",
+      "MEAL_UNLOCKED": "Maaltijd ontgrendeld",
+      "COMPONENT_ADDED": "Component toegevoegd",
+      "COMPONENT_REMOVED": "Component verwijderd",
+      "COMPONENT_CHANGED": "Component gewijzigd",
+      "COMMENT_ADDED": "Opmerking toegevoegd",
+      "COMMENT_EDITED": "Opmerking bewerkt",
+      "COMMENT_DELETED": "Opmerking verwijderd",
+      "VOTE_ADDED": "Stem toegevoegd",
+      "VOTE_CHANGED": "Stem gewijzigd",
+      "TEMPLATE_SWITCHED": "Sjabloon gewijzigd",
+      "CUTOFF_CHANGED": "Deadline gewijzigd",
+      "ATTENDANCE_CHANGED": "Aanwezigheid gewijzigd"
+    },
+    "descriptions": {
+      "planCreated": "{{member}} heeft het plan aangemaakt",
+      "statusChanged": "{{member}} heeft de status gewijzigd van {{oldStatus}} naar {{newStatus}}",
+      "mealAdded": "{{member}} heeft {{mealType}} toegevoegd voor {{day}}",
+      "mealRemoved": "{{member}} heeft {{mealType}} verwijderd van {{day}}",
+      "recipeChanged": "{{member}} heeft het recept gewijzigd van \"{{oldRecipe}}\" naar \"{{newRecipe}}\"",
+      "portionsChanged": "{{member}} heeft de porties gewijzigd van {{old}} naar {{new}}",
+      "mealLocked": "{{member}} heeft de maaltijd vergrendeld",
+      "mealUnlocked": "{{member}} heeft de maaltijd ontgrendeld",
+      "componentAdded": "{{member}} heeft een component toegevoegd",
+      "componentRemoved": "{{member}} heeft een component verwijderd",
+      "componentChanged": "{{member}} heeft een component gewijzigd",
+      "commentAdded": "{{member}} heeft een opmerking toegevoegd",
+      "commentEdited": "{{member}} heeft hun opmerking bewerkt",
+      "commentDeleted": "{{member}} heeft een opmerking verwijderd",
+      "voteAdded": "{{member}} heeft gestemd",
+      "voteChanged": "{{member}} heeft hun stem gewijzigd",
+      "templateSwitched": "{{member}} heeft het planningssjabloon gewijzigd",
+      "cutoffChanged": "{{member}} heeft de deadline gewijzigd",
+      "attendanceChanged": "{{member}} heeft hun aanwezigheid gewijzigd"
+    },
+    "timeAgo": {
+      "justNow": "Zojuist",
+      "minutesAgo": "{{count}} minuut geleden",
+      "minutesAgo_plural": "{{count}} minuten geleden",
+      "hoursAgo": "{{count}} uur geleden",
+      "hoursAgo_plural": "{{count}} uur geleden",
+      "daysAgo": "{{count}} dag geleden",
+      "daysAgo_plural": "{{count}} dagen geleden",
+      "weeksAgo": "{{count}} week geleden",
+      "weeksAgo_plural": "{{count}} weken geleden",
+      "monthsAgo": "{{count}} maand geleden",
+      "monthsAgo_plural": "{{count}} maanden geleden"
+    },
+    "viewDetails": "Details bekijken",
+    "hideDetails": "Details verbergen",
+    "oldValue": "Oude waarde",
+    "newValue": "Nieuwe waarde",
+    "noPermission": "U heeft geen toestemming om de activiteitsgeschiedenis te bekijken"
+  },
+  "permissions": {
+    "editNotAllowed": "U heeft geen toestemming om dit plan te bewerken",
+    "lockNotAllowed": "Alleen beheerders en ouders kunnen maaltijden vergrendelen",
+    "afterCutoff": "De deadline voor wijzigingen is verstreken",
+    "afterCutoffAdmin": "Alleen beheerders en ouders kunnen wijzigingen aanbrengen na de deadline",
+    "planLocked": "Dit plan is vergrendeld en kan niet worden gewijzigd",
+    "mealLocked": "Deze maaltijd is vergrendeld en kan niet worden gewijzigd",
+    "commentsAllowed": "Opmerkingen zijn nog steeds toegestaan",
+    "commentsNotAllowed": "Opmerkingen zijn niet meer toegestaan na de deadline",
+    "commentsStillAllowed": "Opmerkingen blijven toegestaan na de deadline",
+    "noChangesAllowed": "Er zijn geen wijzigingen toegestaan na de deadline",
+    "cutoffWarning": "Deadline: {{date}} om {{time}}",
+    "cutoffPassed": "De deadline voor wijzigingen is verstreken",
+    "cutoffSoon": "Deadline over {{hours}} uur ({{date}})",
+    "rolesExplained": {
+      "ADMIN": "Kan alles wijzigen, zelfs na deadline",
+      "PARENT": "Kan alles wijzigen, zelfs na deadline",
+      "MEMBER": "Kan opmerkingen plaatsen en stemmen, beperkte bewerkingsmogelijkheden",
+      "CHILD": "Kan opmerkingen plaatsen en stemmen"
+    }
   }
 }

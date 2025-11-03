@@ -7,6 +7,13 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
   };
+  member?: {
+    id: string;
+    name: string;
+    role: string;
+    familyId: string;
+    canViewAuditLog?: boolean;
+  };
 }
 
 export const authenticate = (

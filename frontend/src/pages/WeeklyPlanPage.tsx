@@ -7,9 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { weeklyPlanAPI, recipeAPI, mealTemplateAPI } from '@/lib/api';
-import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit } from 'lucide-react';
+import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, History, AlertCircle } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { MealComponentEditor } from '@/components/MealComponentEditor';
+import { MealComments } from '@/components/MealComments';
+import { CommentButton } from '@/components/CommentButton';
+import { PlanActivityFeed } from '@/components/PlanActivityFeed';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useAuthStore } from '@/stores/authStore';
 
 interface Recipe {
   id: string;
@@ -63,11 +68,21 @@ interface WeeklyPlan {
   id: string;
   weekNumber: number;
   year: number;
-  status: 'DRAFT' | 'VALIDATED' | 'ARCHIVED';
+  status: 'DRAFT' | 'IN_VALIDATION' | 'VALIDATED' | 'LOCKED';
+  cutoffDate?: string | null;
+  cutoffTime?: string | null;
+  allowCommentsAfterCutoff?: boolean;
   meals: Meal[];
   family?: {
     id: string;
     name: string;
+    members?: Array<{
+      id: string;
+      userId?: string;
+      name: string;
+      role: string;
+      canViewAuditLog?: boolean;
+    }>;
   };
 }
 
@@ -78,7 +93,10 @@ export default function WeeklyPlanPage() {
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
 
+  const [activeTab, setActiveTab] = useState<'plan' | 'activity'>('plan');
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [portionDialogOpen, setPortionDialogOpen] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
@@ -117,6 +135,16 @@ export default function WeeklyPlanPage() {
     },
     enabled: !!planId
   });
+
+  // Get current user's family member from plan data (already includes family.members)
+  const currentMember = planData?.family?.members?.find((m: any) => m.userId === user?.id);
+
+  // Use permissions hook
+  const permissions = usePermissions(
+    currentMember?.role as 'ADMIN' | 'PARENT' | 'MEMBER' | 'CHILD' | undefined,
+    planData,
+    currentMember?.canViewAuditLog ?? true
+  );
 
   // Fetch recipes for swap dialog
   const { data: recipesData } = useQuery({
@@ -356,9 +384,17 @@ export default function WeeklyPlanPage() {
 
   const getStatusText = (status: string): string => {
     if (status === 'DRAFT') return t('weeklyPlan.status.draft');
+    if (status === 'IN_VALIDATION') return t('weeklyPlan.status.inValidation');
     if (status === 'VALIDATED') return t('weeklyPlan.status.validated');
-    if (status === 'ARCHIVED') return t('weeklyPlan.status.archived');
+    if (status === 'LOCKED') return t('weeklyPlan.status.locked');
     return status;
+  };
+
+  const toggleComments = (mealId: string) => {
+    setExpandedComments(prev => ({
+      ...prev,
+      [mealId]: !prev[mealId]
+    }));
   };
 
   const getMealTypeLabel = (mealType: string): string => {
@@ -457,6 +493,28 @@ export default function WeeklyPlanPage() {
               </Button>
             )}
           </div>
+
+          {/* Comments Section */}
+          {permissions.canComment && (
+            <div className="mt-3 pt-3 border-t">
+              <CommentButton
+                planId={planId!}
+                mealId={meal.id}
+                isExpanded={expandedComments[meal.id] || false}
+                onClick={() => toggleComments(meal.id)}
+              />
+              {expandedComments[meal.id] && (
+                <div className="mt-3">
+                  <MealComments
+                    planId={planId!}
+                    mealId={meal.id}
+                    currentMemberId={currentMember?.id}
+                    currentMemberRole={currentMember?.role}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       );
     }
@@ -512,6 +570,28 @@ export default function WeeklyPlanPage() {
               </Button>
             )}
           </div>
+
+          {/* Comments Section */}
+          {permissions.canComment && (
+            <div className="mt-3 pt-3 border-t">
+              <CommentButton
+                planId={planId!}
+                mealId={meal.id}
+                isExpanded={expandedComments[meal.id] || false}
+                onClick={() => toggleComments(meal.id)}
+              />
+              {expandedComments[meal.id] && (
+                <div className="mt-3">
+                  <MealComments
+                    planId={planId!}
+                    mealId={meal.id}
+                    currentMemberId={currentMember?.id}
+                    currentMemberRole={currentMember?.role}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       );
     }
@@ -583,6 +663,28 @@ export default function WeeklyPlanPage() {
             </Button>
           )}
         </div>
+
+        {/* Comments Section */}
+        {permissions.canComment && (
+          <div className="mt-3 pt-3 border-t">
+            <CommentButton
+              planId={planId!}
+              mealId={meal.id}
+              isExpanded={expandedComments[meal.id] || false}
+              onClick={() => toggleComments(meal.id)}
+            />
+            {expandedComments[meal.id] && (
+              <div className="mt-3">
+                <MealComments
+                  planId={planId!}
+                  mealId={meal.id}
+                  currentMemberId={currentMember?.id}
+                  currentMemberRole={currentMember?.role}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -606,6 +708,85 @@ export default function WeeklyPlanPage() {
         <LanguageSwitcher />
       </div>
 
+      {/* Cutoff Warning Banner */}
+      {permissions.cutoffInfo.hasCutoff && (
+        <Card className={`mb-6 ${permissions.cutoffInfo.isPassed ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}`}>
+          <CardContent className="py-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className={`h-5 w-5 mt-0.5 ${permissions.cutoffInfo.isPassed ? 'text-red-600' : 'text-yellow-600'}`} />
+              <div className="flex-1">
+                {permissions.cutoffInfo.isPassed ? (
+                  <>
+                    <p className="font-semibold text-red-900">
+                      {t('permissions.cutoffPassed')}
+                    </p>
+                    <p className="text-sm text-red-700 mt-1">
+                      {planData.allowCommentsAfterCutoff
+                        ? t('permissions.commentsStillAllowed')
+                        : t('permissions.noChangesAllowed')}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-yellow-900">
+                      {t('permissions.cutoffSoon', {
+                        hours: permissions.cutoffInfo.hoursUntilCutoff,
+                        date: permissions.cutoffInfo.cutoffDate?.toLocaleString()
+                      })}
+                    </p>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      {t('permissions.cutoffWarning')}
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tabs */}
+      <div className="mb-6">
+        <div className="flex border-b">
+          <button
+            onClick={() => setActiveTab('plan')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'plan'
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4" />
+              {t('weeklyPlan.tabs.plan')}
+            </div>
+          </button>
+          {permissions.canViewAuditLog && (
+            <button
+              onClick={() => setActiveTab('activity')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === 'activity'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4" />
+                {t('weeklyPlan.tabs.activity')}
+              </div>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Activity Feed Tab */}
+      {activeTab === 'activity' && permissions.canViewAuditLog && (
+        <PlanActivityFeed planId={planId!} />
+      )}
+
+      {/* Plan Tab */}
+      {activeTab === 'plan' && (
+        <>
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card>
@@ -749,6 +930,8 @@ export default function WeeklyPlanPage() {
           );
         })}
       </div>
+        </>
+      )}
 
       {/* Swap Recipe Dialog */}
       <Dialog open={swapDialogOpen} onOpenChange={setSwapDialogOpen}>

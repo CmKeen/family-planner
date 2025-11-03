@@ -98,8 +98,13 @@
     },
     "status": {
       "draft": "Draft",
+      "inValidation": "In Validation",
       "validated": "Validated",
-      "archived": "Archived"
+      "locked": "Locked"
+    },
+    "tabs": {
+      "plan": "Plan",
+      "activity": "Activity"
     },
     "portions": "{{count}} portions",
     "minutes": "{{count}} min",
@@ -567,5 +572,138 @@
       "cancelError": "Failed to cancel invitation"
     },
     "badge": "{{count}} new"
+  },
+  "comments": {
+    "title": "Comments",
+    "count": "{{count}} comment",
+    "count_plural": "{{count}} comments",
+    "show": "Show comments",
+    "hide": "Hide comments",
+    "add": "Add comment",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edited": "Edited",
+    "empty": "No comments on this meal yet",
+    "placeholder": "Share your thoughts about this meal...",
+    "loading": "Loading comments...",
+    "posting": "Posting...",
+    "updating": "Updating...",
+    "deleting": "Deleting...",
+    "characterCount": "{{count}}/2000 characters",
+    "tooLong": "Comment must be less than 2000 characters",
+    "required": "Comment cannot be empty",
+    "deleteConfirm": {
+      "title": "Delete comment",
+      "message": "Are you sure you want to delete this comment?",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "errors": {
+      "loadFailed": "Failed to load comments",
+      "addFailed": "Failed to add comment",
+      "updateFailed": "Failed to update comment",
+      "deleteFailed": "Failed to delete comment",
+      "notAllowed": "You are not allowed to perform this action",
+      "afterCutoff": "Comments are not allowed after the cutoff deadline"
+    },
+    "success": {
+      "added": "Comment added",
+      "updated": "Comment updated",
+      "deleted": "Comment deleted"
+    }
+  },
+  "activity": {
+    "title": "Activity History",
+    "subtitle": "See who changed what and when",
+    "loading": "Loading activity...",
+    "empty": "No changes recorded yet",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "filterBy": "Filter by",
+    "allMembers": "All members",
+    "allChanges": "All changes",
+    "changeTypes": {
+      "PLAN_CREATED": "Plan created",
+      "PLAN_STATUS_CHANGED": "Status changed",
+      "MEAL_ADDED": "Meal added",
+      "MEAL_REMOVED": "Meal removed",
+      "RECIPE_CHANGED": "Recipe changed",
+      "PORTIONS_CHANGED": "Portions changed",
+      "MEAL_LOCKED": "Meal locked",
+      "MEAL_UNLOCKED": "Meal unlocked",
+      "COMPONENT_ADDED": "Component added",
+      "COMPONENT_REMOVED": "Component removed",
+      "COMPONENT_CHANGED": "Component changed",
+      "COMMENT_ADDED": "Comment added",
+      "COMMENT_EDITED": "Comment edited",
+      "COMMENT_DELETED": "Comment deleted",
+      "VOTE_ADDED": "Vote added",
+      "VOTE_CHANGED": "Vote changed",
+      "TEMPLATE_SWITCHED": "Template changed",
+      "CUTOFF_CHANGED": "Cutoff changed",
+      "ATTENDANCE_CHANGED": "Attendance changed"
+    },
+    "descriptions": {
+      "planCreated": "{{member}} created the plan",
+      "statusChanged": "{{member}} changed status from {{oldStatus}} to {{newStatus}}",
+      "mealAdded": "{{member}} added {{mealType}} for {{day}}",
+      "mealRemoved": "{{member}} removed {{mealType}} from {{day}}",
+      "recipeChanged": "{{member}} changed recipe from \"{{oldRecipe}}\" to \"{{newRecipe}}\"",
+      "portionsChanged": "{{member}} changed portions from {{old}} to {{new}}",
+      "mealLocked": "{{member}} locked the meal",
+      "mealUnlocked": "{{member}} unlocked the meal",
+      "componentAdded": "{{member}} added a component",
+      "componentRemoved": "{{member}} removed a component",
+      "componentChanged": "{{member}} modified a component",
+      "commentAdded": "{{member}} added a comment",
+      "commentEdited": "{{member}} edited their comment",
+      "commentDeleted": "{{member}} deleted a comment",
+      "voteAdded": "{{member}} voted",
+      "voteChanged": "{{member}} changed their vote",
+      "templateSwitched": "{{member}} switched the planning template",
+      "cutoffChanged": "{{member}} changed the cutoff deadline",
+      "attendanceChanged": "{{member}} changed their attendance"
+    },
+    "timeAgo": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} minute ago",
+      "minutesAgo_plural": "{{count}} minutes ago",
+      "hoursAgo": "{{count}} hour ago",
+      "hoursAgo_plural": "{{count}} hours ago",
+      "daysAgo": "{{count}} day ago",
+      "daysAgo_plural": "{{count}} days ago",
+      "weeksAgo": "{{count}} week ago",
+      "weeksAgo_plural": "{{count}} weeks ago",
+      "monthsAgo": "{{count}} month ago",
+      "monthsAgo_plural": "{{count}} months ago"
+    },
+    "viewDetails": "View details",
+    "hideDetails": "Hide details",
+    "oldValue": "Old value",
+    "newValue": "New value",
+    "noPermission": "You don't have permission to view activity history"
+  },
+  "permissions": {
+    "editNotAllowed": "You don't have permission to edit this plan",
+    "lockNotAllowed": "Only administrators and parents can lock meals",
+    "afterCutoff": "The cutoff deadline for changes has passed",
+    "afterCutoffAdmin": "Only administrators and parents can make changes after the cutoff",
+    "planLocked": "This plan is locked and cannot be modified",
+    "mealLocked": "This meal is locked and cannot be modified",
+    "commentsAllowed": "Comments are still allowed",
+    "commentsNotAllowed": "Comments are no longer allowed after the cutoff",
+    "commentsStillAllowed": "Comments remain allowed after the cutoff",
+    "noChangesAllowed": "No changes are allowed after the cutoff",
+    "cutoffWarning": "Cutoff: {{date}} at {{time}}",
+    "cutoffPassed": "The cutoff deadline for changes has passed",
+    "cutoffSoon": "Cutoff in {{hours}} hours ({{date}})",
+    "rolesExplained": {
+      "ADMIN": "Can modify everything, even after cutoff",
+      "PARENT": "Can modify everything, even after cutoff",
+      "MEMBER": "Can comment and vote, limited editing",
+      "CHILD": "Can comment and vote"
+    }
   }
 }

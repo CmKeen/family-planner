@@ -3,6 +3,7 @@ import prisma from '../lib/prisma';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 import { Prisma } from '@prisma/client';
+import { logChange } from '../utils/auditLogger.js';
 import { notificationService } from '../services/notification.service.js';
 
 // Type aliases for Prisma enums
@@ -549,6 +550,16 @@ export const updateMeal = asyncHandler(
     const { mealId } = req.params;
     const { recipeId, portions } = req.body;
 
+    // Fetch old meal data for audit logging
+    const oldMeal = await prisma.meal.findUnique({
+      where: { id: mealId },
+      include: { recipe: true, weeklyPlan: true }
+    });
+
+    if (!oldMeal) {
+      throw new AppError('Meal not found', 404);
+    }
+
     const meal = await prisma.meal.update({
       where: { id: mealId },
       data: { recipeId, portions },
@@ -556,6 +567,36 @@ export const updateMeal = asyncHandler(
         recipe: true
       }
     });
+
+    // Log portion change
+    if (portions && oldMeal.portions !== portions) {
+      await logChange({
+        weeklyPlanId: oldMeal.weeklyPlanId,
+        mealId: meal.id,
+        changeType: 'PORTIONS_CHANGED',
+        memberId: req.member!.id,
+        oldValue: oldMeal.portions.toString(),
+        newValue: portions.toString(),
+        description: `Portions changed from ${oldMeal.portions} to ${portions}`,
+        descriptionEn: `Portions changed from ${oldMeal.portions} to ${portions}`,
+        descriptionNl: `Porties gewijzigd van ${oldMeal.portions} naar ${portions}`
+      });
+    }
+
+    // Log recipe change
+    if (recipeId && oldMeal.recipeId !== recipeId) {
+      await logChange({
+        weeklyPlanId: oldMeal.weeklyPlanId,
+        mealId: meal.id,
+        changeType: 'RECIPE_CHANGED',
+        memberId: req.member!.id,
+        oldValue: oldMeal.recipe?.title || 'None',
+        newValue: meal.recipe?.title || 'None',
+        description: `Recette changée de "${oldMeal.recipe?.title || 'None'}" à "${meal.recipe?.title || 'None'}"`,
+        descriptionEn: `Recipe changed from "${oldMeal.recipe?.title || 'None'}" to "${meal.recipe?.title || 'None'}"`,
+        descriptionNl: `Recept gewijzigd van "${oldMeal.recipe?.title || 'None'}" naar "${meal.recipe?.title || 'None'}"`
+      });
+    }
 
     res.json({
       status: 'success',
@@ -569,12 +610,31 @@ export const swapMeal = asyncHandler(
     const { mealId } = req.params;
     const { newRecipeId } = req.body;
 
+    // Fetch old meal for audit logging
+    const oldMeal = await prisma.meal.findUnique({
+      where: { id: mealId },
+      include: { recipe: true }
+    });
+
     const meal = await prisma.meal.update({
       where: { id: mealId },
       data: { recipeId: newRecipeId },
       include: {
         recipe: true
       }
+    });
+
+    // Log recipe swap
+    await logChange({
+      weeklyPlanId: meal.weeklyPlanId,
+      mealId: meal.id,
+      changeType: 'RECIPE_CHANGED',
+      memberId: req.member!.id,
+      oldValue: oldMeal?.recipe?.title || 'None',
+      newValue: meal.recipe?.title || 'None',
+      description: `Recette échangée de "${oldMeal?.recipe?.title || 'None'}" à "${meal.recipe?.title || 'None'}"`,
+      descriptionEn: `Recipe swapped from "${oldMeal?.recipe?.title || 'None'}" to "${meal.recipe?.title || 'None'}"`,
+      descriptionNl: `Recept gewisseld van "${oldMeal?.recipe?.title || 'None'}" naar "${meal.recipe?.title || 'None'}"`
     });
 
     res.json({
@@ -591,7 +651,19 @@ export const lockMeal = asyncHandler(
 
     const meal = await prisma.meal.update({
       where: { id: mealId },
-      data: { locked }
+      data: { locked },
+      include: { weeklyPlan: true }
+    });
+
+    // Log lock/unlock
+    await logChange({
+      weeklyPlanId: meal.weeklyPlanId,
+      mealId: meal.id,
+      changeType: locked ? 'MEAL_LOCKED' : 'MEAL_UNLOCKED',
+      memberId: req.member!.id,
+      description: locked ? 'Repas verrouillé' : 'Repas déverrouillé',
+      descriptionEn: locked ? 'Meal locked' : 'Meal unlocked',
+      descriptionNl: locked ? 'Maaltijd vergrendeld' : 'Maaltijd ontgrendeld'
     });
 
     res.json({
@@ -706,6 +778,12 @@ export const validatePlan = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { planId } = req.params;
 
+    // Get old plan status before update
+    const oldPlan = await prisma.weeklyPlan.findUnique({
+      where: { id: planId },
+      select: { status: true }
+    });
+
     const plan = await prisma.weeklyPlan.update({
       where: { id: planId },
       data: {
@@ -719,6 +797,18 @@ export const validatePlan = asyncHandler(
           }
         }
       }
+    });
+
+    // Log plan validation
+    await logChange({
+      weeklyPlanId: planId,
+      changeType: 'PLAN_STATUS_CHANGED',
+      memberId: req.member!.id,
+      oldValue: oldPlan?.status,
+      newValue: 'VALIDATED',
+      description: `Statut du plan changé de ${oldPlan?.status} à VALIDATED`,
+      descriptionEn: `Plan status changed from ${oldPlan?.status} to VALIDATED`,
+      descriptionNl: `Planstatus gewijzigd van ${oldPlan?.status} naar VALIDATED`
     });
 
     res.json({
@@ -775,6 +865,18 @@ export const addMeal = asyncHandler(
       }
     });
 
+    // Log meal addition
+    await logChange({
+      weeklyPlanId: planId,
+      mealId: meal.id,
+      changeType: 'MEAL_ADDED',
+      memberId: req.member!.id,
+      newValue: `${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      description: `Repas ajouté: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      descriptionEn: `Meal added: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      descriptionNl: `Maaltijd toegevoegd: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
+    });
+
     res.status(201).json({
       status: 'success',
       data: { meal }
@@ -805,7 +907,8 @@ export const removeMeal = asyncHandler(
       where: {
         id: mealId,
         weeklyPlanId: planId
-      }
+      },
+      include: { recipe: true }
     });
 
     if (!meal) {
@@ -823,6 +926,18 @@ export const removeMeal = asyncHandler(
 
     await prisma.meal.delete({
       where: { id: mealId }
+    });
+
+    // Log meal removal
+    await logChange({
+      weeklyPlanId: planId,
+      mealId,
+      changeType: 'MEAL_REMOVED',
+      memberId: req.member!.id,
+      oldValue: `${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      description: `Repas supprimé: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      descriptionEn: `Meal removed: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      descriptionNl: `Maaltijd verwijderd: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
     });
 
     res.json({

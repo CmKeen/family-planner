@@ -12,9 +12,21 @@ if ! docker-compose ps | grep -q "Up"; then
   exit 1
 fi
 
+echo "🔍 Running backend TypeScript check..."
+if ! docker-compose exec -T backend npx tsc --noEmit; then
+  echo "❌ Backend TypeScript check failed!"
+  exit 1
+fi
+
 echo "🧪 Running backend tests..."
 if ! docker-compose exec -T backend npm test; then
   echo "❌ Backend tests failed!"
+  exit 1
+fi
+
+echo "🔍 Running frontend TypeScript check..."
+if ! docker-compose exec -T frontend npx tsc --noEmit; then
+  echo "❌ Frontend TypeScript check failed!"
   exit 1
 fi
 
@@ -24,4 +36,4 @@ if ! docker-compose exec -T frontend npm test -- --run; then
   exit 1
 fi
 
-echo "✅ All tests passed!"
+echo "✅ All checks passed!"
