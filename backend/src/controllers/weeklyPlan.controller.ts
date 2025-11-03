@@ -4,6 +4,7 @@ import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 import { Prisma } from '@prisma/client';
 import { logChange } from '../utils/auditLogger.js';
+import { notificationService } from '../services/notification.service.js';
 
 // Type aliases for Prisma enums
 type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
@@ -31,6 +32,21 @@ export const createWeeklyPlan = asyncHandler(
         meals: true
       }
     });
+
+    // Send notification to family members
+    if (req.user) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { firstName: true, lastName: true }
+      });
+      const createdByName = user ? `${user.firstName} ${user.lastName}` : 'Unknown';
+      await notificationService.notifyDraftPlanCreated(
+        familyId,
+        weeklyPlan.id,
+        date,
+        createdByName
+      );
+    }
 
     res.status(201).json({
       status: 'success',
@@ -402,6 +418,21 @@ export const generateAutoPlan = asyncHandler(
       }
     });
 
+    // Send notification to family members
+    if (req.user) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { firstName: true, lastName: true }
+      });
+      const createdByName = user ? `${user.firstName} ${user.lastName}` : 'Unknown';
+      await notificationService.notifyDraftPlanCreated(
+        familyId,
+        weeklyPlan.id,
+        date,
+        createdByName
+      );
+    }
+
     res.status(201).json({
       status: 'success',
       data: { plan: completePlan }
@@ -491,6 +522,21 @@ export const generateExpressPlan = asyncHandler(
         }
       }
     });
+
+    // Send notification to family members
+    if (req.user) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { firstName: true, lastName: true }
+      });
+      const createdByName = user ? `${user.firstName} ${user.lastName}` : 'Unknown';
+      await notificationService.notifyDraftPlanCreated(
+        familyId,
+        weeklyPlan.id,
+        date,
+        createdByName
+      );
+    }
 
     res.status(201).json({
       status: 'success',
