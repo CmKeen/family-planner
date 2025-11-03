@@ -2,7 +2,16 @@ import { AuthRequest } from '../auth';
 
 import { Request, Response, NextFunction } from 'express';
 import { enforceCutoff } from '../cutoffEnforcement';
-import { prisma } from '../../lib/prisma';
+import prisma from '../../lib/prisma';
+
+// Mock logger
+jest.mock('../../config/logger', () => ({
+  log: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn()
+  }
+}));
 
 // Mock prisma
 jest.mock('../../lib/prisma', () => {
@@ -20,12 +29,15 @@ jest.mock('../../lib/prisma', () => {
 });
 
 // Mock permissions
-jest.mock('../../utils/permissions.js', () => ({
+jest.mock('../../utils/permissions', () => ({
   isAfterCutoff: jest.fn(),
   canEditAfterCutoff: jest.fn()
 }));
 
 import { isAfterCutoff, canEditAfterCutoff } from '../../utils/permissions';
+
+// Helper to wait for async operations
+const waitForAsync = () => new Promise(resolve => setImmediate(resolve));
 
 describe('Cutoff Enforcement Middleware', () => {
   let mockReq: AuthRequest;
@@ -69,13 +81,22 @@ describe('Cutoff Enforcement Middleware', () => {
         status: 'DRAFT',
         cutoffDate: null,
         cutoffTime: null,
-        allowCommentsAfterCutoff: false
+        allowCommentsAfterCutoff: false,
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123'
+          }]
+        }
       };
 
       (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
       (isAfterCutoff as any).mockReturnValue(false);
 
       await middleware(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalledWith();
       expect(mockRes.status).not.toHaveBeenCalled();
@@ -90,13 +111,22 @@ describe('Cutoff Enforcement Middleware', () => {
         status: 'DRAFT',
         cutoffDate: tomorrow,
         cutoffTime: '18:00',
-        allowCommentsAfterCutoff: false
+        allowCommentsAfterCutoff: false,
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123'
+          }]
+        }
       };
 
       (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
       (isAfterCutoff as any).mockReturnValue(false);
 
       await middleware(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalledWith();
       expect(mockRes.status).not.toHaveBeenCalled();
@@ -111,14 +141,15 @@ describe('Cutoff Enforcement Middleware', () => {
         status: 'DRAFT',
         cutoffDate: yesterday,
         cutoffTime: '18:00',
-        allowCommentsAfterCutoff: false
-      };
-
-      mockReq.member = {
-        id: 'member-123',
-        name: 'Test User',
-        role: 'MEMBER',
-        familyId: 'family-123'
+        allowCommentsAfterCutoff: false,
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'MEMBER',
+            userId: 'user-123'
+          }]
+        }
       };
 
       (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
@@ -126,6 +157,7 @@ describe('Cutoff Enforcement Middleware', () => {
       (canEditAfterCutoff as any).mockReturnValue(false);
 
       await middleware(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
       expect(mockRes.status).not.toHaveBeenCalled();

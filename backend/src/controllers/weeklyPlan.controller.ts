@@ -571,24 +571,30 @@ export const updateMeal = asyncHandler(
     // Log portion change
     if (portions && oldMeal.portions !== portions) {
       await logChange({
-        planId: oldMeal.weeklyPlanId,
+        weeklyPlanId: oldMeal.weeklyPlanId,
         mealId: meal.id,
-        changeType: 'MEAL_PORTIONS_CHANGED',
+        changeType: 'PORTIONS_CHANGED',
         memberId: req.member!.id,
         oldValue: oldMeal.portions.toString(),
-        newValue: portions.toString()
+        newValue: portions.toString(),
+        description: `Portions changed from ${oldMeal.portions} to ${portions}`,
+        descriptionEn: `Portions changed from ${oldMeal.portions} to ${portions}`,
+        descriptionNl: `Porties gewijzigd van ${oldMeal.portions} naar ${portions}`
       });
     }
 
     // Log recipe change
     if (recipeId && oldMeal.recipeId !== recipeId) {
       await logChange({
-        planId: oldMeal.weeklyPlanId,
+        weeklyPlanId: oldMeal.weeklyPlanId,
         mealId: meal.id,
-        changeType: 'MEAL_RECIPE_CHANGED',
+        changeType: 'RECIPE_CHANGED',
         memberId: req.member!.id,
         oldValue: oldMeal.recipe?.title || 'None',
-        newValue: meal.recipe?.title || 'None'
+        newValue: meal.recipe?.title || 'None',
+        description: `Recette changée de "${oldMeal.recipe?.title || 'None'}" à "${meal.recipe?.title || 'None'}"`,
+        descriptionEn: `Recipe changed from "${oldMeal.recipe?.title || 'None'}" to "${meal.recipe?.title || 'None'}"`,
+        descriptionNl: `Recept gewijzigd van "${oldMeal.recipe?.title || 'None'}" naar "${meal.recipe?.title || 'None'}"`
       });
     }
 
@@ -620,12 +626,15 @@ export const swapMeal = asyncHandler(
 
     // Log recipe swap
     await logChange({
-      planId: meal.weeklyPlanId,
+      weeklyPlanId: meal.weeklyPlanId,
       mealId: meal.id,
-      changeType: 'MEAL_RECIPE_CHANGED',
+      changeType: 'RECIPE_CHANGED',
       memberId: req.member!.id,
       oldValue: oldMeal?.recipe?.title || 'None',
-      newValue: meal.recipe?.title || 'None'
+      newValue: meal.recipe?.title || 'None',
+      description: `Recette échangée de "${oldMeal?.recipe?.title || 'None'}" à "${meal.recipe?.title || 'None'}"`,
+      descriptionEn: `Recipe swapped from "${oldMeal?.recipe?.title || 'None'}" to "${meal.recipe?.title || 'None'}"`,
+      descriptionNl: `Recept gewisseld van "${oldMeal?.recipe?.title || 'None'}" naar "${meal.recipe?.title || 'None'}"`
     });
 
     res.json({
@@ -648,10 +657,13 @@ export const lockMeal = asyncHandler(
 
     // Log lock/unlock
     await logChange({
-      planId: meal.weeklyPlanId,
+      weeklyPlanId: meal.weeklyPlanId,
       mealId: meal.id,
       changeType: locked ? 'MEAL_LOCKED' : 'MEAL_UNLOCKED',
-      memberId: req.member!.id
+      memberId: req.member!.id,
+      description: locked ? 'Repas verrouillé' : 'Repas déverrouillé',
+      descriptionEn: locked ? 'Meal locked' : 'Meal unlocked',
+      descriptionNl: locked ? 'Maaltijd vergrendeld' : 'Maaltijd ontgrendeld'
     });
 
     res.json({
@@ -766,6 +778,12 @@ export const validatePlan = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { planId } = req.params;
 
+    // Get old plan status before update
+    const oldPlan = await prisma.weeklyPlan.findUnique({
+      where: { id: planId },
+      select: { status: true }
+    });
+
     const plan = await prisma.weeklyPlan.update({
       where: { id: planId },
       data: {
@@ -783,9 +801,14 @@ export const validatePlan = asyncHandler(
 
     // Log plan validation
     await logChange({
-      planId,
-      changeType: 'PLAN_VALIDATED',
-      memberId: req.member!.id
+      weeklyPlanId: planId,
+      changeType: 'PLAN_STATUS_CHANGED',
+      memberId: req.member!.id,
+      oldValue: oldPlan?.status,
+      newValue: 'VALIDATED',
+      description: `Statut du plan changé de ${oldPlan?.status} à VALIDATED`,
+      descriptionEn: `Plan status changed from ${oldPlan?.status} to VALIDATED`,
+      descriptionNl: `Planstatus gewijzigd van ${oldPlan?.status} naar VALIDATED`
     });
 
     res.json({
@@ -844,11 +867,14 @@ export const addMeal = asyncHandler(
 
     // Log meal addition
     await logChange({
-      planId,
+      weeklyPlanId: planId,
       mealId: meal.id,
       changeType: 'MEAL_ADDED',
       memberId: req.member!.id,
-      newValue: `${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
+      newValue: `${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      description: `Repas ajouté: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      descriptionEn: `Meal added: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      descriptionNl: `Maaltijd toegevoegd: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
     });
 
     res.status(201).json({
@@ -904,11 +930,14 @@ export const removeMeal = asyncHandler(
 
     // Log meal removal
     await logChange({
-      planId,
+      weeklyPlanId: planId,
       mealId,
       changeType: 'MEAL_REMOVED',
       memberId: req.member!.id,
-      oldValue: `${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
+      oldValue: `${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      description: `Repas supprimé: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      descriptionEn: `Meal removed: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+      descriptionNl: `Maaltijd verwijderd: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
     });
 
     res.json({

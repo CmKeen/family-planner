@@ -247,7 +247,7 @@ export function PlanActivityFeed({ planId, limit = 50 }: PlanActivityFeedProps) 
           {/* Timeline Line */}
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border hidden md:block" />
 
-          {logs.map((log: AuditLog, index: number) => {
+          {logs.map((log: AuditLog) => {
             const IconComponent = Icon(log.changeType);
             const colorClass = getColorClass(log.changeType);
             const isExpanded = showDetails[log.id];

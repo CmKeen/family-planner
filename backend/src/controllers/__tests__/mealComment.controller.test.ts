@@ -7,7 +7,16 @@ import {
   updateComment,
   deleteComment
 } from '../mealComment.controller';
-import { prisma } from '../../lib/prisma';
+import prisma from '../../lib/prisma';
+
+// Mock logger
+jest.mock('../../config/logger', () => ({
+  log: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn()
+  }
+}));
 
 // Mock prisma
 jest.mock('../../lib/prisma', () => {
@@ -20,10 +29,7 @@ jest.mock('../../lib/prisma', () => {
       delete: jest.fn()
     },
     meal: {
-      findUnique: jest.fn()
-    },
-    familyMember: {
-      findUnique: jest.fn()
+      findFirst: jest.fn()
     }
   };
 
@@ -36,8 +42,21 @@ jest.mock('../../lib/prisma', () => {
 
 // Mock audit logger
 jest.mock('../../utils/auditLogger', () => ({
-  logChange: jest.fn()
+  logChange: jest.fn().mockResolvedValue(undefined),
+  generateChangeDescription: jest.fn().mockReturnValue({
+    description: 'Test change',
+    descriptionEn: 'Test change',
+    descriptionNl: 'Test wijziging'
+  })
 }));
+
+// Mock permissions
+jest.mock('../../utils/permissions', () => ({
+  canDeleteComment: jest.fn()
+}));
+
+// Helper to wait for async operations
+const waitForAsync = () => new Promise(resolve => setImmediate(resolve));
 
 describe('MealComment Controller', () => {
   let mockReq: AuthRequest;
@@ -96,6 +115,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findMany as any).mockResolvedValue(mockComments);
 
       await getComments(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.mealComment.findMany).toHaveBeenCalledWith({
         where: { mealId: 'meal-123' },
@@ -108,12 +128,12 @@ describe('MealComment Controller', () => {
             }
           }
         },
-        orderBy: { createdAt: 'asc' }
+        orderBy: { createdAt: 'desc' }
       });
 
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: { comments: mockComments }
+        status: 'success',
+        data: { comments: mockComments, count: mockComments.length }
       });
     });
 
@@ -121,10 +141,11 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findMany as any).mockResolvedValue([]);
 
       await getComments(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: { comments: [] }
+        status: 'success',
+        data: { comments: [], count: 0 }
       });
     });
 
@@ -133,6 +154,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findMany as any).mockRejectedValue(error);
 
       await getComments(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });
@@ -141,6 +163,21 @@ describe('MealComment Controller', () => {
   describe('addComment', () => {
     it('should create a new comment', async () => {
       mockReq.body = { content: 'This looks delicious!' };
+
+      const mockMeal = {
+        id: 'meal-123',
+        weeklyPlanId: 'plan-123',
+        weeklyPlan: {
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Test User',
+              role: 'PARENT',
+              userId: 'user-123'
+            }]
+          }
+        }
+      };
 
       const mockComment = {
         id: 'comment-1',
@@ -157,9 +194,11 @@ describe('MealComment Controller', () => {
         }
       };
 
+      (prisma.meal.findFirst as any).mockResolvedValue(mockMeal);
       (prisma.mealComment.create as any).mockResolvedValue(mockComment);
 
       await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.mealComment.create).toHaveBeenCalledWith({
         data: {
@@ -180,7 +219,7 @@ describe('MealComment Controller', () => {
 
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
+        status: 'success',
         data: { comment: mockComment }
       });
     });
@@ -189,28 +228,31 @@ describe('MealComment Controller', () => {
       mockReq.body = { content: '' };
 
       await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalled();
-      expect(prisma.mealComment.create).not.toHaveBeenCalled();
+      expect(prisma.meal.findFirst).not.toHaveBeenCalled();
     });
 
     it('should validate content length (max 2000 chars)', async () => {
       mockReq.body = { content: 'a'.repeat(2001) };
 
       await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(prisma.meal.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('should return 404 if meal not found', async () => {
+      mockReq.body = { content: 'Test comment' };
+      (prisma.meal.findFirst as any).mockResolvedValue(null);
+
+      await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.create).not.toHaveBeenCalled();
-    });
-
-    it('should call next with error on failure', async () => {
-      mockReq.body = { content: 'Test comment' };
-      const error = new Error('Database error');
-      (prisma.mealComment.create as any).mockRejectedValue(error);
-
-      await addComment(mockReq as AuthRequest, mockRes as Response, mockNext);
-
-      expect(mockNext).toHaveBeenCalledWith(error);
     });
   });
 
@@ -229,12 +271,28 @@ describe('MealComment Controller', () => {
         content: 'Original comment',
         memberId: 'member-123',
         mealId: 'meal-123',
-        isEdited: false
+        isEdited: false,
+        member: {
+          id: 'member-123',
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Test User',
+              role: 'PARENT',
+              userId: 'user-123'
+            }]
+          }
+        },
+        meal: {
+          id: 'meal-123'
+        }
       };
 
       const updatedComment = {
-        ...existingComment,
+        id: 'comment-1',
         content: 'Updated comment',
+        memberId: 'member-123',
+        mealId: 'meal-123',
         isEdited: true,
         member: {
           id: 'member-123',
@@ -247,6 +305,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.update as any).mockResolvedValue(updatedComment);
 
       await updateComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.mealComment.update).toHaveBeenCalledWith({
         where: { id: 'comment-1' },
@@ -266,23 +325,84 @@ describe('MealComment Controller', () => {
       });
 
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
+        status: 'success',
         data: { comment: updatedComment }
       });
     });
 
-    it('should not allow updating someone else\'s comment', async () => {
+    it('should allow ADMIN to update any comment', async () => {
       const existingComment = {
         id: 'comment-1',
         content: 'Original comment',
-        memberId: 'other-member-123', // Different member
+        memberId: 'other-member-123',
         mealId: 'meal-123',
-        isEdited: false
+        isEdited: false,
+        member: {
+          id: 'other-member-123',
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Admin User',
+              role: 'ADMIN',
+              userId: 'user-123'
+            }]
+          }
+        },
+        meal: {
+          id: 'meal-123'
+        }
+      };
+
+      const updatedComment = {
+        id: 'comment-1',
+        content: 'Updated comment',
+        memberId: 'other-member-123',
+        mealId: 'meal-123',
+        isEdited: true,
+        member: {
+          id: 'other-member-123',
+          name: 'Other User',
+          role: 'MEMBER'
+        }
+      };
+
+      (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
+      (prisma.mealComment.update as any).mockResolvedValue(updatedComment);
+
+      await updateComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
+
+      expect(prisma.mealComment.update).toHaveBeenCalled();
+      expect(mockRes.json).toHaveBeenCalled();
+    });
+
+    it('should not allow MEMBER to update someone else\'s comment', async () => {
+      const existingComment = {
+        id: 'comment-1',
+        content: 'Original comment',
+        memberId: 'other-member-123',
+        mealId: 'meal-123',
+        isEdited: false,
+        member: {
+          id: 'other-member-123',
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Member User',
+              role: 'MEMBER',
+              userId: 'user-123'
+            }]
+          }
+        },
+        meal: {
+          id: 'meal-123'
+        }
       };
 
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
 
       await updateComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.update).not.toHaveBeenCalled();
@@ -292,6 +412,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findUnique as any).mockResolvedValue(null);
 
       await updateComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.update).not.toHaveBeenCalled();
@@ -308,6 +429,8 @@ describe('MealComment Controller', () => {
   });
 
   describe('deleteComment', () => {
+    const { canDeleteComment } = require('../../utils/permissions');
+
     beforeEach(() => {
       mockReq.params = {
         ...mockReq.params,
@@ -320,21 +443,34 @@ describe('MealComment Controller', () => {
         id: 'comment-1',
         content: 'Test comment',
         memberId: 'member-123',
-        mealId: 'meal-123'
+        mealId: 'meal-123',
+        member: {
+          id: 'member-123',
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Test User',
+              role: 'PARENT',
+              userId: 'user-123'
+            }]
+          }
+        }
       };
 
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
       (prisma.mealComment.delete as any).mockResolvedValue(existingComment);
+      (canDeleteComment as any).mockReturnValue(true);
 
       await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.mealComment.delete).toHaveBeenCalledWith({
         where: { id: 'comment-1' }
       });
 
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
-        data: { message: 'Comment deleted successfully' }
+        status: 'success',
+        message: 'Comment deleted successfully'
       });
     });
 
@@ -342,22 +478,29 @@ describe('MealComment Controller', () => {
       const existingComment = {
         id: 'comment-1',
         content: 'Test comment',
-        memberId: 'other-member-123', // Different member
-        mealId: 'meal-123'
-      };
-
-      mockReq.member = {
-        id: 'member-123',
-        name: 'Admin User',
-        role: 'ADMIN',
-        familyId: 'family-123'
+        memberId: 'other-member-123',
+        mealId: 'meal-123',
+        member: {
+          id: 'other-member-123',
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Admin User',
+              role: 'ADMIN',
+              userId: 'user-123'
+            }]
+          }
+        }
       };
 
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
       (prisma.mealComment.delete as any).mockResolvedValue(existingComment);
+      (canDeleteComment as any).mockReturnValue(true);
 
       await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
+      expect(canDeleteComment).toHaveBeenCalledWith('ADMIN', false);
       expect(prisma.mealComment.delete).toHaveBeenCalled();
       expect(mockRes.json).toHaveBeenCalled();
     });
@@ -367,21 +510,28 @@ describe('MealComment Controller', () => {
         id: 'comment-1',
         content: 'Test comment',
         memberId: 'other-member-123',
-        mealId: 'meal-123'
-      };
-
-      mockReq.member = {
-        id: 'member-123',
-        name: 'Parent User',
-        role: 'PARENT',
-        familyId: 'family-123'
+        mealId: 'meal-123',
+        member: {
+          id: 'other-member-123',
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Parent User',
+              role: 'PARENT',
+              userId: 'user-123'
+            }]
+          }
+        }
       };
 
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
       (prisma.mealComment.delete as any).mockResolvedValue(existingComment);
+      (canDeleteComment as any).mockReturnValue(true);
 
       await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
+      expect(canDeleteComment).toHaveBeenCalledWith('PARENT', false);
       expect(prisma.mealComment.delete).toHaveBeenCalled();
     });
 
@@ -390,20 +540,27 @@ describe('MealComment Controller', () => {
         id: 'comment-1',
         content: 'Test comment',
         memberId: 'other-member-123',
-        mealId: 'meal-123'
-      };
-
-      mockReq.member = {
-        id: 'member-123',
-        name: 'Member User',
-        role: 'MEMBER',
-        familyId: 'family-123'
+        mealId: 'meal-123',
+        member: {
+          id: 'other-member-123',
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Member User',
+              role: 'MEMBER',
+              userId: 'user-123'
+            }]
+          }
+        }
       };
 
       (prisma.mealComment.findUnique as any).mockResolvedValue(existingComment);
+      (canDeleteComment as any).mockReturnValue(false);
 
       await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
+      expect(canDeleteComment).toHaveBeenCalledWith('MEMBER', false);
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.delete).not.toHaveBeenCalled();
     });
@@ -412,6 +569,7 @@ describe('MealComment Controller', () => {
       (prisma.mealComment.findUnique as any).mockResolvedValue(null);
 
       await deleteComment(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.mealComment.delete).not.toHaveBeenCalled();

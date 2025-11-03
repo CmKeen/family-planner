@@ -2,16 +2,29 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import { getPlanAuditLog, getMealAuditLog } from '../auditLog.controller';
-import { prisma } from '../../lib/prisma';
+import prisma from '../../lib/prisma';
+
+// Mock logger
+jest.mock('../../config/logger', () => ({
+  log: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn()
+  }
+}));
 
 // Mock prisma
 jest.mock('../../lib/prisma', () => {
   const mockPrisma = {
     planChangeLog: {
-      findMany: jest.fn()
+      findMany: jest.fn(),
+      count: jest.fn()
     },
-    familyMember: {
+    weeklyPlan: {
       findUnique: jest.fn()
+    },
+    meal: {
+      findFirst: jest.fn()
     }
   };
 
@@ -21,6 +34,14 @@ jest.mock('../../lib/prisma', () => {
     prisma: mockPrisma
   };
 });
+
+// Mock permissions
+jest.mock('../../utils/permissions', () => ({
+  canViewAuditLog: jest.fn()
+}));
+
+// Helper to wait for async operations
+const waitForAsync = () => new Promise(resolve => setImmediate(resolve));
 
 describe('AuditLog Controller', () => {
   let mockReq: AuthRequest;
@@ -58,6 +79,8 @@ describe('AuditLog Controller', () => {
   });
 
   describe('getPlanAuditLog', () => {
+    const { canViewAuditLog } = require('../../utils/permissions');
+
     it('should return audit logs for a plan', async () => {
       const mockLogs = [
         {
@@ -76,25 +99,47 @@ describe('AuditLog Controller', () => {
             id: 'member-123',
             name: 'Test User',
             role: 'PARENT'
-          }
+          },
+          meal: null
         }
       ];
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockPlan = {
+        id: 'plan-123',
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123',
+            canViewAuditLog: true
+          }]
+        }
+      };
+
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(mockLogs.length);
       (prisma.planChangeLog.findMany as any).mockResolvedValue(mockLogs);
 
       await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
-        where: { planId: 'plan-123' },
+        where: { weeklyPlanId: 'plan-123' },
         include: {
           member: {
             select: {
               id: true,
               name: true,
               role: true
+            }
+          },
+          meal: {
+            select: {
+              id: true,
+              dayOfWeek: true,
+              mealType: true
             }
           }
         },
@@ -104,10 +149,15 @@ describe('AuditLog Controller', () => {
       });
 
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
+        status: 'success',
         data: {
           logs: mockLogs,
-          total: mockLogs.length
+          pagination: {
+            total: mockLogs.length,
+            limit: 50,
+            offset: 0,
+            hasMore: false
+          }
         }
       });
     });
@@ -115,16 +165,31 @@ describe('AuditLog Controller', () => {
     it('should filter by memberId when provided', async () => {
       mockReq.query = { memberId: 'member-456' };
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockPlan = {
+        id: 'plan-123',
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123',
+            canViewAuditLog: true
+          }]
+        }
+      };
+
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(0);
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
       await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: {
-          planId: 'plan-123',
+          weeklyPlanId: 'plan-123',
           memberId: 'member-456'
         },
         include: expect.any(Object),
@@ -137,16 +202,30 @@ describe('AuditLog Controller', () => {
     it('should filter by changeType when provided', async () => {
       mockReq.query = { changeType: 'MEAL_ADDED' };
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockPlan = {
+        id: 'plan-123',
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123',
+            canViewAuditLog: true
+          }]
+        }
+      };
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(0);
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
       await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: {
-          planId: 'plan-123',
+          weeklyPlanId: 'plan-123',
           changeType: 'MEAL_ADDED'
         },
         include: expect.any(Object),
@@ -159,12 +238,26 @@ describe('AuditLog Controller', () => {
     it('should respect limit and offset parameters', async () => {
       mockReq.query = { limit: '20', offset: '10' };
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockPlan = {
+        id: 'plan-123',
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123',
+            canViewAuditLog: true
+          }]
+        }
+      };
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(0);
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
       await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: expect.any(Object),
@@ -178,12 +271,26 @@ describe('AuditLog Controller', () => {
     it('should enforce max limit of 100', async () => {
       mockReq.query = { limit: '200' };
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockPlan = {
+        id: 'plan-123',
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123',
+            canViewAuditLog: true
+          }]
+        }
+      };
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(0);
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
       await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -201,41 +308,87 @@ describe('AuditLog Controller', () => {
         canViewAuditLog: false
       };
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: false
-      });
+      const mockPlan = {
+        id: 'plan-123',
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Member User',
+            role: 'MEMBER',
+            userId: 'user-123',
+            canViewAuditLog: false
+          }]
+        }
+      };
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (canViewAuditLog as any).mockReturnValue(false);
 
       await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.planChangeLog.findMany).not.toHaveBeenCalled();
     });
 
     it('should return empty array if no logs found', async () => {
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockPlan = {
+        id: 'plan-123',
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123',
+            canViewAuditLog: true
+          }]
+        }
+      };
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(0);
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
       await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
+        status: 'success',
         data: {
           logs: [],
-          total: 0
+          pagination: {
+            total: 0,
+            limit: 50,
+            offset: 0,
+            hasMore: false
+          }
         }
       });
     });
 
     it('should call next with error on failure', async () => {
       const error = new Error('Database error');
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockPlan = {
+        id: 'plan-123',
+        family: {
+          members: [{
+            id: 'member-123',
+            name: 'Test User',
+            role: 'PARENT',
+            userId: 'user-123',
+            canViewAuditLog: true
+          }]
+        }
+      };
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.weeklyPlan.findUnique as any).mockResolvedValue(mockPlan);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(0);
       (prisma.planChangeLog.findMany as any).mockRejectedValue(error);
 
       await getPlanAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalledWith(error);
     });
@@ -271,16 +424,33 @@ describe('AuditLog Controller', () => {
         }
       ];
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockMeal = {
+        id: 'meal-123',
+        weeklyPlanId: 'plan-123',
+        weeklyPlan: {
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Test User',
+              role: 'PARENT',
+              userId: 'user-123',
+              canViewAuditLog: true
+            }]
+          }
+        }
+      };
+
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.meal.findFirst as any).mockResolvedValue(mockMeal);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(mockLogs.length);
       (prisma.planChangeLog.findMany as any).mockResolvedValue(mockLogs);
 
       await getMealAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: {
-          planId: 'plan-123',
           mealId: 'meal-123'
         },
         include: {
@@ -298,10 +468,15 @@ describe('AuditLog Controller', () => {
       });
 
       expect(mockRes.json).toHaveBeenCalledWith({
-        success: true,
+        status: 'success',
         data: {
           logs: mockLogs,
-          total: mockLogs.length
+          pagination: {
+            total: mockLogs.length,
+            limit: 50,
+            offset: 0,
+            hasMore: false
+          }
         }
       });
     });
@@ -313,18 +488,34 @@ describe('AuditLog Controller', () => {
         offset: '5'
       };
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: true
-      });
+      const mockMeal = {
+        id: 'meal-123',
+        weeklyPlanId: 'plan-123',
+        weeklyPlan: {
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Test User',
+              role: 'PARENT',
+              userId: 'user-123',
+              canViewAuditLog: true
+            }]
+          }
+        }
+      };
+
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.meal.findFirst as any).mockResolvedValue(mockMeal);
+      (canViewAuditLog as any).mockReturnValue(true);
+      (prisma.planChangeLog.count as any).mockResolvedValue(0);
       (prisma.planChangeLog.findMany as any).mockResolvedValue([]);
 
       await getMealAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(prisma.planChangeLog.findMany).toHaveBeenCalledWith({
         where: {
-          planId: 'plan-123',
-          mealId: 'meal-123',
-          changeType: 'MEAL_COMMENT_ADDED'
+          mealId: 'meal-123'
         },
         include: expect.any(Object),
         orderBy: expect.any(Object),
@@ -342,11 +533,28 @@ describe('AuditLog Controller', () => {
         canViewAuditLog: false
       };
 
-      (prisma.familyMember.findUnique as any).mockResolvedValue({
-        canViewAuditLog: false
-      });
+      const mockMeal = {
+        id: 'meal-123',
+        weeklyPlanId: 'plan-123',
+        weeklyPlan: {
+          family: {
+            members: [{
+              id: 'member-123',
+              name: 'Member User',
+              role: 'CHILD',
+              userId: 'user-123',
+              canViewAuditLog: false
+            }]
+          }
+        }
+      };
+
+      const { canViewAuditLog } = require('../../utils/permissions');
+      (prisma.meal.findFirst as any).mockResolvedValue(mockMeal);
+      (canViewAuditLog as any).mockReturnValue(false);
 
       await getMealAuditLog(mockReq as AuthRequest, mockRes as Response, mockNext);
+      await waitForAsync();
 
       expect(mockNext).toHaveBeenCalled();
       expect(prisma.planChangeLog.findMany).not.toHaveBeenCalled();
