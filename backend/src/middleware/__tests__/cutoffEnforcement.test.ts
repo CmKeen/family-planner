@@ -5,14 +5,19 @@ import { enforceCutoff } from '../cutoffEnforcement';
 import { prisma } from '../../lib/prisma';
 
 // Mock prisma
-jest.mock('../../lib/prisma', () => ({
-  __esModule: true,
-  prisma: {
+jest.mock('../../lib/prisma', () => {
+  const mockPrisma = {
     weeklyPlan: {
       findUnique: jest.fn()
     }
-  }
-}));
+  };
+
+  return {
+    __esModule: true,
+    default: mockPrisma,
+    prisma: mockPrisma
+  };
+});
 
 // Mock permissions
 jest.mock('../../utils/permissions.js', () => ({

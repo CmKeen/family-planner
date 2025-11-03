@@ -5,17 +5,22 @@ import { getPlanAuditLog, getMealAuditLog } from '../auditLog.controller';
 import { prisma } from '../../lib/prisma';
 
 // Mock prisma
-jest.mock('../../lib/prisma', () => ({
-  __esModule: true,
-  prisma: {
+jest.mock('../../lib/prisma', () => {
+  const mockPrisma = {
     planChangeLog: {
       findMany: jest.fn()
     },
     familyMember: {
       findUnique: jest.fn()
     }
-  }
-}));
+  };
+
+  return {
+    __esModule: true,
+    default: mockPrisma,
+    prisma: mockPrisma
+  };
+});
 
 describe('AuditLog Controller', () => {
   let mockReq: AuthRequest;

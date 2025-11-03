@@ -10,9 +10,8 @@ import {
 import { prisma } from '../../lib/prisma';
 
 // Mock prisma
-jest.mock('../../lib/prisma', () => ({
-  __esModule: true,
-  prisma: {
+jest.mock('../../lib/prisma', () => {
+  const mockPrisma = {
     mealComment: {
       findMany: jest.fn(),
       create: jest.fn(),
@@ -26,8 +25,14 @@ jest.mock('../../lib/prisma', () => ({
     familyMember: {
       findUnique: jest.fn()
     }
-  }
-}));
+  };
+
+  return {
+    __esModule: true,
+    default: mockPrisma,
+    prisma: mockPrisma
+  };
+});
 
 // Mock audit logger
 jest.mock('../../utils/auditLogger', () => ({
