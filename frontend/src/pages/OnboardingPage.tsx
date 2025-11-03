@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { familyAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function OnboardingPage() {
+  const { t } = useTranslation();
   const [familyName, setFamilyName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -33,23 +35,23 @@ export default function OnboardingPage() {
       </div>
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Welcome!</CardTitle>
-          <CardDescription>Let's set up your family</CardDescription>
+          <CardTitle>{t('onboarding.welcome')}</CardTitle>
+          <CardDescription>{t('onboarding.setupFamily')}</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="familyName">Family Name</Label>
+              <Label htmlFor="familyName">{t('onboarding.familyName')}</Label>
               <Input
                 id="familyName"
-                placeholder="The Smith Family"
+                placeholder={t('onboarding.familyNamePlaceholder')}
                 value={familyName}
                 onChange={(e) => setFamilyName(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Continue'}
+              {isLoading ? t('onboarding.creating') : t('onboarding.continue')}
             </Button>
           </CardContent>
         </form>

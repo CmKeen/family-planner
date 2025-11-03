@@ -283,7 +283,7 @@ export default function WeeklyPlanPage() {
   };
 
   const handleNavigateToShopping = () => {
-    navigate(`/shopping-list/${planData?.id}`);
+    navigate(`/shopping/${planData?.id}`);
   };
 
   const handleSwitchTemplate = () => {

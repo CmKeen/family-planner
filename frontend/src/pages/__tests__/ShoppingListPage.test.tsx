@@ -21,7 +21,7 @@ const mockShoppingList = {
   items: [
     {
       id: 'item-1',
-      ingredientName: 'Poulet',
+      name: 'Poulet',
       quantity: 1.5,
       unit: 'kg',
       category: 'Viandes',
@@ -30,7 +30,7 @@ const mockShoppingList = {
     },
     {
       id: 'item-2',
-      ingredientName: 'Tomates',
+      name: 'Tomates',
       quantity: 500,
       unit: 'g',
       category: 'Fruits et légumes',
@@ -39,7 +39,7 @@ const mockShoppingList = {
     },
     {
       id: 'item-3',
-      ingredientName: 'Riz',
+      name: 'Riz',
       quantity: 400,
       unit: 'g',
       category: 'Épicerie',
@@ -48,7 +48,7 @@ const mockShoppingList = {
     },
     {
       id: 'item-4',
-      ingredientName: 'Lait',
+      name: 'Lait',
       quantity: 1,
       unit: 'L',
       category: 'Produits laitiers',

@@ -417,6 +417,12 @@
   },
   "onboarding": {
     "title": "Bienvenue",
+    "welcome": "Bienvenue !",
+    "setupFamily": "Configurons votre famille",
+    "familyName": "Nom de la famille",
+    "familyNamePlaceholder": "La famille Dupont",
+    "creating": "Création...",
+    "continue": "Continuer",
     "steps": {
       "family": "Famille",
       "dietary": "Régime alimentaire",
@@ -706,5 +712,16 @@
       "MEMBER": "Peut commenter et voter, modifications limitées",
       "CHILD": "Peut commenter et voter"
     }
+  },
+  "notFound": {
+    "title": "Page non trouvée",
+    "description": "Désolé, la page que vous recherchez n'existe pas ou a été déplacée.",
+    "goBack": "Retour",
+    "goHome": "Tableau de bord",
+    "suggestions": "Pages utiles :"
+  },
+  "navigation": {
+    "recipes": "Recettes",
+    "family": "Famille"
   }
 }

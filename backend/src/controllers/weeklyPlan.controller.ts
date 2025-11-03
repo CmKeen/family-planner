@@ -549,6 +549,7 @@ export const updateMeal = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { mealId } = req.params;
     const { recipeId, portions } = req.body;
+    const userId = req.user!.id;
 
     // Fetch old meal data for audit logging
     const oldMeal = await prisma.meal.findUnique({
@@ -558,6 +559,18 @@ export const updateMeal = asyncHandler(
 
     if (!oldMeal) {
       throw new AppError('Meal not found', 404);
+    }
+
+    // Check if user is a member of the family
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        familyId: oldMeal.weeklyPlan.familyId,
+        userId
+      }
+    });
+
+    if (!member) {
+      throw new AppError('You do not have permission to modify this meal', 403);
     }
 
     const meal = await prisma.meal.update({
@@ -574,7 +587,7 @@ export const updateMeal = asyncHandler(
         weeklyPlanId: oldMeal.weeklyPlanId,
         mealId: meal.id,
         changeType: 'PORTIONS_CHANGED',
-        memberId: req.member!.id,
+        memberId: member.id,
         oldValue: oldMeal.portions.toString(),
         newValue: portions.toString(),
         description: `Portions changed from ${oldMeal.portions} to ${portions}`,
@@ -589,7 +602,7 @@ export const updateMeal = asyncHandler(
         weeklyPlanId: oldMeal.weeklyPlanId,
         mealId: meal.id,
         changeType: 'RECIPE_CHANGED',
-        memberId: req.member!.id,
+        memberId: member.id,
         oldValue: oldMeal.recipe?.title || 'None',
         newValue: meal.recipe?.title || 'None',
         description: `Recette changée de "${oldMeal.recipe?.title || 'None'}" à "${meal.recipe?.title || 'None'}"`,
@@ -609,12 +622,32 @@ export const swapMeal = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { mealId } = req.params;
     const { newRecipeId } = req.body;
+    const userId = req.user!.id;
 
     // Fetch old meal for audit logging
     const oldMeal = await prisma.meal.findUnique({
       where: { id: mealId },
-      include: { recipe: true }
+      include: {
+        recipe: true,
+        weeklyPlan: true
+      }
     });
+
+    if (!oldMeal) {
+      throw new AppError('Meal not found', 404);
+    }
+
+    // Check if user is a member of the family
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        familyId: oldMeal.weeklyPlan.familyId,
+        userId
+      }
+    });
+
+    if (!member) {
+      throw new AppError('You do not have permission to modify this meal', 403);
+    }
 
     const meal = await prisma.meal.update({
       where: { id: mealId },
@@ -629,7 +662,7 @@ export const swapMeal = asyncHandler(
       weeklyPlanId: meal.weeklyPlanId,
       mealId: meal.id,
       changeType: 'RECIPE_CHANGED',
-      memberId: req.member!.id,
+      memberId: member.id,
       oldValue: oldMeal?.recipe?.title || 'None',
       newValue: meal.recipe?.title || 'None',
       description: `Recette échangée de "${oldMeal?.recipe?.title || 'None'}" à "${meal.recipe?.title || 'None'}"`,
@@ -777,12 +810,29 @@ export const addWish = asyncHandler(
 export const validatePlan = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { planId } = req.params;
+    const userId = req.user!.id;
 
     // Get old plan status before update
     const oldPlan = await prisma.weeklyPlan.findUnique({
       where: { id: planId },
-      select: { status: true }
+      select: { status: true, familyId: true }
     });
+
+    if (!oldPlan) {
+      throw new AppError('Plan not found', 404);
+    }
+
+    // Check if user is a member of the family
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        familyId: oldPlan.familyId,
+        userId
+      }
+    });
+
+    if (!member) {
+      throw new AppError('You do not have permission to validate this plan', 403);
+    }
 
     const plan = await prisma.weeklyPlan.update({
       where: { id: planId },
@@ -803,13 +853,152 @@ export const validatePlan = asyncHandler(
     await logChange({
       weeklyPlanId: planId,
       changeType: 'PLAN_STATUS_CHANGED',
-      memberId: req.member!.id,
+      memberId: member.id,
       oldValue: oldPlan?.status,
       newValue: 'VALIDATED',
       description: `Statut du plan changé de ${oldPlan?.status} à VALIDATED`,
       descriptionEn: `Plan status changed from ${oldPlan?.status} to VALIDATED`,
       descriptionNl: `Planstatus gewijzigd van ${oldPlan?.status} naar VALIDATED`
     });
+
+    // Auto-generate shopping list on validation (BUG-015 FIX)
+    try {
+      // Category translation map (BUG-009 FIX)
+      const translateCategory = (category: string): string => {
+        const translations: Record<string, string> = {
+          'meat': 'Boucherie',
+          'pantry': 'Épicerie',
+          'produce': 'Fruits & Légumes',
+          'dairy': 'Produits Laitiers',
+          'bakery': 'Boulangerie'
+        };
+        return translations[category] || category;
+      };
+
+      // Check if shopping list already exists
+      const existingList = await prisma.shoppingList.findFirst({
+        where: { weeklyPlanId: planId }
+      });
+
+      // Delete existing list if present
+      if (existingList) {
+        await prisma.shoppingList.delete({
+          where: { id: existingList.id }
+        });
+      }
+
+      // Fetch full plan data with ingredients for shopping list generation
+      const fullPlan = await prisma.weeklyPlan.findUnique({
+        where: { id: planId },
+        include: {
+          family: {
+            include: {
+              dietProfile: true,
+              inventory: true
+            }
+          },
+          meals: {
+            include: {
+              recipe: {
+                include: {
+                  ingredients: true
+                }
+              },
+              mealComponents: {
+                include: {
+                  component: true
+                }
+              },
+              guests: true
+            }
+          }
+        }
+      });
+
+      if (fullPlan) {
+        // Aggregate ingredients
+        const ingredientMap = new Map<string, any>();
+
+        for (const meal of fullPlan.meals) {
+          if (meal.isSchoolMeal || meal.isExternal || !meal.recipe) continue;
+
+          const totalGuests = meal.guests.reduce(
+            (sum: number, g: any) => sum + g.adults + g.children * 0.7,
+            0
+          );
+
+          const servingFactor = meal.portions / (meal.recipe.servings || 4);
+          const finalFactor = servingFactor * (1 + totalGuests / meal.portions);
+
+          for (const ingredient of meal.recipe.ingredients) {
+            // Translate category name (BUG-009 FIX)
+            const translatedCategory = translateCategory(ingredient.category);
+            const key = `${ingredient.name}|${ingredient.unit}|${translatedCategory}`;
+
+            const existing = ingredientMap.get(key);
+            if (existing) {
+              existing.quantity += ingredient.quantity * finalFactor;
+              // Track which recipes use this ingredient
+              if (!existing.recipeNames.includes(meal.recipe.title)) {
+                existing.recipeNames.push(meal.recipe.title);
+              }
+            } else {
+              ingredientMap.set(key, {
+                name: ingredient.name,
+                nameEn: ingredient.nameEn || undefined,
+                quantity: ingredient.quantity * finalFactor,
+                unit: ingredient.unit,
+                category: translatedCategory,  // Use translated category (BUG-009 FIX)
+                alternatives: ingredient.alternatives,
+                recipeNames: [meal.recipe.title]  // Track source recipe (BUG-014 FIX)
+              });
+            }
+          }
+        }
+
+        // Convert map to array and sort
+        const categoryOrder: Record<string, number> = {
+          'Boucherie': 1,
+          'Boulangerie': 2,
+          'Épicerie': 3,
+          'Fruits & Légumes': 4,
+          'Produits Laitiers': 5
+        };
+
+        const finalItems = Array.from(ingredientMap.values())
+          .sort((a, b) => {
+            const orderA = categoryOrder[a.category] || 999;
+            const orderB = categoryOrder[b.category] || 999;
+            return orderA - orderB;
+          })
+          .map((item, index) => ({
+            name: item.name,
+            nameEn: item.nameEn,
+            quantity: Math.round(item.quantity * 100) / 100,
+            unit: item.unit,
+            category: item.category,
+            alternatives: item.alternatives,
+            recipeNames: item.recipeNames,  // Include recipe names (BUG-014 FIX)
+            checked: false,
+            inStock: false,
+            order: index
+          }));
+
+        // Create shopping list
+        await prisma.shoppingList.create({
+          data: {
+            familyId: fullPlan.familyId,
+            weeklyPlanId: planId,
+            items: {
+              create: finalItems
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error auto-generating shopping list:', error);
+      // Don't fail validation if shopping list generation fails
+    }
 
     res.json({
       status: 'success',

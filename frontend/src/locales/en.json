@@ -417,6 +417,12 @@
   },
   "onboarding": {
     "title": "Welcome",
+    "welcome": "Welcome!",
+    "setupFamily": "Let's set up your family",
+    "familyName": "Family Name",
+    "familyNamePlaceholder": "The Smith Family",
+    "creating": "Creating...",
+    "continue": "Continue",
     "steps": {
       "family": "Family",
       "dietary": "Dietary requirements",
@@ -705,5 +711,16 @@
       "MEMBER": "Can comment and vote, limited editing",
       "CHILD": "Can comment and vote"
     }
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "Sorry, the page you're looking for doesn't exist or has been moved.",
+    "goBack": "Go Back",
+    "goHome": "Dashboard",
+    "suggestions": "Helpful pages:"
+  },
+  "navigation": {
+    "recipes": "Recipes",
+    "family": "Family"
   }
 }

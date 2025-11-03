@@ -13,11 +13,24 @@ interface AggregatedIngredient {
   containsGluten?: boolean;
   containsLactose?: boolean;
   allergens: string[];
+  recipeNames?: string[];  // BUG-014 FIX: Track source recipes
 }
 
 export const generateShoppingList = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { weeklyPlanId } = req.params;
+
+    // Category translation map (BUG-009 FIX)
+    const translateCategory = (category: string): string => {
+      const translations: Record<string, string> = {
+        'meat': 'Boucherie',
+        'pantry': 'Épicerie',
+        'produce': 'Fruits & Légumes',
+        'dairy': 'Produits Laitiers',
+        'bakery': 'Boulangerie'
+      };
+      return translations[category] || category;
+    };
 
     const plan = await prisma.weeklyPlan.findUnique({
       where: { id: weeklyPlanId },
@@ -68,22 +81,29 @@ export const generateShoppingList = asyncHandler(
         const finalFactor = servingFactor * (1 + totalGuests / meal.portions);
 
         for (const ingredient of meal.recipe.ingredients) {
-          const key = `${ingredient.name}|${ingredient.unit}|${ingredient.category}`;
+          // Translate category name (BUG-009 FIX)
+          const translatedCategory = translateCategory(ingredient.category);
+          const key = `${ingredient.name}|${ingredient.unit}|${translatedCategory}`;
 
           const existing = ingredientMap.get(key);
           if (existing) {
             existing.quantity += ingredient.quantity * finalFactor;
+            // Track which recipes use this ingredient (BUG-014 FIX)
+            if (existing.recipeNames && !existing.recipeNames.includes(meal.recipe.title)) {
+              existing.recipeNames.push(meal.recipe.title);
+            }
           } else {
             ingredientMap.set(key, {
               name: ingredient.name,
               nameEn: ingredient.nameEn || undefined,
               quantity: ingredient.quantity * finalFactor,
               unit: ingredient.unit,
-              category: ingredient.category,
+              category: translatedCategory,  // Use translated category (BUG-009 FIX)
               alternatives: ingredient.alternatives,
               containsGluten: ingredient.containsGluten,
               containsLactose: ingredient.containsLactose,
-              allergens: ingredient.allergens
+              allergens: ingredient.allergens,
+              recipeNames: [meal.recipe.title]  // Track source recipe (BUG-014 FIX)
             });
           }
         }
@@ -98,7 +118,9 @@ export const generateShoppingList = asyncHandler(
 
         for (const mealComponent of meal.mealComponents) {
           const component = mealComponent.component;
-          const key = `${component.name}|${mealComponent.unit}|${component.shoppingCategory}`;
+          // Translate category name (BUG-009 FIX)
+          const translatedCategory = translateCategory(component.shoppingCategory);
+          const key = `${component.name}|${mealComponent.unit}|${translatedCategory}`;
 
           const existing = ingredientMap.get(key);
           if (existing) {
@@ -109,11 +131,12 @@ export const generateShoppingList = asyncHandler(
               nameEn: component.nameEn || undefined,
               quantity: mealComponent.quantity * componentFactor,
               unit: mealComponent.unit,
-              category: component.shoppingCategory,
+              category: translatedCategory,  // Use translated category (BUG-009 FIX)
               alternatives: [],
               containsGluten: !component.glutenFree,
               containsLactose: !component.lactoseFree,
-              allergens: component.allergens
+              allergens: component.allergens,
+              recipeNames: []  // Components don't have specific recipes
             });
           }
         }
@@ -159,9 +182,15 @@ export const generateShoppingList = asyncHandler(
       // Round to reasonable quantities
       finalQuantity = roundQuantity(finalQuantity, item.unit);
 
+      // Only include fields that exist in ShoppingItem schema
       return {
-        ...item,
+        name: item.name,
+        nameEn: item.nameEn,
         quantity: finalQuantity,
+        unit: item.unit,
+        category: item.category,
+        alternatives: item.alternatives || [],
+        recipeNames: item.recipeNames || [],  // BUG-014 FIX: Include source recipes
         inStock,
         order: index
       };

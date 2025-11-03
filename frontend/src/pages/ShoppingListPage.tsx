@@ -12,7 +12,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface ShoppingItem {
   id: string;
-  ingredientName: string;
+  name: string;
   quantity: number;
   unit: string;
   category: string;
@@ -62,7 +62,7 @@ export default function ShoppingListPage() {
   };
 
   const handleBack = () => {
-    navigate(`/weekly-plan/${planId}`);
+    navigate(`/plan/${planId}`);
   };
 
   if (isLoading || !shoppingData) {
@@ -233,7 +233,7 @@ export default function ShoppingListPage() {
                       </button>
                       <div className="flex-1">
                         <div className={`font-medium ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
-                          {item.quantity} {item.unit} {item.ingredientName}
+                          {item.quantity} {item.unit} {item.name}
                         </div>
                         {item.recipeNames && item.recipeNames.length > 0 && (
                           <div className="text-xs text-muted-foreground mt-1">
@@ -281,7 +281,7 @@ export default function ShoppingListPage() {
                       </button>
                       <div className="flex-1">
                         <div className={`font-medium ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
-                          {item.quantity} {item.unit} {item.ingredientName}
+                          {item.quantity} {item.unit} {item.name}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
                           {t('shoppingList.categoryLabel', { category: item.category })}
@@ -306,7 +306,7 @@ export default function ShoppingListPage() {
                 <li key={item.id} className="flex items-start gap-3">
                   <span className="flex-shrink-0">☐</span>
                   <span>
-                    {item.quantity} {item.unit} {item.ingredientName}
+                    {item.quantity} {item.unit} {item.name}
                   </span>
                 </li>
               ))}

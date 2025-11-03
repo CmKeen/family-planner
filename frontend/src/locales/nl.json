@@ -417,6 +417,12 @@
   },
   "onboarding": {
     "title": "Welkom",
+    "welcome": "Welkom!",
+    "setupFamily": "Laten we uw gezin instellen",
+    "familyName": "Gezinsnaam",
+    "familyNamePlaceholder": "De familie Jansen",
+    "creating": "Maken...",
+    "continue": "Doorgaan",
     "steps": {
       "family": "Gezin",
       "dietary": "Dieetwensen",
@@ -706,5 +712,16 @@
       "MEMBER": "Kan opmerkingen plaatsen en stemmen, beperkte bewerkingsmogelijkheden",
       "CHILD": "Kan opmerkingen plaatsen en stemmen"
     }
+  },
+  "notFound": {
+    "title": "Pagina niet gevonden",
+    "description": "Sorry, de pagina die u zoekt bestaat niet of is verplaatst.",
+    "goBack": "Terug",
+    "goHome": "Dashboard",
+    "suggestions": "Nuttige pagina's:"
+  },
+  "navigation": {
+    "recipes": "Recepten",
+    "family": "Familie"
   }
 }

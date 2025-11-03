@@ -13,6 +13,7 @@ import RecipesPage from './pages/RecipesPage';
 import ShoppingListPage from './pages/ShoppingListPage';
 import FamilySettingsPage from './pages/FamilySettingsPage';
 import InvitationsPage from './pages/InvitationsPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,6 +103,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* Catch-all route for 404 errors */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
