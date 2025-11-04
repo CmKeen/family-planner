@@ -450,6 +450,7 @@ model ShoppingItem {
   category          String        // aisle/department
 
   alternatives      String[]      // compliant alternatives
+  recipeNames       String[]      @default([])  // Which recipes use this ingredient
 
   checked           Boolean       @default(false)
 
