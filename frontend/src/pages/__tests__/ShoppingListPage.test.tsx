@@ -6,6 +6,47 @@ import userEvent from '@testing-library/user-event';
 import ShoppingListPage from '../ShoppingListPage';
 import * as api from '@/lib/api';
 
+// Mock i18next
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: any) => {
+      const translations: Record<string, string> = {
+        'shoppingList.title': 'Liste de courses',
+        'shoppingList.generatedAt': 'Générée le {{date}}',
+        'shoppingList.generatedOn': 'Générée le {{date}}',
+        'shoppingList.progress.title': 'Progression',
+        'shoppingList.progress.items': '{{checked}} sur {{total}} articles',
+        'shoppingList.viewMode.category': 'Par catégorie',
+        'shoppingList.viewMode.recipe': 'Par recette',
+        'shoppingList.categories.meats': 'Viandes',
+        'shoppingList.categories.produce': 'Fruits et légumes',
+        'shoppingList.categories.pantry': 'Épicerie',
+        'shoppingList.categories.dairy': 'Produits laitiers',
+        'shoppingList.empty': 'Aucun article dans la liste',
+        'shoppingList.loading': 'Chargement de la liste',
+        'shoppingList.actions.print': 'Imprimer',
+        'shoppingList.actions.back': 'Retour',
+        'shoppingList.item.for': 'Pour',
+        'common.article': 'article',
+        'common.articles': 'articles'
+      };
+
+      let value = translations[key] || key;
+
+      // Handle interpolation with actual values
+      if (params) {
+        Object.keys(params).forEach(paramKey => {
+          value = value.replace(new RegExp(`\\{\\{${paramKey}\\}\\}`, 'g'), params[paramKey]);
+        });
+      }
+
+      return value;
+    },
+    i18n: { language: 'fr' }
+  }),
+  I18nextProvider: ({ children }: { children: React.ReactNode }) => children
+}));
+
 // Mock the API
 vi.mock('@/lib/api', () => ({
   shoppingListAPI: {
