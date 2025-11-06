@@ -104,6 +104,7 @@
     },
     "tabs": {
       "plan": "Planning",
+      "shopping": "Courses",
       "activity": "Activité"
     },
     "portions": "{{count}} portions",

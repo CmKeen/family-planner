@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { weeklyPlanAPI, recipeAPI, mealTemplateAPI } from '@/lib/api';
-import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, History, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, History, AlertCircle, ShoppingCart } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { MealComponentEditor } from '@/components/MealComponentEditor';
 import { MealComments } from '@/components/MealComments';
 import { CommentButton } from '@/components/CommentButton';
 import { PlanActivityFeed } from '@/components/PlanActivityFeed';
+import ShoppingListView from '@/components/ShoppingListView';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -95,7 +96,7 @@ export default function WeeklyPlanPage() {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
-  const [activeTab, setActiveTab] = useState<'plan' | 'activity'>('plan');
+  const [activeTab, setActiveTab] = useState<'plan' | 'shopping' | 'activity'>('plan');
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [portionDialogOpen, setPortionDialogOpen] = useState(false);
@@ -282,9 +283,6 @@ export default function WeeklyPlanPage() {
     }
   };
 
-  const handleNavigateToShopping = () => {
-    navigate(`/shopping/${planData?.id}`);
-  };
 
   const handleSwitchTemplate = () => {
     setSwitchTemplateDialogOpen(true);
@@ -761,6 +759,21 @@ export default function WeeklyPlanPage() {
               {t('weeklyPlan.tabs.plan')}
             </div>
           </button>
+          {planData?.status === 'VALIDATED' && (
+            <button
+              onClick={() => setActiveTab('shopping')}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === 'shopping'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                {t('weeklyPlan.tabs.shopping')}
+              </div>
+            </button>
+          )}
           {permissions.canViewAuditLog && (
             <button
               onClick={() => setActiveTab('activity')}
@@ -778,6 +791,11 @@ export default function WeeklyPlanPage() {
           )}
         </div>
       </div>
+
+      {/* Shopping Tab */}
+      {activeTab === 'shopping' && planData?.status === 'VALIDATED' && (
+        <ShoppingListView planId={planId!} showPrintButton={true} />
+      )}
 
       {/* Activity Feed Tab */}
       {activeTab === 'activity' && permissions.canViewAuditLog && (
@@ -873,9 +891,6 @@ export default function WeeklyPlanPage() {
             </Button>
           </>
         )}
-        <Button onClick={handleNavigateToShopping}>
-          {t('weeklyPlan.actions.viewShoppingList')}
-        </Button>
       </div>
       {/* Meal Grid */}
       <div className="space-y-4">

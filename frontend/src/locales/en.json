@@ -104,6 +104,7 @@
     },
     "tabs": {
       "plan": "Plan",
+      "shopping": "Shopping",
       "activity": "Activity"
     },
     "portions": "{{count}} portions",

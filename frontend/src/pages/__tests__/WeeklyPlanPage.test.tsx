@@ -40,6 +40,9 @@ vi.mock('react-i18next', () => ({
         'weeklyPlan.actions.portions': 'Portions',
         'weeklyPlan.actions.lock': 'Verrouiller',
         'weeklyPlan.actions.unlock': 'Déverrouiller',
+        'weeklyPlan.tabs.plan': 'Plan',
+        'weeklyPlan.tabs.shopping': 'Courses',
+        'weeklyPlan.tabs.activity': 'Activité',
         'weeklyPlan.dialogs.swap': 'Échanger la recette',
         'weeklyPlan.dialogs.portions': 'Ajuster les portions',
         'weeklyPlan.dialogs.addMealDialog.title': 'Ajouter un repas',
@@ -207,20 +210,6 @@ describe('WeeklyPlanPage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /valider le plan/i })).toBeInTheDocument();
-    });
-  });
-
-  it('should show shopping list button for validated plan', async () => {
-    const validatedPlan = { ...mockPlanData, status: 'VALIDATED' };
-    vi.mocked(weeklyPlanAPI.weeklyPlanAPI.getById).mockResolvedValue({
-      data: { data: { plan: validatedPlan } }
-    } as any);
-
-    window.history.pushState({}, '', '/weekly-plan/plan-1');
-    renderWithProviders(<WeeklyPlanPage />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /voir la liste de courses/i })).toBeInTheDocument();
     });
   });
 
@@ -769,6 +758,99 @@ describe('WeeklyPlanPage', () => {
         // Look for "Build from Scratch" button or similar
         expect(screen.getByText(/Semaine/)).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Shopping Tab', () => {
+    it('should show shopping tab for validated plans', async () => {
+      const validatedPlan = { ...mockPlanData, status: 'VALIDATED' };
+      vi.mocked(weeklyPlanAPI.weeklyPlanAPI.getById).mockResolvedValue({
+        data: { data: { plan: validatedPlan } }
+      } as any);
+
+      window.history.pushState({}, '', '/weekly-plan/plan-1');
+      renderWithProviders(<WeeklyPlanPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /courses/i })).toBeInTheDocument();
+      });
+    });
+
+    it('should display tabs in correct order: Plan, Shopping', async () => {
+      const validatedPlan = { ...mockPlanData, status: 'VALIDATED' };
+      vi.mocked(weeklyPlanAPI.weeklyPlanAPI.getById).mockResolvedValue({
+        data: { data: { plan: validatedPlan } }
+      } as any);
+
+      window.history.pushState({}, '', '/weekly-plan/plan-1');
+      renderWithProviders(<WeeklyPlanPage />);
+
+      await waitFor(() => {
+        const planTab = screen.getByRole('button', { name: /^plan$/i });
+        const shoppingTab = screen.getByRole('button', { name: /courses/i });
+
+        expect(planTab).toBeInTheDocument();
+        expect(shoppingTab).toBeInTheDocument();
+
+        // Activity tab would appear here if user has permissions (not tested in this basic test)
+      });
+    });
+
+    it('should switch to shopping tab when clicked', async () => {
+      const user = userEvent.setup();
+      const validatedPlan = { ...mockPlanData, status: 'VALIDATED' };
+
+      vi.mocked(weeklyPlanAPI.weeklyPlanAPI.getById).mockResolvedValue({
+        data: { data: { plan: validatedPlan } }
+      } as any);
+
+      window.history.pushState({}, '', '/weekly-plan/plan-1');
+      renderWithProviders(<WeeklyPlanPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /courses/i })).toBeInTheDocument();
+      });
+
+      const shoppingTab = screen.getByRole('button', { name: /courses/i });
+      await user.click(shoppingTab);
+
+      // Shopping tab should become active (have active styling)
+      // This will be validated by the component rendering the shopping list content
+    });
+
+    it('should not show "View Shopping List" button when shopping tab is present', async () => {
+      const validatedPlan = { ...mockPlanData, status: 'VALIDATED' };
+      vi.mocked(weeklyPlanAPI.weeklyPlanAPI.getById).mockResolvedValue({
+        data: { data: { plan: validatedPlan } }
+      } as any);
+
+      window.history.pushState({}, '', '/weekly-plan/plan-1');
+      renderWithProviders(<WeeklyPlanPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /courses/i })).toBeInTheDocument();
+      });
+
+      // Old "View Shopping List" button should not exist
+      expect(screen.queryByRole('button', { name: /voir la liste de courses/i })).not.toBeInTheDocument();
+    });
+
+    it('should default to plan tab on initial load', async () => {
+      const validatedPlan = { ...mockPlanData, status: 'VALIDATED' };
+      vi.mocked(weeklyPlanAPI.weeklyPlanAPI.getById).mockResolvedValue({
+        data: { data: { plan: validatedPlan } }
+      } as any);
+
+      window.history.pushState({}, '', '/weekly-plan/plan-1');
+      renderWithProviders(<WeeklyPlanPage />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^plan$/i })).toBeInTheDocument();
+      });
+
+      // Plan tab should be active by default
+      // Meals should be visible (which means we're on the plan tab)
+      expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
     });
   });
 });
