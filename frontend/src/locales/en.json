@@ -157,6 +157,10 @@
     "title": "Shopping List",
     "loading": "Loading list...",
     "generatedOn": "Generated on {{date}}",
+    "notFound": "Shopping list not found",
+    "notFoundDescription": "The shopping list doesn't exist yet for this plan. Click the button below to generate it.",
+    "generate": "Generate shopping list",
+    "generating": "Generating...",
     "progress": {
       "title": "Progress",
       "items": "{{checked}} of {{total}} items"

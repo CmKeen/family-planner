@@ -35,13 +35,23 @@ export default function ShoppingListPage() {
   const [viewMode, setViewMode] = useState<'category' | 'recipe'>('category');
 
   // Fetch shopping list
-  const { data: shoppingData, isLoading } = useQuery({
+  const { data: shoppingData, isLoading, error, refetch } = useQuery({
     queryKey: ['shoppingList', planId],
     queryFn: async () => {
       const response = await shoppingListAPI.getByPlanId(planId!);
       return response.data.data.shoppingList as ShoppingList;
     },
-    enabled: !!planId
+    enabled: !!planId,
+    retry: false // Don't retry on 404
+  });
+
+  // Generate shopping list mutation
+  const generateMutation = useMutation({
+    mutationFn: () => shoppingListAPI.generate(planId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shoppingList', planId] });
+      refetch();
+    }
   });
 
   // Toggle item checked mutation
@@ -65,13 +75,43 @@ export default function ShoppingListPage() {
     navigate(`/plan/${planId}`);
   };
 
-  if (isLoading || !shoppingData) {
+  if (isLoading) {
     return (
       <div className="container mx-auto p-4 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">{t('shoppingList.loading')}</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show generate button if shopping list doesn't exist (404 error)
+  if (error || !shoppingData) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="mb-6 flex items-center justify-between">
+          <Button variant="ghost" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t('shoppingList.back')}
+          </Button>
+          <LanguageSwitcher />
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <ShoppingCart className="h-16 w-16 text-muted-foreground mb-4" />
+            <h2 className="text-2xl font-semibold mb-2">{t('shoppingList.notFound')}</h2>
+            <p className="text-muted-foreground mb-6 text-center max-w-md">
+              {t('shoppingList.notFoundDescription')}
+            </p>
+            <Button
+              onClick={() => generateMutation.mutate()}
+              disabled={generateMutation.isPending}
+            >
+              {generateMutation.isPending ? t('shoppingList.generating') : t('shoppingList.generate')}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

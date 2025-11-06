@@ -5,6 +5,7 @@ import { AuthRequest } from '../middleware/auth';
 import { Prisma } from '@prisma/client';
 import { logChange } from '../utils/auditLogger.js';
 import { notificationService } from '../services/notification.service.js';
+import { generateShoppingList as generateShoppingListService } from '../services/shoppingList.service.js';
 
 // Type aliases for Prisma enums
 type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
@@ -159,6 +160,9 @@ export const generateAutoPlan = asyncHandler(
       throw new AppError('Family not found', 404);
     }
 
+    // Variable to store plan ID for shopping list generation
+    let createdPlanId: string;
+
     // Get meal schedule template
     let template;
     if (templateId) {
@@ -243,6 +247,9 @@ export const generateAutoPlan = asyncHandler(
         templateId: template.id
       }
     });
+
+    // Store plan ID for shopping list generation
+    createdPlanId = weeklyPlan.id;
 
     // Generate meals based on template schedule
     const meals = [];
@@ -433,6 +440,14 @@ export const generateAutoPlan = asyncHandler(
       );
     }
 
+    // Auto-generate shopping list on plan creation (OBU-7 FIX)
+    try {
+      await generateShoppingListService(createdPlanId);
+    } catch (error) {
+      console.error('Error auto-generating shopping list:', error);
+      // Don't fail plan creation if shopping list generation fails
+    }
+
     res.status(201).json({
       status: 'success',
       data: { plan: completePlan }
@@ -536,6 +551,14 @@ export const generateExpressPlan = asyncHandler(
         date,
         createdByName
       );
+    }
+
+    // Auto-generate shopping list on plan creation (OBU-7 FIX)
+    try {
+      await generateShoppingListService(weeklyPlan.id);
+    } catch (error) {
+      console.error('Error auto-generating shopping list:', error);
+      // Don't fail plan creation if shopping list generation fails
     }
 
     res.status(201).json({
@@ -863,138 +886,7 @@ export const validatePlan = asyncHandler(
 
     // Auto-generate shopping list on validation (BUG-015 FIX)
     try {
-      // Category translation map (BUG-009 FIX)
-      const translateCategory = (category: string): string => {
-        const translations: Record<string, string> = {
-          'meat': 'Boucherie',
-          'pantry': 'Épicerie',
-          'produce': 'Fruits & Légumes',
-          'dairy': 'Produits Laitiers',
-          'bakery': 'Boulangerie'
-        };
-        return translations[category] || category;
-      };
-
-      // Check if shopping list already exists
-      const existingList = await prisma.shoppingList.findFirst({
-        where: { weeklyPlanId: planId }
-      });
-
-      // Delete existing list if present
-      if (existingList) {
-        await prisma.shoppingList.delete({
-          where: { id: existingList.id }
-        });
-      }
-
-      // Fetch full plan data with ingredients for shopping list generation
-      const fullPlan = await prisma.weeklyPlan.findUnique({
-        where: { id: planId },
-        include: {
-          family: {
-            include: {
-              dietProfile: true,
-              inventory: true
-            }
-          },
-          meals: {
-            include: {
-              recipe: {
-                include: {
-                  ingredients: true
-                }
-              },
-              mealComponents: {
-                include: {
-                  component: true
-                }
-              },
-              guests: true
-            }
-          }
-        }
-      });
-
-      if (fullPlan) {
-        // Aggregate ingredients
-        const ingredientMap = new Map<string, any>();
-
-        for (const meal of fullPlan.meals) {
-          if (meal.isSchoolMeal || meal.isExternal || !meal.recipe) continue;
-
-          const totalGuests = meal.guests.reduce(
-            (sum: number, g: any) => sum + g.adults + g.children * 0.7,
-            0
-          );
-
-          const servingFactor = meal.portions / (meal.recipe.servings || 4);
-          const finalFactor = servingFactor * (1 + totalGuests / meal.portions);
-
-          for (const ingredient of meal.recipe.ingredients) {
-            // Translate category name (BUG-009 FIX)
-            const translatedCategory = translateCategory(ingredient.category);
-            const key = `${ingredient.name}|${ingredient.unit}|${translatedCategory}`;
-
-            const existing = ingredientMap.get(key);
-            if (existing) {
-              existing.quantity += ingredient.quantity * finalFactor;
-              // Track which recipes use this ingredient
-              if (!existing.recipeNames.includes(meal.recipe.title)) {
-                existing.recipeNames.push(meal.recipe.title);
-              }
-            } else {
-              ingredientMap.set(key, {
-                name: ingredient.name,
-                nameEn: ingredient.nameEn || undefined,
-                quantity: ingredient.quantity * finalFactor,
-                unit: ingredient.unit,
-                category: translatedCategory,  // Use translated category (BUG-009 FIX)
-                alternatives: ingredient.alternatives,
-                recipeNames: [meal.recipe.title]  // Track source recipe (BUG-014 FIX)
-              });
-            }
-          }
-        }
-
-        // Convert map to array and sort
-        const categoryOrder: Record<string, number> = {
-          'Boucherie': 1,
-          'Boulangerie': 2,
-          'Épicerie': 3,
-          'Fruits & Légumes': 4,
-          'Produits Laitiers': 5
-        };
-
-        const finalItems = Array.from(ingredientMap.values())
-          .sort((a, b) => {
-            const orderA = categoryOrder[a.category] || 999;
-            const orderB = categoryOrder[b.category] || 999;
-            return orderA - orderB;
-          })
-          .map((item, index) => ({
-            name: item.name,
-            nameEn: item.nameEn,
-            quantity: Math.round(item.quantity * 100) / 100,
-            unit: item.unit,
-            category: item.category,
-            alternatives: item.alternatives,
-            recipeNames: item.recipeNames,  // Include recipe names (BUG-014 FIX)
-            checked: false,
-            inStock: false,
-            order: index
-          }));
-
-        // Create shopping list
-        await prisma.shoppingList.create({
-          data: {
-            familyId: fullPlan.familyId,
-            weeklyPlanId: planId,
-            items: {
-              create: finalItems
-            }
-          }
-        });
-      }
+      await generateShoppingListService(planId);
     } catch (error) {
       console.error('Error auto-generating shopping list:', error);
       // Don't fail validation if shopping list generation fails

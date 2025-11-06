@@ -849,7 +849,7 @@ export default function WeeklyPlanPage() {
 
       {/* Action Buttons */}
       <div className="mb-6 flex flex-wrap gap-2">
-        {planData.status === 'DRAFT' ? (
+        {planData.status === 'DRAFT' && (
           <>
             <Button
               onClick={handleValidate}
@@ -872,11 +872,10 @@ export default function WeeklyPlanPage() {
               {t('weeklyPlan.actions.addMeal')}
             </Button>
           </>
-        ) : (
-          <Button onClick={handleNavigateToShopping}>
-            {t('weeklyPlan.actions.viewShoppingList')}
-          </Button>
         )}
+        <Button onClick={handleNavigateToShopping}>
+          {t('weeklyPlan.actions.viewShoppingList')}
+        </Button>
       </div>
       {/* Meal Grid */}
       <div className="space-y-4">

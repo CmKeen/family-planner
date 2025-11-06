@@ -157,6 +157,10 @@
     "title": "Boodschappenlijst",
     "loading": "Lijst laden...",
     "generatedOn": "Gegenereerd op {{date}}",
+    "notFound": "Boodschappenlijst niet gevonden",
+    "notFoundDescription": "De boodschappenlijst bestaat nog niet voor dit plan. Klik op de knop hieronder om deze te genereren.",
+    "generate": "Boodschappenlijst genereren",
+    "generating": "Genereren...",
     "progress": {
       "title": "Voortgang",
       "items": "{{checked}} van {{total}} items"

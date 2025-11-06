@@ -157,6 +157,10 @@
     "title": "Liste de courses",
     "loading": "Chargement de la liste...",
     "generatedOn": "Générée le {{date}}",
+    "notFound": "Liste de courses introuvable",
+    "notFoundDescription": "La liste de courses n'existe pas encore pour ce plan. Cliquez sur le bouton ci-dessous pour la générer.",
+    "generate": "Générer la liste de courses",
+    "generating": "Génération en cours...",
     "progress": {
       "title": "Progression",
       "items": "{{checked}} sur {{total}} articles"
