@@ -18,7 +18,6 @@ import foodComponentRoutes from './routes/foodComponent.routes.js';
 import healthRoutes from './routes/health.routes.js';
 import { createAdminRouter } from './routes/admin.routes.js';
 import adminApiRoutes from './routes/admin.api.routes.js';
-import { authenticateAdmin } from './middleware/adminAuth.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import {
   securityHeaders,
@@ -49,13 +48,8 @@ app.use(getEnvironmentLimiter());
 // CORS with security configuration
 app.use(cors(getCorsOptions(env.CORS_ORIGIN)));
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' })); // Limit payload size
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Cookie parser (needed by AdminJS session)
 app.use(cookieParser());
-
-// Request sanitization
-app.use(sanitizeRequest);
 
 // Request logging (skip health checks to reduce noise)
 app.use(skipHealthCheck);
@@ -87,8 +81,15 @@ app.get('/api-docs.json', (req, res) => {
   res.send(swaggerSpec);
 });
 
-// Admin Panel (protected by admin authentication)
-app.use('/admin', authenticateAdmin, createAdminRouter());
+// Admin Panel (MUST be before body parser middleware)
+app.use('/admin', createAdminRouter());
+
+// Body parsing middleware (MUST be after Admin Panel)
+app.use(express.json({ limit: '10mb' })); // Limit payload size
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request sanitization
+app.use(sanitizeRequest);
 
 // Admin API routes (protected by admin authentication)
 app.use('/api/admin', adminApiRoutes);

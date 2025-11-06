@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../config/admin';
 import { AppError } from './errorHandler';
 
@@ -62,9 +63,49 @@ export const authenticateAdmin = async (
  */
 export const adminAuthProvider = {
   authenticate: async (email: string, password: string) => {
-    // This is handled by our JWT system, so we return null
-    // Users must be authenticated via the API and then access the admin panel
-    return null;
+    try {
+      console.log('[AdminAuth] Attempting authentication for:', email);
+
+      // Find user by email
+      const user = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (!user) {
+        console.log('[AdminAuth] User not found');
+        return null;
+      }
+
+      console.log('[AdminAuth] User found, isAdmin:', user.isAdmin);
+
+      // Check if user is an admin
+      if (!user.isAdmin) {
+        console.log('[AdminAuth] User is not an admin');
+        return null;
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      console.log('[AdminAuth] Password valid:', isPasswordValid);
+
+      if (!isPasswordValid) {
+        return null;
+      }
+
+      console.log('[AdminAuth] Authentication successful');
+
+      // Return user object without password
+      return {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isAdmin: user.isAdmin
+      };
+    } catch (error) {
+      console.error('[AdminAuth] Error during authentication:', error);
+      return null;
+    }
   },
 
   /**

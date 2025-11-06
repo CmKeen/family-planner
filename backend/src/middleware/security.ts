@@ -108,6 +108,12 @@ export const getCorsOptions = (allowedOrigin: string) => ({
     // Support multiple origins (comma-separated)
     const allowedOrigins = allowedOrigin.split(',').map(o => o.trim());
 
+    // Always allow same-origin requests (for admin panel)
+    const backendUrl = `http://localhost:${process.env.PORT || 3001}`;
+    if (origin === backendUrl) {
+      return callback(null, true);
+    }
+
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {

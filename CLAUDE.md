@@ -1,6 +1,6 @@
 # Family Planner - Codebase Documentation
 
-**Last Updated:** October 25, 2025
+**Last Updated:** November 6, 2025
 
 > A full-stack family meal planning SaaS with multi-dietary constraints, flexible scheduling, and smart recipe selection.
 
@@ -82,6 +82,27 @@ docker-compose exec frontend npm test
 **Infrastructure:**
 - Docker + Docker Compose
 - GitHub Actions CI/CD
+- Linear (Project Management)
+
+---
+
+## 📋 Project Management
+
+### Linear Integration
+
+**Team:** Obuone
+**Project:** Family Planner
+- **Project ID:** `80e2d151-e5db-4ee9-bec5-e04e1e93e268`
+- **Summary:** "The preferred meal planning tool of awesome families"
+- **Status:** In Progress
+- **Priority:** High
+- **Lead:** olivier@obuone.be
+- **URL:** https://linear.app/obuone/project/family-planner-b6df5c153775
+
+**Usage:**
+- Claude Code has Linear MCP integration enabled
+- Can create/update issues, manage tasks, and track project progress
+- All development work should be tracked in Linear
 
 ---
 
@@ -561,7 +582,21 @@ const { t, i18n } = useTranslation();
 
 ## 👨‍💼 Admin Panel
 
-**Access:** `http://localhost:3001/admin` (requires `user.isAdmin = true`)
+**Access:** `http://localhost:3001/admin`
+
+### Authentication
+
+The admin panel now has a **dedicated login page** at `/admin/login`. Only users with `isAdmin = true` can access the admin panel.
+
+**Login credentials:**
+- Email: Your admin user email
+- Password: Your user password
+
+**Access control:**
+- Non-authenticated users are redirected to `/admin/login`
+- Non-admin users cannot login (authentication fails)
+- Session-based authentication (separate from API JWT tokens)
+- Automatic logout with session cleanup
 
 ### Features
 - Custom dashboard
@@ -581,11 +616,14 @@ const { t, i18n } = useTranslation();
 
 ### Admin User Management
 ```bash
-# Grant admin
+# Grant admin privileges
 docker-compose exec backend npm run make-admin -- user@example.com
 
-# Revoke admin
+# Revoke admin privileges
 docker-compose exec backend npm run revoke-admin -- user@example.com
+
+# Note: Users must exist before granting admin privileges
+# Register via API: POST /api/auth/register
 ```
 
 ---
