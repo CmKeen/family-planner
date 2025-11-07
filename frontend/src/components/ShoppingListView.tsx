@@ -227,7 +227,7 @@ export default function ShoppingListView({ planId, showPrintButton = true }: Sho
 
       {/* Category View */}
       {viewMode === 'category' && (
-        <div className="space-y-6">
+        <div className="space-y-6 print:hidden">
           {sortedCategories.map(category => (
             <Card key={category}>
               <CardHeader>
@@ -275,7 +275,7 @@ export default function ShoppingListView({ planId, showPrintButton = true }: Sho
 
       {/* Recipe View */}
       {viewMode === 'recipe' && (
-        <div className="space-y-6">
+        <div className="space-y-6 print:hidden">
           {Object.entries(itemsByRecipe).map(([recipeName, items]) => (
             <Card key={recipeName}>
               <CardHeader>
