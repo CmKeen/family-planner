@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { weeklyPlanAPI, recipeAPI, mealTemplateAPI } from '@/lib/api';
-import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, History, AlertCircle, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, History, AlertCircle, ShoppingCart, BookOpen, X, ChevronRight } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { MealComponentEditor } from '@/components/MealComponentEditor';
 import { MealComments } from '@/components/MealComments';
@@ -526,57 +526,78 @@ export default function WeeklyPlanPage() {
       );
     }
 
-    // No recipe and no components
+    // No recipe and no components - Card-Based Empty Slot UX
     if (!meal.recipe) {
       return (
-        <div key={meal.id} className="border rounded-lg p-4">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
-                {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
-              </div>
-              <h3 className="font-semibold text-muted-foreground">{t('weeklyPlan.noRecipe')}</h3>
-              <p className="text-sm text-muted-foreground">
-                {t('weeklyPlan.portions', { count: meal.portions })}
-              </p>
+        <div key={meal.id} className="border rounded-lg p-4 bg-white">
+          {/* Header: Meal Type + Portions */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
+              {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
             </div>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {t('weeklyPlan.emptySlot.title')}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t('weeklyPlan.portions', { count: meal.portions })}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleSwapClick(meal)}
-              disabled={planData.status !== 'DRAFT'}
-            >
-              <RefreshCw className="h-3 w-3 mr-1" />
-              {t('weeklyPlan.actions.selectRecipe')}
-            </Button>
-            {planData.status === 'DRAFT' && (
-              <Button
-                size="sm"
-                variant="outline"
+
+          {/* Action Cards Grid */}
+          {planData.status === 'DRAFT' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              {/* Primary Action: Browse Recipes */}
+              <button
+                onClick={() => handleSwapClick(meal)}
+                className="group relative flex flex-col items-start p-4 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  <span className="font-semibold text-sm text-primary">
+                    {t('weeklyPlan.emptySlot.browseRecipes.title')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t('weeklyPlan.emptySlot.browseRecipes.description')}
+                </p>
+                <ChevronRight className="absolute top-4 right-4 h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+
+              {/* Secondary Action: Build Custom */}
+              <button
                 onClick={() => {
                   setSelectedMeal(meal);
                   setComponentEditorOpen(true);
                 }}
-                className="bg-blue-50 hover:bg-blue-100"
+                className="group relative flex flex-col items-start p-4 rounded-lg border border-border bg-background hover:bg-accent/50 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <Sparkles className="h-3 w-3 mr-1" />
-                {t('mealBuilder.buildFromScratch')}
-              </Button>
-            )}
-            {planData.status === 'DRAFT' && (
-              <Button
-                size="sm"
-                variant="ghost"
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-5 w-5 text-foreground" />
+                  <span className="font-semibold text-sm">
+                    {t('weeklyPlan.emptySlot.buildCustom.title')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t('weeklyPlan.emptySlot.buildCustom.description')}
+                </p>
+                <ChevronRight className="absolute top-4 right-4 h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            </div>
+          )}
+
+          {/* Tertiary Action: Skip Meal */}
+          {planData.status === 'DRAFT' && (
+            <div className="flex justify-center pt-2 border-t">
+              <button
                 onClick={() => handleRemoveMeal(meal.id)}
-                className="text-destructive hover:text-destructive"
+                className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1.5 py-2 px-3 rounded hover:bg-destructive/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+                <X className="h-3.5 w-3.5" />
+                {t('weeklyPlan.emptySlot.skipMeal')}
+              </button>
+            </div>
+          )}
 
           {/* Comments Section */}
           {permissions.canComment && (

@@ -109,7 +109,19 @@
     },
     "portions": "{{count}} portions",
     "minutes": "{{count}} min",
-    "hours": "{{count}}h"
+    "hours": "{{count}}h",
+    "emptySlot": {
+      "title": "Choose how to fill this meal",
+      "browseRecipes": {
+        "title": "Browse Recipes",
+        "description": "Choose from your recipe library"
+      },
+      "buildCustom": {
+        "title": "Build Custom Meal",
+        "description": "Create from individual ingredients"
+      },
+      "skipMeal": "Skip this meal"
+    }
   },
   "recipes": {
     "title": "Recipe Catalog",

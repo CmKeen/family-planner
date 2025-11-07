@@ -109,7 +109,19 @@
     },
     "portions": "{{count}} porties",
     "minutes": "{{count}} min",
-    "hours": "{{count}}u"
+    "hours": "{{count}}u",
+    "emptySlot": {
+      "title": "Kies hoe je deze maaltijd wilt invullen",
+      "browseRecipes": {
+        "title": "Recepten Doorbladeren",
+        "description": "Kies uit je receptenbibliotheek"
+      },
+      "buildCustom": {
+        "title": "Aangepaste Maaltijd Maken",
+        "description": "Maak van individuele ingrediënten"
+      },
+      "skipMeal": "Deze maaltijd overslaan"
+    }
   },
   "recipes": {
     "title": "Receptencatalogus",

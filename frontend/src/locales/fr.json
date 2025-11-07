@@ -109,7 +109,19 @@
     },
     "portions": "{{count}} portions",
     "minutes": "{{count}} min",
-    "hours": "{{count}}h"
+    "hours": "{{count}}h",
+    "emptySlot": {
+      "title": "Choisissez comment remplir ce repas",
+      "browseRecipes": {
+        "title": "Parcourir les Recettes",
+        "description": "Choisissez dans votre bibliothèque de recettes"
+      },
+      "buildCustom": {
+        "title": "Créer un Repas Personnalisé",
+        "description": "Créez à partir d'ingrédients individuels"
+      },
+      "skipMeal": "Passer ce repas"
+    }
   },
   "recipes": {
     "title": "Catalogue de recettes",
