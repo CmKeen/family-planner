@@ -13,7 +13,7 @@ router.use(authenticate);
 
 router.post('/generate/:weeklyPlanId', generateShoppingList);
 router.get('/:weeklyPlanId', getShoppingList);
-router.put('/items/:itemId', updateShoppingItem);
-router.post('/items/:itemId/toggle', toggleItemChecked);
+router.put('/:listId/items/:itemId', updateShoppingItem);
+router.post('/:listId/items/:itemId/toggle', toggleItemChecked);
 
 export default router;

@@ -77,10 +77,13 @@ export const updateShoppingItem = asyncHandler(
 
 export const toggleItemChecked = asyncHandler(
   async (req: AuthRequest, res: Response) => {
-    const { itemId } = req.params;
+    const { listId, itemId } = req.params;
 
     const item = await prisma.shoppingItem.findUnique({
-      where: { id: itemId }
+      where: {
+        id: itemId,
+        shoppingListId: listId
+      }
     });
 
     if (!item) {
