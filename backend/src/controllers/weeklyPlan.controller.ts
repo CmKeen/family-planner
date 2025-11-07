@@ -3,9 +3,9 @@ import prisma from '../lib/prisma';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 import { Prisma } from '@prisma/client';
-import { logChange } from '../utils/auditLogger.js';
-import { notificationService } from '../services/notification.service.js';
-import { generateShoppingList as generateShoppingListService } from '../services/shoppingList.service.js';
+import { logChange } from '../utils/auditLogger';
+import { notificationService } from '../services/notification.service';
+import { generateShoppingList as generateShoppingListService } from '../services/shoppingList.service';
 
 // Type aliases for Prisma enums
 type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
@@ -721,19 +721,43 @@ export const lockMeal = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { mealId } = req.params;
     const { locked } = req.body;
+    const userId = req.user!.id;
 
+    // First, fetch the meal to get family context
+    const existingMeal = await prisma.meal.findUnique({
+      where: { id: mealId },
+      include: { weeklyPlan: true }
+    });
+
+    if (!existingMeal) {
+      throw new AppError('Meal not found', 404);
+    }
+
+    // Validate user is a member of the family
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        familyId: existingMeal.weeklyPlan.familyId,
+        userId
+      }
+    });
+
+    if (!member) {
+      throw new AppError('You do not have permission to modify this meal', 403);
+    }
+
+    // Now proceed with update
     const meal = await prisma.meal.update({
       where: { id: mealId },
       data: { locked },
       include: { weeklyPlan: true }
     });
 
-    // Log lock/unlock
+    // Log lock/unlock with validated member
     await logChange({
       weeklyPlanId: meal.weeklyPlanId,
       mealId: meal.id,
       changeType: locked ? 'MEAL_LOCKED' : 'MEAL_UNLOCKED',
-      memberId: req.member!.id,
+      memberId: member.id,
       description: locked ? 'Repas verrouillé' : 'Repas déverrouillé',
       descriptionEn: locked ? 'Meal locked' : 'Meal unlocked',
       descriptionNl: locked ? 'Maaltijd vergrendeld' : 'Maaltijd ontgrendeld'
@@ -916,6 +940,7 @@ export const addMeal = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { planId } = req.params;
     const { dayOfWeek, mealType, recipeId } = req.body;
+    const userId = req.user!.id;
 
     // Verify plan exists and is in DRAFT status
     const plan = await prisma.weeklyPlan.findUnique({
@@ -925,6 +950,18 @@ export const addMeal = asyncHandler(
 
     if (!plan) {
       throw new AppError('Weekly plan not found', 404);
+    }
+
+    // Validate user is a member of the family
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        familyId: plan.familyId,
+        userId
+      }
+    });
+
+    if (!member) {
+      throw new AppError('You do not have permission to modify this plan', 403);
     }
 
     if (plan.status !== 'DRAFT') {
@@ -958,12 +995,12 @@ export const addMeal = asyncHandler(
       }
     });
 
-    // Log meal addition
+    // Log meal addition with validated member
     await logChange({
       weeklyPlanId: planId,
       mealId: meal.id,
       changeType: 'MEAL_ADDED',
-      memberId: req.member!.id,
+      memberId: member.id,
       newValue: `${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
       description: `Repas ajouté: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
       descriptionEn: `Meal added: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
@@ -989,31 +1026,38 @@ export const addMeal = asyncHandler(
 export const removeMeal = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { planId, mealId } = req.params;
+    const userId = req.user!.id;
 
-    // Verify plan exists and is in DRAFT status
-    const plan = await prisma.weeklyPlan.findUnique({
-      where: { id: planId }
-    });
-
-    if (!plan) {
-      throw new AppError('Weekly plan not found', 404);
-    }
-
-    if (plan.status !== 'DRAFT') {
-      throw new AppError('Can only remove meals from draft plans', 400);
-    }
-
-    // Verify meal belongs to this plan
+    // Verify meal exists and belongs to this plan
     const meal = await prisma.meal.findFirst({
       where: {
         id: mealId,
         weeklyPlanId: planId
       },
-      include: { recipe: true }
+      include: {
+        recipe: true,
+        weeklyPlan: true
+      }
     });
 
     if (!meal) {
-      throw new AppError('Meal not found or does not belong to this plan', 404);
+      throw new AppError('Meal not found', 404);
+    }
+
+    // Validate user is a member of the family
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        familyId: meal.weeklyPlan.familyId,
+        userId
+      }
+    });
+
+    if (!member) {
+      throw new AppError('You do not have permission to modify this plan', 403);
+    }
+
+    if (meal.weeklyPlan.status !== 'DRAFT') {
+      throw new AppError('Can only remove meals from draft plans', 400);
     }
 
     // Ensure at least one meal remains
@@ -1029,12 +1073,12 @@ export const removeMeal = asyncHandler(
       where: { id: mealId }
     });
 
-    // Log meal removal
+    // Log meal removal with validated member
     await logChange({
       weeklyPlanId: planId,
       mealId,
       changeType: 'MEAL_REMOVED',
-      memberId: req.member!.id,
+      memberId: member.id,
       oldValue: `${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
       description: `Repas supprimé: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
       descriptionEn: `Meal removed: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
