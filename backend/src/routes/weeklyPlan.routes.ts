@@ -6,6 +6,7 @@ import {
   generateAutoPlan,
   generateExpressPlan,
   updateMeal,
+  adjustMealPortions,
   swapMeal,
   lockMeal,
   addAttendance,
@@ -43,6 +44,7 @@ router.get('/:id', getWeeklyPlan);
 router.post('/:familyId/generate', intensiveOperationLimiter, generateAutoPlan);
 router.post('/:familyId/generate-express', intensiveOperationLimiter, generateExpressPlan);
 router.put('/:planId/meals/:mealId', updateMeal);
+router.post('/:planId/meals/:mealId/adjust-portions', adjustMealPortions);
 router.post('/:planId/meals/:mealId/swap', swapMeal);
 router.post('/:planId/meals/:mealId/lock', lockMeal);
 router.post('/:planId/meals/:mealId/attendance', addAttendance);

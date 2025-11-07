@@ -650,6 +650,76 @@ export const updateMeal = asyncHandler(
   }
 );
 
+export const adjustMealPortions = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { mealId } = req.params;
+    const { portions } = req.body;
+    const userId = req.user!.id;
+
+    // Validate portions
+    if (!portions || typeof portions !== 'number' || portions < 1 || !Number.isInteger(portions)) {
+      throw new AppError('Portions must be a positive integer', 400);
+    }
+
+    // Fetch old meal data for audit logging
+    const oldMeal = await prisma.meal.findUnique({
+      where: { id: mealId },
+      include: { recipe: true, weeklyPlan: true }
+    });
+
+    if (!oldMeal) {
+      throw new AppError('Meal not found', 404);
+    }
+
+    // Check if user is a member of the family
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        familyId: oldMeal.weeklyPlan.familyId,
+        userId
+      }
+    });
+
+    if (!member) {
+      throw new AppError('You do not have permission to modify this meal', 403);
+    }
+
+    // Update meal portions
+    const meal = await prisma.meal.update({
+      where: { id: mealId },
+      data: { portions },
+      include: {
+        recipe: true
+      }
+    });
+
+    // Log portion change
+    await logChange({
+      weeklyPlanId: oldMeal.weeklyPlanId,
+      mealId: meal.id,
+      changeType: 'PORTIONS_CHANGED',
+      memberId: member.id,
+      oldValue: oldMeal.portions.toString(),
+      newValue: portions.toString(),
+      description: `Portions changées de ${oldMeal.portions} à ${portions}`,
+      descriptionEn: `Portions changed from ${oldMeal.portions} to ${portions}`,
+      descriptionNl: `Porties gewijzigd van ${oldMeal.portions} naar ${portions}`
+    });
+
+    // Regenerate shopping list to keep it in sync (OBU-12)
+    try {
+      await generateShoppingListService(meal.weeklyPlanId);
+    } catch (error) {
+      console.error('Error regenerating shopping list:', error);
+      // Don't fail update if shopping list regeneration fails
+    }
+
+    res.json({
+      status: 'success',
+      data: { meal }
+    });
+  }
+);
+
 export const swapMeal = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { mealId } = req.params;
