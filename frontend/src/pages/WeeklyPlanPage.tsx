@@ -202,8 +202,8 @@ export default function WeeklyPlanPage() {
 
   // Lock/unlock meal mutation
   const toggleLockMutation = useMutation({
-    mutationFn: ({ mealId, isLocked }: { mealId: string; isLocked: boolean }) =>
-      weeklyPlanAPI.lockMeal(planId!, mealId, { isLocked }),
+    mutationFn: ({ mealId, locked }: { mealId: string; locked: boolean }) =>
+      weeklyPlanAPI.lockMeal(planId!, mealId, { locked }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
     }
@@ -283,7 +283,7 @@ export default function WeeklyPlanPage() {
   };
 
   const handleToggleLock = (meal: Meal) => {
-    toggleLockMutation.mutate({ mealId: meal.id, isLocked: !meal.locked });
+    toggleLockMutation.mutate({ mealId: meal.id, locked: !meal.locked });
   };
 
   const handleValidate = () => {

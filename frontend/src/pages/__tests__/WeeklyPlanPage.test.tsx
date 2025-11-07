@@ -761,6 +761,100 @@ describe('WeeklyPlanPage', () => {
     });
   });
 
+  describe('Meal Locking (OBU-107)', () => {
+    it('should send "locked" parameter (not "isLocked") when locking a meal', async () => {
+      const user = userEvent.setup();
+
+      // Mock successful lock response
+      vi.mocked(weeklyPlanAPI.weeklyPlanAPI.lockMeal).mockResolvedValue({
+        data: {
+          status: 'success',
+          data: {
+            meal: { ...mockPlanData.meals[0], locked: true }
+          }
+        }
+      } as any);
+
+      window.history.pushState({}, '', '/weekly-plan/plan-1');
+      renderWithProviders(<WeeklyPlanPage />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
+      });
+
+      // Find and click the lock button
+      // Lock buttons are rendered as ghost buttons with Lock icon
+      const lockButtons = document.querySelectorAll('button[class*="ghost"]');
+      const lockButton = Array.from(lockButtons).find(btn =>
+        btn.querySelector('svg') !== null
+      );
+
+      if (lockButton) {
+        await user.click(lockButton as HTMLElement);
+
+        // Verify lockMeal was called with correct parameter name "locked"
+        await waitFor(() => {
+          expect(weeklyPlanAPI.weeklyPlanAPI.lockMeal).toHaveBeenCalledWith(
+            'plan-1',
+            'meal-1',
+            { locked: true } // MUST be "locked", not "isLocked"
+          );
+        });
+      }
+    });
+
+    it('should send "locked: false" when unlocking a meal', async () => {
+      const user = userEvent.setup();
+
+      // Plan with a locked meal
+      const lockedPlan = {
+        ...mockPlanData,
+        meals: [
+          { ...mockPlanData.meals[0], locked: true }
+        ]
+      };
+
+      vi.mocked(weeklyPlanAPI.weeklyPlanAPI.getById).mockResolvedValue({
+        data: { data: { plan: lockedPlan } }
+      } as any);
+
+      vi.mocked(weeklyPlanAPI.weeklyPlanAPI.lockMeal).mockResolvedValue({
+        data: {
+          status: 'success',
+          data: {
+            meal: { ...lockedPlan.meals[0], locked: false }
+          }
+        }
+      } as any);
+
+      window.history.pushState({}, '', '/weekly-plan/plan-1');
+      renderWithProviders(<WeeklyPlanPage />);
+
+      await waitFor(() => {
+        expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
+      });
+
+      // Find and click the unlock button
+      const lockButtons = document.querySelectorAll('button[class*="ghost"]');
+      const lockButton = Array.from(lockButtons).find(btn =>
+        btn.querySelector('svg') !== null
+      );
+
+      if (lockButton) {
+        await user.click(lockButton as HTMLElement);
+
+        // Verify lockMeal was called with "locked: false"
+        await waitFor(() => {
+          expect(weeklyPlanAPI.weeklyPlanAPI.lockMeal).toHaveBeenCalledWith(
+            'plan-1',
+            'meal-1',
+            { locked: false } // MUST be "locked", not "isLocked"
+          );
+        });
+      }
+    });
+  });
+
   describe('Shopping Tab', () => {
     it('should show shopping tab for validated plans', async () => {
       const validatedPlan = { ...mockPlanData, status: 'VALIDATED' };
