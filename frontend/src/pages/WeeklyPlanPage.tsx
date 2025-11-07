@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,8 +95,17 @@ export default function WeeklyPlanPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+  const [searchParams] = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<'plan' | 'shopping' | 'activity'>('plan');
+
+  // Set initial tab from URL query parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'shopping' || tabParam === 'activity') {
+      setActiveTab(tabParam as 'shopping' | 'activity');
+    }
+  }, [searchParams]);
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [swapDialogOpen, setSwapDialogOpen] = useState(false);
   const [portionDialogOpen, setPortionDialogOpen] = useState(false);
@@ -759,21 +768,19 @@ export default function WeeklyPlanPage() {
               {t('weeklyPlan.tabs.plan')}
             </div>
           </button>
-          {planData?.status === 'VALIDATED' && (
-            <button
-              onClick={() => setActiveTab('shopping')}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === 'shopping'
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4" />
-                {t('weeklyPlan.tabs.shopping')}
-              </div>
-            </button>
-          )}
+          <button
+            onClick={() => setActiveTab('shopping')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'shopping'
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="h-4 w-4" />
+              {t('weeklyPlan.tabs.shopping')}
+            </div>
+          </button>
           {permissions.canViewAuditLog && (
             <button
               onClick={() => setActiveTab('activity')}
@@ -793,7 +800,7 @@ export default function WeeklyPlanPage() {
       </div>
 
       {/* Shopping Tab */}
-      {activeTab === 'shopping' && planData?.status === 'VALIDATED' && (
+      {activeTab === 'shopping' && (
         <ShoppingListView planId={planId!} showPrintButton={true} />
       )}
 

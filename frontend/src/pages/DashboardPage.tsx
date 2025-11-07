@@ -238,7 +238,7 @@ export default function DashboardPage() {
                           size="sm"
                           className="flex-1"
                         >
-                          <Link to={`/shopping/${plan.id}`}>
+                          <Link to={`/plan/${plan.id}?tab=shopping`}>
                             <ShoppingCart className="h-4 w-4 mr-2" />
                             {t('dashboard.planCard.shopping')}
                           </Link>
