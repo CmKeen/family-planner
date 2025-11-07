@@ -93,7 +93,7 @@
         "cancel": "Annuler",
         "confirm": "Ajouter"
       },
-      "validatePlan": "Valider ce plan hebdomadaire ? Cela générera la liste de courses.",
+      "validatePlan": "Valider ce plan hebdomadaire ? Le plan sera verrouillé et ne pourra plus être modifié.",
       "confirmRemoveMeal": "Retirer ce repas du plan ?"
     },
     "status": {

@@ -440,7 +440,8 @@ export const generateAutoPlan = asyncHandler(
       );
     }
 
-    // Auto-generate shopping list on plan creation (OBU-7 FIX)
+    // Auto-generate shopping list on plan creation (OBU-7)
+    // Shopping list is available immediately for DRAFT plans
     try {
       await generateShoppingListService(createdPlanId);
     } catch (error) {
@@ -634,6 +635,14 @@ export const updateMeal = asyncHandler(
       });
     }
 
+    // Regenerate shopping list to keep it in sync (OBU-12)
+    try {
+      await generateShoppingListService(meal.weeklyPlanId);
+    } catch (error) {
+      console.error('Error regenerating shopping list:', error);
+      // Don't fail update if shopping list regeneration fails
+    }
+
     res.json({
       status: 'success',
       data: { meal }
@@ -692,6 +701,14 @@ export const swapMeal = asyncHandler(
       descriptionEn: `Recipe swapped from "${oldMeal?.recipe?.title || 'None'}" to "${meal.recipe?.title || 'None'}"`,
       descriptionNl: `Recept gewisseld van "${oldMeal?.recipe?.title || 'None'}" naar "${meal.recipe?.title || 'None'}"`
     });
+
+    // Regenerate shopping list to keep it in sync (OBU-12)
+    try {
+      await generateShoppingListService(meal.weeklyPlanId);
+    } catch (error) {
+      console.error('Error regenerating shopping list:', error);
+      // Don't fail swap if shopping list regeneration fails
+    }
 
     res.json({
       status: 'success',
@@ -884,13 +901,8 @@ export const validatePlan = asyncHandler(
       descriptionNl: `Planstatus gewijzigd van ${oldPlan?.status} naar VALIDATED`
     });
 
-    // Auto-generate shopping list on validation (BUG-015 FIX)
-    try {
-      await generateShoppingListService(planId);
-    } catch (error) {
-      console.error('Error auto-generating shopping list:', error);
-      // Don't fail validation if shopping list generation fails
-    }
+    // Shopping list already exists from plan creation (OBU-7)
+    // No need to regenerate on validation (OBU-12 FIX)
 
     res.json({
       status: 'success',
@@ -958,6 +970,14 @@ export const addMeal = asyncHandler(
       descriptionNl: `Maaltijd toegevoegd: ${dayOfWeek} ${mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
     });
 
+    // Regenerate shopping list to keep it in sync (OBU-12)
+    try {
+      await generateShoppingListService(planId);
+    } catch (error) {
+      console.error('Error regenerating shopping list:', error);
+      // Don't fail meal addition if shopping list regeneration fails
+    }
+
     res.status(201).json({
       status: 'success',
       data: { meal }
@@ -1020,6 +1040,14 @@ export const removeMeal = asyncHandler(
       descriptionEn: `Meal removed: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
       descriptionNl: `Maaltijd verwijderd: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
     });
+
+    // Regenerate shopping list to keep it in sync (OBU-12)
+    try {
+      await generateShoppingListService(planId);
+    } catch (error) {
+      console.error('Error regenerating shopping list:', error);
+      // Don't fail meal removal if shopping list regeneration fails
+    }
 
     res.json({
       status: 'success',

@@ -93,7 +93,7 @@
         "cancel": "Annuleren",
         "confirm": "Toevoegen"
       },
-      "validatePlan": "Dit weekplan valideren? Dit zal de boodschappenlijst genereren.",
+      "validatePlan": "Dit weekplan valideren? Het plan wordt vergrendeld en kan niet meer worden gewijzigd.",
       "confirmRemoveMeal": "Deze maaltijd uit het plan verwijderen?"
     },
     "status": {

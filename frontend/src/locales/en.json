@@ -93,7 +93,7 @@
         "cancel": "Cancel",
         "confirm": "Add"
       },
-      "validatePlan": "Validate this weekly plan? This will generate the shopping list.",
+      "validatePlan": "Validate this weekly plan? The plan will be locked and can no longer be modified.",
       "confirmRemoveMeal": "Remove this meal from the plan?"
     },
     "status": {
