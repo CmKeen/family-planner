@@ -121,6 +121,20 @@
         "description": "Maak van individuele ingrediënten"
       },
       "skipMeal": "Deze maaltijd overslaan"
+    },
+    "skippedMeal": {
+      "title": "Overgeslagen maaltijd",
+      "restore": "Herstel maaltijd"
+    },
+    "dialogs": {
+      "skipMeal": {
+        "title": "Deze maaltijd overslaan",
+        "description": "Deze maaltijd wordt gemarkeerd als overgeslagen. U kunt een optionele reden toevoegen om uw familie te informeren.",
+        "reasonLabel": "Reden",
+        "optional": "optioneel",
+        "placeholder": "Bijv. uit eten, bij oma, niet thuis...",
+        "confirm": "Maaltijd overslaan"
+      }
     }
   },
   "recipes": {

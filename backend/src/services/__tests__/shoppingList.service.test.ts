@@ -656,6 +656,85 @@ describe('ShoppingList Service', () => {
         category: 'Boulangerie'
       });
     });
+
+    it('should exclude skipped meals from shopping list', async () => {
+      const mockPlan = {
+        id: 'plan-1',
+        familyId: 'family-1',
+        family: {
+          dietProfile: {
+            glutenFree: false,
+            lactoseFree: false
+          },
+          inventory: []
+        },
+        meals: [
+          {
+            id: 'meal-1',
+            portions: 4,
+            isSchoolMeal: false,
+            isExternal: false,
+            isSkipped: false,
+            recipe: {
+              title: 'Pasta',
+              servings: 4,
+              ingredients: [
+                {
+                  name: 'Pâtes',
+                  quantity: 400,
+                  unit: 'g',
+                  category: 'pantry',
+                  alternatives: [],
+                  allergens: []
+                }
+              ]
+            },
+            mealComponents: [],
+            guests: []
+          },
+          {
+            id: 'meal-2',
+            portions: 4,
+            isSchoolMeal: false,
+            isExternal: false,
+            isSkipped: true, // Skipped meal
+            skipReason: 'Eating out',
+            recipe: {
+              title: 'Pizza',
+              servings: 4,
+              ingredients: [
+                {
+                  name: 'Farine',
+                  quantity: 300,
+                  unit: 'g',
+                  category: 'pantry',
+                  alternatives: [],
+                  allergens: []
+                }
+              ]
+            },
+            mealComponents: [],
+            guests: []
+          }
+        ]
+      };
+
+      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+        id: 'list-1',
+        items: []
+      });
+
+      await generateShoppingList('plan-1');
+
+      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      // Should only have 1 item (Pâtes from meal-1), not 2
+      expect(createCall.data.items.create).toHaveLength(1);
+      expect(createCall.data.items.create[0].name).toBe('Pâtes');
+      // Should NOT include Farine from the skipped meal
+      expect(createCall.data.items.create.find((item: any) => item.name === 'Farine')).toBeUndefined();
+    });
   });
 
   describe('regenerateShoppingList', () => {

@@ -121,6 +121,20 @@
         "description": "Créez à partir d'ingrédients individuels"
       },
       "skipMeal": "Passer ce repas"
+    },
+    "skippedMeal": {
+      "title": "Repas ignoré",
+      "restore": "Restaurer le repas"
+    },
+    "dialogs": {
+      "skipMeal": {
+        "title": "Ignorer ce repas",
+        "description": "Ce repas sera marqué comme ignoré. Vous pouvez ajouter une raison optionnelle pour informer votre famille.",
+        "reasonLabel": "Raison",
+        "optional": "optionnel",
+        "placeholder": "Ex: Restaurant, chez mamie, pas à la maison...",
+        "confirm": "Ignorer le repas"
+      }
     }
   },
   "recipes": {

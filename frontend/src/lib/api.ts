@@ -88,8 +88,12 @@ export const weeklyPlanAPI = {
   // Meal schedule template operations
   addMeal: (planId: string, data: any) =>
     api.post(`/weekly-plans/${planId}/meals`, data),
-  removeMeal: (planId: string, mealId: string) =>
-    api.delete(`/weekly-plans/${planId}/meals/${mealId}`),
+  removeMeal: (planId: string, mealId: string, skipReason?: string) =>
+    api.delete(`/weekly-plans/${planId}/meals/${mealId}`, {
+      data: skipReason ? { skipReason } : undefined
+    }),
+  restoreMeal: (planId: string, mealId: string) =>
+    api.post(`/weekly-plans/${planId}/meals/${mealId}/restore`),
   switchTemplate: (planId: string, data: any) =>
     api.put(`/weekly-plans/${planId}/template`, data),
   // Component-based meal operations

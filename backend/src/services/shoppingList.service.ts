@@ -92,6 +92,9 @@ export async function generateShoppingList(weeklyPlanId: string) {
         }
       },
       meals: {
+        where: {
+          isSkipped: false // Exclude skipped meals from shopping list
+        },
         include: {
           recipe: {
             include: {

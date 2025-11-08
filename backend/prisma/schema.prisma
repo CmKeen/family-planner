@@ -304,6 +304,10 @@ model Meal {
   isExternal        Boolean     @default(false) // restaurant, delivery, etc.
   externalNote      String?
 
+  // Skipped state
+  isSkipped         Boolean     @default(false)
+  skipReason        String?     @db.Text
+
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 

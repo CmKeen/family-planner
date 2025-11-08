@@ -968,6 +968,21 @@ export const validatePlan = asyncHandler(
       throw new AppError('You do not have permission to validate this plan', 403);
     }
 
+    // Auto-skip all empty meals before validating (removes ambiguity)
+    // Only affects truly empty meals (no recipe, no components, not already skipped)
+    await prisma.meal.updateMany({
+      where: {
+        weeklyPlanId: planId,
+        recipeId: null,
+        isSkipped: false,
+        mealComponents: { none: {} }
+      },
+      data: {
+        isSkipped: true,
+        skipReason: null // Auto-skipped meals have no reason
+      }
+    });
+
     const plan = await prisma.weeklyPlan.update({
       where: { id: planId },
       data: {
@@ -1092,10 +1107,11 @@ export const addMeal = asyncHandler(
   }
 );
 
-// Remove meal from draft plan
+// Skip meal in draft plan (non-destructive, marks as skipped instead of deleting)
 export const removeMeal = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { planId, mealId } = req.params;
+    const { skipReason } = req.body; // Optional skip reason
     const userId = req.user!.id;
 
     // Verify meal exists and belongs to this plan
@@ -1127,32 +1143,30 @@ export const removeMeal = asyncHandler(
     }
 
     if (meal.weeklyPlan.status !== 'DRAFT') {
-      throw new AppError('Can only remove meals from draft plans', 400);
+      throw new AppError('Can only skip meals in draft plans', 400);
     }
 
-    // Ensure at least one meal remains
-    const mealCount = await prisma.meal.count({
-      where: { weeklyPlanId: planId }
+    // Mark meal as skipped (non-destructive) and clear recipe/components
+    await prisma.meal.update({
+      where: { id: mealId },
+      data: {
+        isSkipped: true,
+        skipReason: skipReason || null,
+        recipeId: null, // Clear recipe when skipping
+        mealComponents: { deleteMany: {} } // Clear components when skipping
+      }
     });
 
-    if (mealCount <= 1) {
-      throw new AppError('Cannot remove the last meal from a plan', 400);
-    }
-
-    await prisma.meal.delete({
-      where: { id: mealId }
-    });
-
-    // Log meal removal with validated member
+    // Log meal skip with validated member
     await logChange({
       weeklyPlanId: planId,
       mealId,
       changeType: 'MEAL_REMOVED',
       memberId: member.id,
       oldValue: `${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
-      description: `Repas supprimé: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
-      descriptionEn: `Meal removed: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
-      descriptionNl: `Maaltijd verwijderd: ${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`
+      description: `Repas ignoré: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`,
+      descriptionEn: `Meal skipped: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`,
+      descriptionNl: `Maaltijd overgeslagen: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`
     });
 
     // Regenerate shopping list to keep it in sync (OBU-12)
@@ -1160,12 +1174,85 @@ export const removeMeal = asyncHandler(
       await generateShoppingListService(planId);
     } catch (error) {
       console.error('Error regenerating shopping list:', error);
-      // Don't fail meal removal if shopping list regeneration fails
+      // Don't fail meal skip if shopping list regeneration fails
     }
 
     res.json({
       status: 'success',
-      message: 'Meal removed successfully'
+      message: 'Meal skipped successfully'
+    });
+  }
+);
+
+// Restore skipped meal to empty state
+export const restoreMeal = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { planId, mealId } = req.params;
+    const userId = req.user!.id;
+
+    // Verify meal exists and belongs to this plan
+    const meal = await prisma.meal.findFirst({
+      where: {
+        id: mealId,
+        weeklyPlanId: planId
+      },
+      include: {
+        weeklyPlan: true
+      }
+    });
+
+    if (!meal) {
+      throw new AppError('Meal not found', 404);
+    }
+
+    // Validate user is a member of the family
+    const member = await prisma.familyMember.findFirst({
+      where: {
+        familyId: meal.weeklyPlan.familyId,
+        userId
+      }
+    });
+
+    if (!member) {
+      throw new AppError('You do not have permission to modify this plan', 403);
+    }
+
+    if (meal.weeklyPlan.status !== 'DRAFT') {
+      throw new AppError('Can only restore meals in draft plans', 400);
+    }
+
+    // Restore meal to empty state
+    await prisma.meal.update({
+      where: { id: mealId },
+      data: {
+        isSkipped: false,
+        skipReason: null
+      }
+    });
+
+    // Log meal restoration
+    await logChange({
+      weeklyPlanId: planId,
+      mealId,
+      changeType: 'MEAL_ADDED', // Reusing MEAL_ADDED as it's essentially re-adding the meal
+      memberId: member.id,
+      newValue: `${meal.dayOfWeek} ${meal.mealType}`,
+      description: `Repas restauré: ${meal.dayOfWeek} ${meal.mealType}`,
+      descriptionEn: `Meal restored: ${meal.dayOfWeek} ${meal.mealType}`,
+      descriptionNl: `Maaltijd hersteld: ${meal.dayOfWeek} ${meal.mealType}`
+    });
+
+    // Regenerate shopping list to keep it in sync
+    try {
+      await generateShoppingListService(planId);
+    } catch (error) {
+      console.error('Error regenerating shopping list:', error);
+      // Don't fail meal restoration if shopping list regeneration fails
+    }
+
+    res.json({
+      status: 'success',
+      message: 'Meal restored successfully'
     });
   }
 );
