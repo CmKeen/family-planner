@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { weeklyPlanAPI, recipeAPI, mealTemplateAPI } from '@/lib/api';
-import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, History, AlertCircle, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Clock, Heart, Sparkles, Lock, Unlock, RefreshCw, Plus, Trash2, CalendarDays, Edit, History, AlertCircle, ShoppingCart, BookOpen, X, ChevronRight } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { MealComponentEditor } from '@/components/MealComponentEditor';
 import { MealComments } from '@/components/MealComments';
@@ -63,6 +63,8 @@ interface Meal {
   portions: number;
   locked: boolean;
   mealComponents?: MealComponent[];
+  isSkipped?: boolean;
+  skipReason?: string | null;
 }
 
 interface WeeklyPlan {
@@ -121,6 +123,9 @@ export default function WeeklyPlanPage() {
   const [newMealType, setNewMealType] = useState<'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'>('DINNER');
   const [recipeName, setRecipeName] = useState('');
   const [recipeNameEn, setRecipeNameEn] = useState('');
+  const [skipDialogOpen, setSkipDialogOpen] = useState(false);
+  const [skipDialogMealId, setSkipDialogMealId] = useState<string | null>(null);
+  const [skipReason, setSkipReason] = useState('');
 
   // Day names mapping
   const getDayName = (day: string): string => {
@@ -238,9 +243,18 @@ export default function WeeklyPlanPage() {
     }
   });
 
-  // Remove meal mutation
+  // Skip meal mutation (renamed from removeMeal)
   const removeMealMutation = useMutation({
-    mutationFn: (mealId: string) => weeklyPlanAPI.removeMeal(planId!, mealId),
+    mutationFn: ({ mealId, skipReason }: { mealId: string; skipReason?: string }) =>
+      weeklyPlanAPI.removeMeal(planId!, mealId, skipReason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
+    }
+  });
+
+  // Restore skipped meal mutation
+  const restoreMealMutation = useMutation({
+    mutationFn: (mealId: string) => weeklyPlanAPI.restoreMeal(planId!, mealId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
     }
@@ -311,10 +325,24 @@ export default function WeeklyPlanPage() {
     addMealMutation.mutate({ dayOfWeek: newMealDay, mealType: newMealType });
   };
 
-  const handleRemoveMeal = (mealId: string) => {
-    if (window.confirm(t('weeklyPlan.dialogs.confirmRemoveMeal'))) {
-      removeMealMutation.mutate(mealId);
+  const handleSkipClick = (mealId: string) => {
+    setSkipDialogMealId(mealId);
+    setSkipReason('');
+    setSkipDialogOpen(true);
+  };
+
+  const handleSkipConfirm = () => {
+    if (skipDialogMealId) {
+      removeMealMutation.mutate({
+        mealId: skipDialogMealId,
+        skipReason: skipReason.trim() || undefined
+      });
+      setSkipDialogOpen(false);
     }
+  };
+
+  const handleRestoreMeal = (mealId: string) => {
+    restoreMealMutation.mutate(mealId);
   };
 
   const handleSaveAsRecipe = (meal: Meal) => {
@@ -493,7 +521,7 @@ export default function WeeklyPlanPage() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => handleRemoveMeal(meal.id)}
+                onClick={() => handleSkipClick(meal.id)}
                 className="text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" />
@@ -526,57 +554,141 @@ export default function WeeklyPlanPage() {
       );
     }
 
-    // No recipe and no components
+    // Skipped meal card (compact)
+    if (meal.isSkipped) {
+      return (
+        <div key={meal.id} className="border rounded-lg p-3 bg-gray-50/50">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Badge + Title + Reason */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="secondary" className="opacity-60 text-xs">
+                  {getMealTypeLabel(meal.mealType)}
+                </Badge>
+                {meal.locked && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {t('weeklyPlan.skippedMeal.title')}
+                </span>
+                {meal.skipReason && (
+                  <span className="text-xs text-muted-foreground italic truncate">
+                    "{meal.skipReason}"
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Restore Button */}
+            {planData.status === 'DRAFT' && (
+              <button
+                onClick={() => handleRestoreMeal(meal.id)}
+                disabled={restoreMealMutation.isPending}
+                className="text-xs text-primary hover:underline flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded whitespace-nowrap"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${restoreMealMutation.isPending ? 'animate-spin' : ''}`} />
+                {t('weeklyPlan.skippedMeal.restore')}
+              </button>
+            )}
+          </div>
+
+          {/* Comments Section */}
+          {permissions.canComment && (
+            <div className="mt-3 pt-3 border-t">
+              <CommentButton
+                planId={planId!}
+                mealId={meal.id}
+                isExpanded={expandedComments[meal.id] || false}
+                onClick={() => toggleComments(meal.id)}
+              />
+              {expandedComments[meal.id] && (
+                <div className="mt-3">
+                  <MealComments
+                    planId={planId!}
+                    mealId={meal.id}
+                    currentMemberId={currentMember?.id}
+                    currentMemberRole={currentMember?.role}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // No recipe and no components - Card-Based Empty Slot UX
     if (!meal.recipe) {
       return (
-        <div key={meal.id} className="border rounded-lg p-4">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
-                {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
-              </div>
-              <h3 className="font-semibold text-muted-foreground">{t('weeklyPlan.noRecipe')}</h3>
-              <p className="text-sm text-muted-foreground">
-                {t('weeklyPlan.portions', { count: meal.portions })}
-              </p>
+        <div key={meal.id} className="border rounded-lg p-4 bg-white">
+          {/* Header: Meal Type + Portions */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="secondary">{getMealTypeLabel(meal.mealType)}</Badge>
+              {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
             </div>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {t('weeklyPlan.emptySlot.title')}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t('weeklyPlan.portions', { count: meal.portions })}
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleSwapClick(meal)}
-              disabled={planData.status !== 'DRAFT'}
-            >
-              <RefreshCw className="h-3 w-3 mr-1" />
-              {t('weeklyPlan.actions.selectRecipe')}
-            </Button>
-            {planData.status === 'DRAFT' && (
-              <Button
-                size="sm"
-                variant="outline"
+
+          {/* Action Cards Grid */}
+          {planData.status === 'DRAFT' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              {/* Primary Action: Browse Recipes */}
+              <button
+                onClick={() => handleSwapClick(meal)}
+                className="group relative flex flex-col items-start p-4 rounded-lg border-2 border-primary bg-primary/5 hover:bg-primary/10 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                  <span className="font-semibold text-sm text-primary">
+                    {t('weeklyPlan.emptySlot.browseRecipes.title')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t('weeklyPlan.emptySlot.browseRecipes.description')}
+                </p>
+                <ChevronRight className="absolute top-4 right-4 h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+
+              {/* Secondary Action: Build Custom */}
+              <button
                 onClick={() => {
                   setSelectedMeal(meal);
                   setComponentEditorOpen(true);
                 }}
-                className="bg-blue-50 hover:bg-blue-100"
+                className="group relative flex flex-col items-start p-4 rounded-lg border border-border bg-background hover:bg-accent/50 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <Sparkles className="h-3 w-3 mr-1" />
-                {t('mealBuilder.buildFromScratch')}
-              </Button>
-            )}
-            {planData.status === 'DRAFT' && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleRemoveMeal(meal.id)}
-                className="text-destructive hover:text-destructive"
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-5 w-5 text-foreground" />
+                  <span className="font-semibold text-sm">
+                    {t('weeklyPlan.emptySlot.buildCustom.title')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t('weeklyPlan.emptySlot.buildCustom.description')}
+                </p>
+                <ChevronRight className="absolute top-4 right-4 h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            </div>
+          )}
+
+          {/* Tertiary Action: Skip Meal */}
+          {planData.status === 'DRAFT' && (
+            <div className="flex justify-center pt-2 border-t">
+              <button
+                onClick={() => handleSkipClick(meal.id)}
+                className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1.5 py-2 px-3 rounded hover:bg-destructive/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+                <X className="h-3.5 w-3.5" />
+                {t('weeklyPlan.emptySlot.skipMeal')}
+              </button>
+            </div>
+          )}
 
           {/* Comments Section */}
           {permissions.canComment && (
@@ -663,7 +775,7 @@ export default function WeeklyPlanPage() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => handleRemoveMeal(meal.id)}
+              onClick={() => handleSkipClick(meal.id)}
               className="text-destructive hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
@@ -1025,6 +1137,48 @@ export default function WeeklyPlanPage() {
               disabled={adjustPortionsMutation.isPending}
             >
               {adjustPortionsMutation.isPending ? t('weeklyPlan.actions.adjusting') : t('weeklyPlan.dialogs.adjustPortions.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Skip Meal Dialog */}
+      <Dialog open={skipDialogOpen} onOpenChange={setSkipDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('weeklyPlan.dialogs.skipMeal.title')}</DialogTitle>
+            <DialogDescription>
+              {t('weeklyPlan.dialogs.skipMeal.description')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium">
+                {t('weeklyPlan.dialogs.skipMeal.reasonLabel')}
+                <span className="text-muted-foreground ml-1">
+                  ({t('weeklyPlan.dialogs.skipMeal.optional')})
+                </span>
+              </label>
+              <textarea
+                value={skipReason}
+                onChange={(e) => setSkipReason(e.target.value)}
+                placeholder={t('weeklyPlan.dialogs.skipMeal.placeholder')}
+                className="w-full mt-2 p-2 border rounded-md text-sm"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSkipDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleSkipConfirm}
+              disabled={removeMealMutation.isPending}
+            >
+              {removeMealMutation.isPending ? t('common.loading') : t('weeklyPlan.dialogs.skipMeal.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

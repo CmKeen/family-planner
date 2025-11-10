@@ -16,6 +16,7 @@ import {
   validatePlan,
   addMeal,
   removeMeal,
+  restoreMeal,
   switchTemplate,
   saveComponentMealAsRecipe
 } from '../controllers/weeklyPlan.controller';
@@ -62,7 +63,8 @@ router.post('/:planId/meals/:mealId/save-as-recipe', saveComponentMealAsRecipe);
 
 // Meal schedule template operations for draft plans
 router.post('/:planId/meals', addMeal); // Add single meal
-router.delete('/:planId/meals/:mealId', removeMeal); // Remove meal
+router.delete('/:planId/meals/:mealId', removeMeal); // Skip meal (mark as skipped)
+router.post('/:planId/meals/:mealId/restore', restoreMeal); // Restore skipped meal to empty state
 router.put('/:planId/template', switchTemplate); // Switch to different template
 
 // Meal comments (nested routes)

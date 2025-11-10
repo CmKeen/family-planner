@@ -93,6 +93,14 @@
         "cancel": "Annuleren",
         "confirm": "Toevoegen"
       },
+      "skipMeal": {
+        "title": "Deze maaltijd overslaan",
+        "description": "Deze maaltijd wordt gemarkeerd als overgeslagen. U kunt een optionele reden toevoegen om uw familie te informeren.",
+        "reasonLabel": "Reden",
+        "optional": "optioneel",
+        "placeholder": "Bijv. uit eten, bij oma, niet thuis...",
+        "confirm": "Maaltijd overslaan"
+      },
       "validatePlan": "Dit weekplan valideren? Het plan wordt vergrendeld en kan niet meer worden gewijzigd.",
       "confirmRemoveMeal": "Deze maaltijd uit het plan verwijderen?"
     },
@@ -109,7 +117,23 @@
     },
     "portions": "{{count}} porties",
     "minutes": "{{count}} min",
-    "hours": "{{count}}u"
+    "hours": "{{count}}u",
+    "emptySlot": {
+      "title": "Kies hoe je deze maaltijd wilt invullen",
+      "browseRecipes": {
+        "title": "Recepten Doorbladeren",
+        "description": "Kies uit je receptenbibliotheek"
+      },
+      "buildCustom": {
+        "title": "Aangepaste Maaltijd Maken",
+        "description": "Maak van individuele ingrediënten"
+      },
+      "skipMeal": "Deze maaltijd overslaan"
+    },
+    "skippedMeal": {
+      "title": "Overgeslagen maaltijd",
+      "restore": "Herstel maaltijd"
+    }
   },
   "recipes": {
     "title": "Receptencatalogus",
