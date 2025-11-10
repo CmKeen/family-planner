@@ -735,5 +735,45 @@ docker-compose restart backend
 3. ✅ Translate ALL text (FR/EN/NL)
 4. ✅ Use Docker for everything
 5. ✅ Follow coding standards
+6. ✅ **Use Winston logger, NEVER console.log**
+
+---
+
+## 📝 Logging Best Practices
+
+**CRITICAL: Never use `console.log` in production code!**
+
+### Winston Logger (Required)
+```typescript
+import { log } from '../config/logger';
+
+// ✅ CORRECT - Use Winston logger with structured context
+log.debug('Components loaded for meal plan', { familyId, total: components.length });
+log.info('Plan generated successfully', { planId, mealCount: 12 });
+log.warn('Shopping list generation skipped', { reason: 'No meals in plan' });
+log.error('Database query failed', { error: err.message, stack: err.stack });
+
+// ❌ WRONG - Never use console statements
+console.log('Starting process...');  // ESLint will block this
+console.error('Error occurred');     // Not structured, no context
+```
+
+### Log Levels
+- **debug** - Detailed debugging info (only in development)
+- **info** - Important business events (plan created, email sent)
+- **warn** - Non-blocking issues (audit log failed, optional feature skipped)
+- **error** - Failures requiring attention (DB errors, API failures)
+
+### Environment Control
+- Development: `LOG_LEVEL=debug` (verbose)
+- Production: `LOG_LEVEL=info` (minimal, no debug logs)
+
+### ESLint Enforcement
+ESLint rule blocks `console.log` in production code:
+```javascript
+'no-console': ['error', { allow: ['warn', 'error'] }]
+```
+
+**Exceptions:** CLI scripts in `src/scripts/` are excluded (they need console output).
 
 **End of Documentation**

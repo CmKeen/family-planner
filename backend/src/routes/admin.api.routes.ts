@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { authenticateAdmin } from '../middleware/adminAuth';
+import { authenticateAdmin, AdminAuthRequest } from '../middleware/adminAuth';
 import { scrapeHelloFreshRecipes } from '../controllers/admin.controller';
+import { log } from '../config/logger';
 
 const router = Router();
 
@@ -13,8 +14,8 @@ router.get('/scraper', (req, res) => {
 });
 
 // Serve the scraper HTML form
-router.get('/scraper-form', (req, res) => {
-  console.log('✅ Scraper form accessed');
+router.get('/scraper-form', (req: AdminAuthRequest, res) => {
+  log.info('Admin scraper form accessed', { userId: req.user?.id });
   res.send(`
 <!DOCTYPE html>
 <html>

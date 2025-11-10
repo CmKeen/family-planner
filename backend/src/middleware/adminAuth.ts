@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../config/admin';
 import { AppError } from './errorHandler';
+import { log } from '../config/logger';
 
 export interface AdminAuthRequest extends Request {
   user?: {
@@ -64,7 +65,7 @@ export const authenticateAdmin = async (
 export const adminAuthProvider = {
   authenticate: async (email: string, password: string) => {
     try {
-      console.log('[AdminAuth] Attempting authentication for:', email);
+      log.auth('Admin authentication attempt', { email });
 
       // Find user by email
       const user = await prisma.user.findUnique({
@@ -72,27 +73,27 @@ export const adminAuthProvider = {
       });
 
       if (!user) {
-        console.log('[AdminAuth] User not found');
+        log.auth('Admin authentication failed - user not found', { email });
         return null;
       }
 
-      console.log('[AdminAuth] User found, isAdmin:', user.isAdmin);
+      log.debug('Admin user found', { email, isAdmin: user.isAdmin });
 
       // Check if user is an admin
       if (!user.isAdmin) {
-        console.log('[AdminAuth] User is not an admin');
+        log.auth('Admin authentication failed - user is not an admin', { email });
         return null;
       }
 
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      console.log('[AdminAuth] Password valid:', isPasswordValid);
 
       if (!isPasswordValid) {
+        log.auth('Admin authentication failed - invalid password', { email });
         return null;
       }
 
-      console.log('[AdminAuth] Authentication successful');
+      log.auth('Admin authentication successful', { email, userId: user.id });
 
       // Return user object without password
       return {
@@ -103,7 +104,11 @@ export const adminAuthProvider = {
         isAdmin: user.isAdmin
       };
     } catch (error) {
-      console.error('[AdminAuth] Error during authentication:', error);
+      log.error('Admin authentication error', {
+        email,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       return null;
     }
   },

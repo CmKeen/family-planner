@@ -6,6 +6,7 @@ import {
   EmailRecipient
 } from '../types/notification.types';
 import { getEmailTemplate } from '../templates/emailTemplates';
+import { log } from '../config/logger';
 
 export class EmailService {
   private transporter: Transporter | null = null;
@@ -34,9 +35,15 @@ export class EmailService {
       });
 
       this.isEnabled = true;
-      console.log('✓ Email service enabled');
+      log.info('Email service enabled', {
+        fromAddress: this.fromAddress,
+        fromName: this.fromName
+      });
     } catch (error) {
-      console.warn('⚠ Email service disabled - SMTP configuration not found. Emails will be logged to console only.');
+      log.warn('Email service disabled - SMTP configuration not found', {
+        message: 'Emails will be logged only, not sent',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
       this.isEnabled = false;
     }
   }
@@ -76,12 +83,13 @@ export class EmailService {
     html: string,
     text: string
   ): Promise<void> {
-    // If email service is disabled, just log to console
+    // If email service is disabled, just log
     if (!this.isEnabled || !this.transporter) {
-      console.log('📧 [EMAIL] (simulated - SMTP not configured)');
-      console.log(`   To: ${to}`);
-      console.log(`   Subject: ${subject}`);
-      console.log(`   Content: ${text.substring(0, 200)}...`);
+      log.info('Email simulated (SMTP not configured)', {
+        to,
+        subject,
+        contentPreview: text.substring(0, 200)
+      });
       return;
     }
 
@@ -93,9 +101,17 @@ export class EmailService {
         html,
         text
       });
-      console.log(`✓ Email sent successfully to ${to}`);
+      log.info('Email sent successfully', {
+        to,
+        subject
+      });
     } catch (error) {
-      console.error(`✗ Failed to send email to ${to}:`, error);
+      log.error('Failed to send email', {
+        to,
+        subject,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't throw - we don't want email failures to break the application
     }
   }

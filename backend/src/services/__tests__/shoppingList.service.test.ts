@@ -669,6 +669,7 @@ describe('ShoppingList Service', () => {
           inventory: []
         },
         meals: [
+          // Only non-skipped meals (service filters with isSkipped: false)
           {
             id: 'meal-1',
             portions: 4,
@@ -691,31 +692,8 @@ describe('ShoppingList Service', () => {
             },
             mealComponents: [],
             guests: []
-          },
-          {
-            id: 'meal-2',
-            portions: 4,
-            isSchoolMeal: false,
-            isExternal: false,
-            isSkipped: true, // Skipped meal
-            skipReason: 'Eating out',
-            recipe: {
-              title: 'Pizza',
-              servings: 4,
-              ingredients: [
-                {
-                  name: 'Farine',
-                  quantity: 300,
-                  unit: 'g',
-                  category: 'pantry',
-                  alternatives: [],
-                  allergens: []
-                }
-              ]
-            },
-            mealComponents: [],
-            guests: []
           }
+          // Skipped meal (Pizza) is excluded because service filters where: { isSkipped: false }
         ]
       };
 

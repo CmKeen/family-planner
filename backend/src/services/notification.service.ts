@@ -5,6 +5,7 @@ import {
   EmailRecipient,
   Language
 } from '../types/notification.types';
+import { log } from '../config/logger';
 
 /**
  * Notification Service
@@ -54,7 +55,10 @@ export class NotificationService {
       });
 
       if (!family) {
-        console.error(`Family not found: ${familyId}`);
+        log.error('Family not found for draft plan notification', {
+          familyId,
+          planId
+        });
         return;
       }
 
@@ -62,7 +66,10 @@ export class NotificationService {
       const recipients = await this.getFamilyRecipients(familyId);
 
       if (recipients.length === 0) {
-        console.log(`No email recipients found for family ${familyId}`);
+        log.info('No email recipients found for draft plan notification', {
+          familyId,
+          familyName: family.name
+        });
         return;
       }
 
@@ -79,9 +86,19 @@ export class NotificationService {
       // Send notification
       await emailService.sendDraftPlanCreatedNotification(notificationData);
 
-      console.log(`Draft plan notification sent to ${recipients.length} recipients for family ${family.name}`);
+      log.info('Draft plan notification sent successfully', {
+        familyId,
+        familyName: family.name,
+        planId,
+        recipientCount: recipients.length
+      });
     } catch (error) {
-      console.error('Failed to send draft plan notification:', error);
+      log.error('Failed to send draft plan notification', {
+        familyId,
+        planId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't throw - we don't want notification failures to break the application
     }
   }
@@ -101,14 +118,20 @@ export class NotificationService {
       });
 
       if (!family) {
-        console.error(`Family not found: ${familyId}`);
+        log.error('Family not found for plan deadline reminder', {
+          familyId,
+          planId
+        });
         return;
       }
 
       const recipients = await this.getFamilyRecipients(familyId);
 
       if (recipients.length === 0) {
-        console.log(`No email recipients found for family ${familyId}`);
+        log.info('No email recipients found for plan deadline reminder', {
+          familyId,
+          familyName: family.name
+        });
         return;
       }
 
@@ -123,9 +146,19 @@ export class NotificationService {
 
       await emailService.sendPlanDeadlineReminder(notificationData);
 
-      console.log(`Plan deadline reminder sent to ${recipients.length} recipients for family ${family.name}`);
+      log.info('Plan deadline reminder sent successfully', {
+        familyId,
+        familyName: family.name,
+        planId,
+        recipientCount: recipients.length
+      });
     } catch (error) {
-      console.error('Failed to send plan deadline reminder:', error);
+      log.error('Failed to send plan deadline reminder', {
+        familyId,
+        planId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
     }
   }
 }

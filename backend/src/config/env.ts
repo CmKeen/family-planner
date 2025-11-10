@@ -7,6 +7,7 @@
 
 import { z } from 'zod';
 import dotenv from 'dotenv';
+import { log } from './logger';
 
 // Load environment variables
 dotenv.config();
@@ -69,13 +70,13 @@ function validateEnv(): Env {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const messages = error.errors.map((err) => {
-        return `  ❌ ${err.path.join('.')}: ${err.message}`;
+        return `${err.path.join('.')}: ${err.message}`;
       });
 
-      console.error('\n🚨 Environment Validation Failed:\n');
-      console.error(messages.join('\n'));
-      console.error('\n📝 Please check your .env file and ensure all required variables are set.\n');
-      console.error('💡 See .env.example for reference.\n');
+      log.error('Environment validation failed', {
+        errors: messages,
+        message: 'Please check your .env file and ensure all required variables are set. See .env.example for reference.'
+      });
 
       process.exit(1);
     }
@@ -97,30 +98,34 @@ export const env = validateEnv();
  * Only logs non-sensitive configuration details
  */
 export function logEnvConfig() {
-  console.log('\n✅ Environment Configuration Loaded:');
-  console.log(`   📝 NODE_ENV: ${env.NODE_ENV}`);
-  console.log(`   🚀 PORT: ${env.PORT}`);
-  console.log(`   🌐 CORS_ORIGIN: ${env.CORS_ORIGIN}`);
-  console.log(`   🔑 JWT_EXPIRES_IN: ${env.JWT_EXPIRES_IN}`);
-  console.log(`   📦 APP_NAME: ${env.APP_NAME}`);
+  log.info('Environment configuration loaded', {
+    NODE_ENV: env.NODE_ENV,
+    PORT: env.PORT,
+    CORS_ORIGIN: env.CORS_ORIGIN,
+    JWT_EXPIRES_IN: env.JWT_EXPIRES_IN,
+    APP_NAME: env.APP_NAME
+  });
 
   // Warn if using weak JWT secret in production
   if (env.NODE_ENV === 'production' && env.JWT_SECRET.length < 64) {
-    console.warn('\n⚠️  WARNING: JWT_SECRET is shorter than 64 characters.');
-    console.warn('   For production, use a longer secret (e.g., 128+ characters).\n');
+    log.warn('JWT_SECRET is shorter than recommended length for production', {
+      currentLength: env.JWT_SECRET.length,
+      recommendedLength: 128,
+      recommendation: 'Use a longer secret for production (128+ characters)'
+    });
   }
 
   // Warn if using default secret
   if (env.JWT_SECRET.includes('secret') || env.JWT_SECRET.includes('change')) {
-    console.warn('\n⚠️  WARNING: JWT_SECRET appears to be a default/example value.');
-    console.warn('   Please generate a strong, random secret for production.\n');
+    log.warn('JWT_SECRET appears to be a default or example value', {
+      recommendation: 'Generate a strong, random secret for production'
+    });
   }
 
   // Check database connection string
   if (env.DATABASE_URL.includes('localhost') && env.NODE_ENV === 'production') {
-    console.warn('\n⚠️  WARNING: DATABASE_URL points to localhost in production.');
-    console.warn('   Consider using a managed database service.\n');
+    log.warn('DATABASE_URL points to localhost in production environment', {
+      recommendation: 'Consider using a managed database service for production'
+    });
   }
-
-  console.log('');
 }

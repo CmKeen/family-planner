@@ -128,8 +128,8 @@ describe('Weekly Plan - Skip/Restore Meal Functionality (OBU-110)', () => {
         data: {
           isSkipped: true,
           skipReason,
-          recipeId: null,
-          mealComponents: { deleteMany: {} }
+          recipeId: null
+          // Note: mealComponents are not deleted, just meal is marked as skipped
         },
         include: {
           recipe: true,
@@ -190,8 +190,8 @@ describe('Weekly Plan - Skip/Restore Meal Functionality (OBU-110)', () => {
         data: {
           isSkipped: true,
           skipReason: null,
-          recipeId: null,
-          mealComponents: { deleteMany: {} }
+          recipeId: null
+          // Note: mealComponents are not deleted, just meal is marked as skipped
         },
         include: {
           recipe: true,

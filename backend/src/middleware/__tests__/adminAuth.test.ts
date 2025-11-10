@@ -4,7 +4,8 @@ jest.mock('../../config/logger', () => ({
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    auth: jest.fn()
+    auth: jest.fn(),
+    debug: jest.fn()
   }
 }));
 

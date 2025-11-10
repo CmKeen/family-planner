@@ -1,5 +1,17 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 
+// Mock logger before importing the service
+const mockLog = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn()
+};
+
+jest.mock('../../config/logger', () => ({
+  log: mockLog
+}));
+
 // Mock nodemailer before importing the service
 const mockSendMail: any = jest.fn();
 const mockCreateTransport: any = jest.fn();
@@ -24,10 +36,16 @@ describe('EmailService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Spy on console methods
+    // Spy on console methods (for backward compatibility)
     consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Reset logger mocks
+    mockLog.info.mockClear();
+    mockLog.error.mockClear();
+    mockLog.warn.mockClear();
+    mockLog.debug.mockClear();
 
     // Mock environment variables
     process.env.SMTP_HOST = 'smtp.test.com';
@@ -69,15 +87,25 @@ describe('EmailService', () => {
     });
 
     it('should log when email service is enabled', () => {
-      expect(consoleLogSpy).toHaveBeenCalledWith('✓ Email service enabled');
+      expect(mockLog.info).toHaveBeenCalledWith(
+        'Email service enabled',
+        expect.objectContaining({
+          fromAddress: expect.any(String),
+          fromName: expect.any(String)
+        })
+      );
     });
 
     it('should warn when SMTP configuration is missing', () => {
       delete process.env.SMTP_HOST;
+      mockLog.warn.mockClear(); // Clear previous calls
       const service = new EmailService();
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Email service disabled')
+      expect(mockLog.warn).toHaveBeenCalledWith(
+        'Email service disabled - SMTP configuration not found',
+        expect.objectContaining({
+          message: expect.stringContaining('Emails will be logged only')
+        })
       );
     });
   });
@@ -184,7 +212,7 @@ describe('EmailService', () => {
         emailService.sendDraftPlanCreatedNotification(notificationData)
       ).resolves.not.toThrow();
 
-      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(mockLog.error).toHaveBeenCalled();
     });
   });
 
@@ -235,15 +263,19 @@ describe('EmailService', () => {
         'Text'
       );
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to send email'),
-        expect.any(Error)
+      expect(mockLog.error).toHaveBeenCalledWith(
+        'Failed to send email',
+        expect.objectContaining({
+          to: 'test@example.com',
+          subject: 'Test'
+        })
       );
     });
 
-    it('should log to console when SMTP is not configured', async () => {
+    it('should log when SMTP is not configured', async () => {
       // Create service without SMTP config
       delete process.env.SMTP_HOST;
+      mockLog.info.mockClear(); // Clear previous calls
       const noSmtpService = new EmailService();
 
       await noSmtpService.sendEmail(
@@ -253,8 +285,12 @@ describe('EmailService', () => {
         'Text content'
       );
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[EMAIL] (simulated')
+      expect(mockLog.info).toHaveBeenCalledWith(
+        'Email simulated (SMTP not configured)',
+        expect.objectContaining({
+          to: 'test@example.com',
+          subject: 'Test Subject'
+        })
       );
       expect(mockSendMail).not.toHaveBeenCalled();
     });

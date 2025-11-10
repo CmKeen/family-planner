@@ -122,16 +122,18 @@ app.listen(PORT, () => {
     },
   });
 
-  // Keep console output for Docker logs
-  console.log(`\n🚀 ${env.APP_NAME} Server Started Successfully!`);
-  console.log(`   📍 Port: ${PORT}`);
-  console.log(`   📝 Environment: ${env.NODE_ENV}`);
-  console.log(`   🔑 Admin Panel: http://localhost:${PORT}/admin (requires admin user)`);
-  console.log(`   📚 API Documentation: http://localhost:${PORT}/api-docs`);
-  console.log(`   🔍 Swagger JSON: http://localhost:${PORT}/api-docs.json`);
-  console.log(`   ✅ Health Check: http://localhost:${PORT}/health`);
-  console.log(`   🏥 Health Detailed: http://localhost:${PORT}/health/detailed`);
-  console.log(`   ⚡ Readiness: http://localhost:${PORT}/health/ready`);
-  console.log(`   💓 Liveness: http://localhost:${PORT}/health/live`);
-  console.log('\n📊 Ready to accept connections!\n');
+  log.info('Server started successfully', {
+    appName: env.APP_NAME,
+    port: PORT,
+    environment: env.NODE_ENV,
+    endpoints: {
+      adminPanel: `http://localhost:${PORT}/admin`,
+      apiDocs: `http://localhost:${PORT}/api-docs`,
+      swaggerJson: `http://localhost:${PORT}/api-docs.json`,
+      healthCheck: `http://localhost:${PORT}/health`,
+      healthDetailed: `http://localhost:${PORT}/health/detailed`,
+      readiness: `http://localhost:${PORT}/health/ready`,
+      liveness: `http://localhost:${PORT}/health/live`
+    }
+  });
 });

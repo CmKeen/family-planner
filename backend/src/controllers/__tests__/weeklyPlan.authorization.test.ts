@@ -379,7 +379,7 @@ describe('Weekly Plan Authorization Tests (OBU-93)', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('success');
-      expect(response.body.message).toContain('removed');
+      expect(response.body.message).toContain('skipped'); // Changed from 'removed' to 'skipped' (OBU-110)
 
       // Verify member validation was performed
       expect(prisma.familyMember.findFirst).toHaveBeenCalledWith({

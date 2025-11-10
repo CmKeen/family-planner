@@ -6,6 +6,7 @@ import { Prisma } from '@prisma/client';
 import { logChange } from '../utils/auditLogger';
 import { notificationService } from '../services/notification.service';
 import { generateShoppingList as generateShoppingListService } from '../services/shoppingList.service';
+import { log } from '../config/logger';
 
 // Type aliases for Prisma enums
 type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
@@ -221,7 +222,13 @@ export const generateAutoPlan = asyncHandler(
     const proteins = components.filter((c: any) => c.category === 'PROTEIN');
     const vegetables = components.filter((c: any) => c.category === 'VEGETABLE');
     const carbs = components.filter((c: any) => c.category === 'CARB');
-    console.log('🔍 DEBUG: Components loaded:', { total: components.length, proteins: proteins.length, vegetables: vegetables.length, carbs: carbs.length });
+    log.debug('Components loaded for meal plan generation', {
+      familyId,
+      total: components.length,
+      proteins: proteins.length,
+      vegetables: vegetables.length,
+      carbs: carbs.length
+    });
 
     // Parse template schedule
     const scheduleData = template.schedule as any[];
@@ -288,10 +295,19 @@ export const generateAutoPlan = asyncHandler(
           const shouldBeComponentBased = Math.random() < 0.3 &&
             proteins.length > 0 && vegetables.length > 0 && carbs.length > 0;
 
-          console.log(`🎲 Meal ${day} ${mealType}: shouldBeComponentBased=${shouldBeComponentBased}, proteins=${proteins.length}, vegetables=${vegetables.length}, carbs=${carbs.length}`);
+          log.debug('Evaluating meal composition strategy', {
+            day,
+            mealType,
+            shouldBeComponentBased,
+            availableComponents: {
+              proteins: proteins.length,
+              vegetables: vegetables.length,
+              carbs: carbs.length
+            }
+          });
 
           if (shouldBeComponentBased) {
-            console.log('✅ Creating component-based meal!');
+            log.debug('Creating component-based meal', { day, mealType });
             // Create component-based meal
             try {
               const selectedComponents = selectMealComponents(
@@ -445,7 +461,12 @@ export const generateAutoPlan = asyncHandler(
     try {
       await generateShoppingListService(createdPlanId);
     } catch (error) {
-      console.error('Error auto-generating shopping list:', error);
+      log.error('Failed to auto-generate shopping list for new plan', {
+        weeklyPlanId: createdPlanId,
+        familyId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't fail plan creation if shopping list generation fails
     }
 
@@ -558,7 +579,12 @@ export const generateExpressPlan = asyncHandler(
     try {
       await generateShoppingListService(weeklyPlan.id);
     } catch (error) {
-      console.error('Error auto-generating shopping list:', error);
+      log.error('Failed to auto-generate shopping list for express plan', {
+        weeklyPlanId: weeklyPlan.id,
+        familyId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't fail plan creation if shopping list generation fails
     }
 
@@ -639,7 +665,12 @@ export const updateMeal = asyncHandler(
     try {
       await generateShoppingListService(meal.weeklyPlanId);
     } catch (error) {
-      console.error('Error regenerating shopping list:', error);
+      log.error('Failed to regenerate shopping list after meal update', {
+        weeklyPlanId: meal.weeklyPlanId,
+        mealId: meal.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't fail update if shopping list regeneration fails
     }
 
@@ -709,7 +740,12 @@ export const adjustMealPortions = asyncHandler(
     try {
       await generateShoppingListService(meal.weeklyPlanId);
     } catch (error) {
-      console.error('Error regenerating shopping list:', error);
+      log.error('Failed to regenerate shopping list after meal update', {
+        weeklyPlanId: meal.weeklyPlanId,
+        mealId: meal.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't fail update if shopping list regeneration fails
     }
 
@@ -776,7 +812,12 @@ export const swapMeal = asyncHandler(
     try {
       await generateShoppingListService(meal.weeklyPlanId);
     } catch (error) {
-      console.error('Error regenerating shopping list:', error);
+      log.error('Failed to regenerate shopping list after recipe swap', {
+        weeklyPlanId: meal.weeklyPlanId,
+        mealId: meal.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't fail swap if shopping list regeneration fails
     }
 
@@ -1096,7 +1137,12 @@ export const addMeal = asyncHandler(
     try {
       await generateShoppingListService(planId);
     } catch (error) {
-      console.error('Error regenerating shopping list:', error);
+      log.error('Failed to regenerate shopping list after adding meal', {
+        weeklyPlanId: planId,
+        mealId: meal.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't fail meal addition if shopping list regeneration fails
     }
 
@@ -1185,7 +1231,12 @@ export const removeMeal = asyncHandler(
         descriptionNl: `Maaltijd overgeslagen: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`
       });
     } catch (logError) {
-      console.error('Failed to log meal skip:', logError);
+      log.warn('Failed to log meal skip audit entry', {
+        weeklyPlanId: planId,
+        mealId,
+        memberId: member.id,
+        error: logError instanceof Error ? logError.message : 'Unknown error'
+      });
       // Continue anyway - meal skip succeeded
     }
 
@@ -1193,7 +1244,12 @@ export const removeMeal = asyncHandler(
     try {
       await generateShoppingListService(planId);
     } catch (error) {
-      console.error('Error regenerating shopping list:', error);
+      log.error('Failed to regenerate shopping list after skipping meal', {
+        weeklyPlanId: planId,
+        mealId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't fail meal skip if shopping list regeneration fails
     }
 
@@ -1272,7 +1328,12 @@ export const restoreMeal = asyncHandler(
         descriptionNl: `Maaltijd hersteld: ${meal.dayOfWeek} ${meal.mealType}`
       });
     } catch (logError) {
-      console.error('Failed to log meal restoration:', logError);
+      log.warn('Failed to log meal restoration audit entry', {
+        weeklyPlanId: planId,
+        mealId,
+        memberId: member.id,
+        error: logError instanceof Error ? logError.message : 'Unknown error'
+      });
       // Continue anyway - meal restoration succeeded
     }
 
@@ -1280,7 +1341,12 @@ export const restoreMeal = asyncHandler(
     try {
       await generateShoppingListService(planId);
     } catch (error) {
-      console.error('Error regenerating shopping list:', error);
+      log.error('Failed to regenerate shopping list after restoring meal', {
+        weeklyPlanId: planId,
+        mealId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       // Don't fail meal restoration if shopping list regeneration fails
     }
 
