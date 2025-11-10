@@ -1122,7 +1122,8 @@ export const removeMeal = asyncHandler(
       },
       include: {
         recipe: true,
-        weeklyPlan: true
+        weeklyPlan: true,
+        mealComponents: true
       }
     });
 
