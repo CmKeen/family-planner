@@ -93,6 +93,14 @@
         "cancel": "Cancel",
         "confirm": "Add"
       },
+      "skipMeal": {
+        "title": "Skip this meal",
+        "description": "This meal will be marked as skipped. You can add an optional reason to inform your family.",
+        "reasonLabel": "Reason",
+        "optional": "optional",
+        "placeholder": "E.g., Eating out, at grandma's, not home...",
+        "confirm": "Skip meal"
+      },
       "validatePlan": "Validate this weekly plan? The plan will be locked and can no longer be modified.",
       "confirmRemoveMeal": "Remove this meal from the plan?"
     },
@@ -125,16 +133,6 @@
     "skippedMeal": {
       "title": "Skipped meal",
       "restore": "Restore meal slot"
-    },
-    "dialogs": {
-      "skipMeal": {
-        "title": "Skip this meal",
-        "description": "This meal will be marked as skipped. You can add an optional reason to inform your family.",
-        "reasonLabel": "Reason",
-        "optional": "optional",
-        "placeholder": "E.g., Eating out, at grandma's, not home...",
-        "confirm": "Skip meal"
-      }
     }
   },
   "recipes": {

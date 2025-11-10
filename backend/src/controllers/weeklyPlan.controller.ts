@@ -1146,28 +1146,47 @@ export const removeMeal = asyncHandler(
       throw new AppError('Can only skip meals in draft plans', 400);
     }
 
-    // Mark meal as skipped (non-destructive) and clear recipe/components
-    await prisma.meal.update({
+    // Delete meal components first (if any)
+    if (meal.mealComponents && meal.mealComponents.length > 0) {
+      await prisma.mealComponent.deleteMany({
+        where: { mealId }
+      });
+    }
+
+    // Mark meal as skipped (non-destructive) and clear recipe
+    const updatedMeal = await prisma.meal.update({
       where: { id: mealId },
       data: {
         isSkipped: true,
         skipReason: skipReason || null,
-        recipeId: null, // Clear recipe when skipping
-        mealComponents: { deleteMany: {} } // Clear components when skipping
+        recipeId: null // Clear recipe when skipping
+      },
+      include: {
+        recipe: true,
+        mealComponents: {
+          include: {
+            component: true
+          }
+        }
       }
     });
 
-    // Log meal skip with validated member
-    await logChange({
-      weeklyPlanId: planId,
-      mealId,
-      changeType: 'MEAL_REMOVED',
-      memberId: member.id,
-      oldValue: `${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
-      description: `Repas ignoré: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`,
-      descriptionEn: `Meal skipped: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`,
-      descriptionNl: `Maaltijd overgeslagen: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`
-    });
+    // Log meal skip with validated member (non-blocking)
+    try {
+      await logChange({
+        weeklyPlanId: planId,
+        mealId,
+        changeType: 'MEAL_REMOVED',
+        memberId: member.id,
+        oldValue: `${meal.dayOfWeek} ${meal.mealType}${meal.recipe ? `: ${meal.recipe.title}` : ''}`,
+        description: `Repas ignoré: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`,
+        descriptionEn: `Meal skipped: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`,
+        descriptionNl: `Maaltijd overgeslagen: ${meal.dayOfWeek} ${meal.mealType}${skipReason ? ` (${skipReason})` : ''}`
+      });
+    } catch (logError) {
+      console.error('Failed to log meal skip:', logError);
+      // Continue anyway - meal skip succeeded
+    }
 
     // Regenerate shopping list to keep it in sync (OBU-12)
     try {
@@ -1179,7 +1198,8 @@ export const removeMeal = asyncHandler(
 
     res.json({
       status: 'success',
-      message: 'Meal skipped successfully'
+      message: 'Meal skipped successfully',
+      data: { meal: updatedMeal }
     });
   }
 );
@@ -1222,25 +1242,38 @@ export const restoreMeal = asyncHandler(
     }
 
     // Restore meal to empty state
-    await prisma.meal.update({
+    const updatedMeal = await prisma.meal.update({
       where: { id: mealId },
       data: {
         isSkipped: false,
         skipReason: null
+      },
+      include: {
+        recipe: true,
+        mealComponents: {
+          include: {
+            component: true
+          }
+        }
       }
     });
 
-    // Log meal restoration
-    await logChange({
-      weeklyPlanId: planId,
-      mealId,
-      changeType: 'MEAL_ADDED', // Reusing MEAL_ADDED as it's essentially re-adding the meal
-      memberId: member.id,
-      newValue: `${meal.dayOfWeek} ${meal.mealType}`,
-      description: `Repas restauré: ${meal.dayOfWeek} ${meal.mealType}`,
-      descriptionEn: `Meal restored: ${meal.dayOfWeek} ${meal.mealType}`,
-      descriptionNl: `Maaltijd hersteld: ${meal.dayOfWeek} ${meal.mealType}`
-    });
+    // Log meal restoration (non-blocking)
+    try {
+      await logChange({
+        weeklyPlanId: planId,
+        mealId,
+        changeType: 'MEAL_ADDED', // Reusing MEAL_ADDED as it's essentially re-adding the meal
+        memberId: member.id,
+        newValue: `${meal.dayOfWeek} ${meal.mealType}`,
+        description: `Repas restauré: ${meal.dayOfWeek} ${meal.mealType}`,
+        descriptionEn: `Meal restored: ${meal.dayOfWeek} ${meal.mealType}`,
+        descriptionNl: `Maaltijd hersteld: ${meal.dayOfWeek} ${meal.mealType}`
+      });
+    } catch (logError) {
+      console.error('Failed to log meal restoration:', logError);
+      // Continue anyway - meal restoration succeeded
+    }
 
     // Regenerate shopping list to keep it in sync
     try {
@@ -1252,7 +1285,8 @@ export const restoreMeal = asyncHandler(
 
     res.json({
       status: 'success',
-      message: 'Meal restored successfully'
+      message: 'Meal restored successfully',
+      data: { meal: updatedMeal }
     });
   }
 );

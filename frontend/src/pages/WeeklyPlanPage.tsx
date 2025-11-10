@@ -554,46 +554,43 @@ export default function WeeklyPlanPage() {
       );
     }
 
-    // Skipped meal card
+    // Skipped meal card (compact)
     if (meal.isSkipped) {
       return (
-        <div key={meal.id} className="border rounded-lg p-4 bg-gray-50/50">
-          {/* Header */}
-          <div className="mb-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant="secondary" className="opacity-60">
-                {getMealTypeLabel(meal.mealType)}
-              </Badge>
-              {meal.locked && <Lock className="h-4 w-4 text-muted-foreground" />}
+        <div key={meal.id} className="border rounded-lg p-3 bg-gray-50/50">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: Badge + Title + Reason */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="secondary" className="opacity-60 text-xs">
+                  {getMealTypeLabel(meal.mealType)}
+                </Badge>
+                {meal.locked && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {t('weeklyPlan.skippedMeal.title')}
+                </span>
+                {meal.skipReason && (
+                  <span className="text-xs text-muted-foreground italic truncate">
+                    "{meal.skipReason}"
+                  </span>
+                )}
+              </div>
             </div>
-            <h3 className="text-sm font-medium text-muted-foreground">
-              {t('weeklyPlan.skippedMeal.title')}
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('weeklyPlan.portions', { count: meal.portions })}
-            </p>
+
+            {/* Right: Restore Button */}
+            {planData.status === 'DRAFT' && (
+              <button
+                onClick={() => handleRestoreMeal(meal.id)}
+                disabled={restoreMealMutation.isPending}
+                className="text-xs text-primary hover:underline flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded whitespace-nowrap"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${restoreMealMutation.isPending ? 'animate-spin' : ''}`} />
+                {t('weeklyPlan.skippedMeal.restore')}
+              </button>
+            )}
           </div>
-
-          {/* Skip Reason (if provided) */}
-          {meal.skipReason && (
-            <div className="mb-3 p-2 bg-white rounded border border-gray-200">
-              <p className="text-xs text-muted-foreground italic">
-                "{meal.skipReason}"
-              </p>
-            </div>
-          )}
-
-          {/* Restore Button */}
-          {planData.status === 'DRAFT' && (
-            <button
-              onClick={() => handleRestoreMeal(meal.id)}
-              disabled={restoreMealMutation.isPending}
-              className="text-sm text-primary hover:underline flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded mb-3"
-            >
-              <RefreshCw className={`h-4 w-4 ${restoreMealMutation.isPending ? 'animate-spin' : ''}`} />
-              {t('weeklyPlan.skippedMeal.restore')}
-            </button>
-          )}
 
           {/* Comments Section */}
           {permissions.canComment && (
