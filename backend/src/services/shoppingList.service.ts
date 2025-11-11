@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma';
 import { AppError } from '../middleware/errorHandler';
+import { log } from '../config/logger';
 
 interface AggregatedIngredient {
   name: string;
