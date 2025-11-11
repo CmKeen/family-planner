@@ -19,7 +19,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
-    "jsx": "react"
+    "jsx": "react",
+    "types": ["vitest/globals"]
   },
   "include": ["src/**/*"],
   "exclude": [
@@ -27,6 +28,7 @@
     "dist",
     "src/**/__tests__/**",
     "src/**/*.test.ts",
-    "src/scripts/**"
+    "src/scripts/**",
+    "src/test-setup.ts"
   ]
 }

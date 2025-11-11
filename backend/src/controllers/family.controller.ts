@@ -28,6 +28,15 @@ const createFamilySchema = z.object({
   }).optional()
 });
 
+const updateMemberSchema = z.object({
+  name: z.string().min(1).optional(),
+  role: z.enum(['ADMIN', 'PARENT', 'MEMBER', 'CHILD']).optional(),
+  age: z.number().int().positive().optional().nullable(),
+  portionFactor: z.number().positive().optional(),
+  aversions: z.array(z.string()).optional(),
+  favorites: z.array(z.string()).optional()
+});
+
 export const createFamily = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const data = createFamilySchema.parse(req.body);

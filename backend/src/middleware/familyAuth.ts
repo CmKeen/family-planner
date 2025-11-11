@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 import { AppError } from './errorHandler';
+import { AuthRequest } from './auth';
 
 /**
  * Middleware to populate req.member for family-scoped operations.
@@ -12,7 +13,7 @@ import { AppError } from './errorHandler';
  * - req.params.mealId (looks up family via meal -> weekly plan)
  */
 export const ensureFamilyMember = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -86,7 +87,7 @@ export const ensureFamilyMember = async (
  * router.post('/lock', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), controller.lock);
  */
 export const requireRole = (...allowedRoles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.member) {
       return next(new AppError('Member context not established', 500));
     }
