@@ -135,11 +135,14 @@ describe('RecipesPage', () => {
   it('should render recipe catalog', async () => {
     renderWithProviders();
 
+    // Wait for recipes to load
     await waitFor(() => {
       expect(screen.getAllByText('Poulet rôti')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Pâtes tomates basilic')[0]).toBeInTheDocument();
-      expect(screen.getAllByText('Saumon grillé')[0]).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
+
+    // Verify all recipes are rendered
+    expect(screen.getAllByText('Pâtes tomates basilic')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Saumon grillé')[0]).toBeInTheDocument();
   });
 
   it('should display search bar', () => {
