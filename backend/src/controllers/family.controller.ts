@@ -206,6 +206,17 @@ export const addMember = asyncHandler(
     const { id } = req.params;
     const { name, email, role, age, portionFactor, aversions, favorites } = req.body;
 
+    // Authorization check: Only ADMIN/PARENT can add members
+    // req.member is populated by ensureFamilyMember middleware
+    if (req.member!.role !== 'ADMIN' && req.member!.role !== 'PARENT') {
+      throw new AppError('Only admins and parents can add members', 403);
+    }
+
+    // Additional check: Only ADMIN can create other ADMIN members
+    if (role === 'ADMIN' && req.member!.role !== 'ADMIN') {
+      throw new AppError('Only admins can create admin members', 403);
+    }
+
     // If email is provided, try to link to existing user
     let userId: string | undefined;
     if (email) {
@@ -266,6 +277,43 @@ export const updateMember = asyncHandler(
     // Validate and sanitize input - only allowed fields will be processed
     const validatedData = updateMemberSchema.parse(req.body);
 
+    // Get target member
+    const targetMember = await prisma.familyMember.findUnique({
+      where: { id: memberId }
+    });
+
+    if (!targetMember) {
+      throw new AppError('Member not found', 404);
+    }
+
+    // Authorization rules
+    const isUpdatingSelf = req.member!.id === memberId;
+    const isAdmin = req.member!.role === 'ADMIN';
+    const isParent = req.member!.role === 'PARENT';
+    const isRoleChange = validatedData.role && validatedData.role !== targetMember.role;
+
+    // Only ADMIN/PARENT can update other members
+    if (!isUpdatingSelf && !isAdmin && !isParent) {
+      throw new AppError('Insufficient permissions to update other members', 403);
+    }
+
+    // Only ADMIN can change roles
+    if (isRoleChange && !isAdmin) {
+      throw new AppError('Only admins can change member roles', 403);
+    }
+
+    // Cannot demote self if last admin
+    if (isUpdatingSelf && isRoleChange && isAdmin && validatedData.role !== 'ADMIN') {
+      const adminCount = await prisma.familyMember.count({
+        where: { familyId: targetMember.familyId, role: 'ADMIN' }
+      });
+
+      if (adminCount === 1) {
+        throw new AppError('Cannot remove last admin from family', 400);
+      }
+    }
+
+    // Proceed with update
     const member = await prisma.familyMember.update({
       where: { id: memberId },
       data: validatedData
@@ -281,6 +329,41 @@ export const updateMember = asyncHandler(
 export const removeMember = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { memberId } = req.params;
+
+    // Get target member
+    const targetMember = await prisma.familyMember.findUnique({
+      where: { id: memberId }
+    });
+
+    if (!targetMember) {
+      throw new AppError('Member not found', 404);
+    }
+
+    // Authorization rules
+    const isRemovingSelf = req.member!.id === memberId;
+    const isAdmin = req.member!.role === 'ADMIN';
+    const isParent = req.member!.role === 'PARENT';
+
+    // Only ADMIN/PARENT can remove members (except ADMIN members)
+    if (!isAdmin && !isParent) {
+      throw new AppError('Only admins and parents can remove members', 403);
+    }
+
+    // PARENT cannot remove ADMIN members
+    if (isParent && targetMember.role === 'ADMIN') {
+      throw new AppError('Parents cannot remove admin members', 403);
+    }
+
+    // Cannot remove last admin
+    if (targetMember.role === 'ADMIN') {
+      const adminCount = await prisma.familyMember.count({
+        where: { familyId: targetMember.familyId, role: 'ADMIN' }
+      });
+
+      if (adminCount === 1) {
+        throw new AppError('Cannot remove last admin from family', 400);
+      }
+    }
 
     await prisma.familyMember.delete({
       where: { id: memberId }

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { FamilyMember } from '@prisma/client';
 import { AppError } from './errorHandler';
 
 export interface AuthRequest extends Request {
@@ -7,13 +8,7 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
   };
-  member?: {
-    id: string;
-    name: string;
-    role: string;
-    familyId: string;
-    canViewAuditLog?: boolean;
-  };
+  member?: FamilyMember;
 }
 
 export const authenticate = (
