@@ -88,38 +88,145 @@ export const getWeeklyPlans = asyncHandler(
 export const getWeeklyPlan = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
+    const startTime = Date.now();
 
     const plan = await prisma.weeklyPlan.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        weekStartDate: true,
+        weekNumber: true,
+        year: true,
+        status: true,
+        cutoffDate: true,
+        cutoffTime: true,
+        allowCommentsAfterCutoff: true,
+        validatedAt: true,
+        createdAt: true,
+        updatedAt: true,
         family: {
-          include: {
-            dietProfile: true,
-            members: true
+          select: {
+            id: true,
+            name: true,
+            language: true,
+            units: true,
+            dietProfile: {
+              select: {
+                id: true,
+                kosher: true,
+                kosherType: true,
+                halal: true,
+                halalType: true,
+                vegetarian: true,
+                vegan: true,
+                pescatarian: true,
+                glutenFree: true,
+                lactoseFree: true,
+                allergies: true,
+                favoriteRatio: true,
+                maxNovelties: true
+              }
+            },
+            members: {
+              select: {
+                id: true,
+                name: true,
+                role: true,
+                age: true,
+                portionFactor: true,
+                aversions: true,
+                favorites: true,
+                canViewAuditLog: true
+              }
+            }
           }
         },
         meals: {
-          include: {
+          select: {
+            id: true,
+            dayOfWeek: true,
+            mealType: true,
+            portions: true,
+            locked: true,
+            isSchoolMeal: true,
+            isExternal: true,
+            externalNote: true,
+            isSkipped: true,
+            skipReason: true,
+            createdAt: true,
+            updatedAt: true,
             recipe: {
-              include: {
-                ingredients: true,
-                instructions: true
+              select: {
+                id: true,
+                title: true,
+                titleEn: true,
+                prepTime: true,
+                cookTime: true,
+                totalTime: true,
+                category: true,
+                cuisine: true,
+                imageUrl: true,
+                thumbnailUrl: true,
+                isFavorite: true,
+                isNovelty: true,
+                isComponentBased: true,
+                servings: true,
+                // ✅ NO ingredients, NO instructions for list view
               }
             },
             mealComponents: {
-              include: {
-                component: true
+              select: {
+                id: true,
+                quantity: true,
+                unit: true,
+                order: true,
+                component: {
+                  select: {
+                    id: true,
+                    name: true,
+                    nameEn: true,
+                    nameNl: true,
+                    category: true,
+                    unit: true
+                  }
+                }
+              },
+              orderBy: {
+                order: 'asc'
               }
             },
             attendance: {
-              include: {
-                member: true
+              select: {
+                id: true,
+                status: true,
+                member: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             },
-            guests: true,
+            guests: {
+              select: {
+                id: true,
+                adults: true,
+                children: true,
+                note: true
+              }
+            },
             votes: {
-              include: {
-                member: true
+              select: {
+                id: true,
+                type: true,
+                comment: true,
+                createdAt: true,
+                member: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             }
           },
@@ -128,13 +235,41 @@ export const getWeeklyPlan = asyncHandler(
             { mealType: 'asc' }
           ]
         },
-        wishes: true
+        wishes: {
+          select: {
+            id: true,
+            text: true,
+            memberId: true,
+            fulfilled: true,
+            fulfilledWithRecipeId: true,
+            createdAt: true
+          }
+        },
+        template: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            isSystem: true,
+            schedule: true
+          }
+        }
       }
     });
 
     if (!plan) {
       throw new AppError('Weekly plan not found', 404);
     }
+
+    const duration = Date.now() - startTime;
+    const mealCount = plan.meals?.length || 0;
+
+    log.info('Weekly plan loaded', {
+      planId: id,
+      duration,
+      mealCount,
+      status: plan.status
+    });
 
     res.json({
       status: 'success',

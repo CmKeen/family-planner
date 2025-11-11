@@ -215,6 +215,8 @@ model Ingredient {
   order             Int         @default(0)
 
   createdAt         DateTime    @default(now())
+
+  @@index([recipeId, order])
 }
 
 model Instruction {
@@ -318,6 +320,9 @@ model Meal {
   mealComponents    MealComponent[]
   comments          MealComment[]
   changeLogs        PlanChangeLog[]
+
+  @@index([weeklyPlanId, isSkipped])
+  @@index([weeklyPlanId, dayOfWeek, mealType])
 }
 
 enum AttendanceStatus {
@@ -354,6 +359,8 @@ model Guest {
 
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+
+  @@index([mealId])
 }
 
 enum VoteType {
@@ -440,6 +447,8 @@ model ShoppingList {
   generatedAt       DateTime    @default(now())
 
   items             ShoppingItem[]
+
+  @@unique([weeklyPlanId])
 }
 
 model ShoppingItem {
@@ -482,6 +491,9 @@ model InventoryItem {
 
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+
+  @@index([familyId])
+  @@index([familyId, name])
 }
 
 enum ComponentCategory {

@@ -1,6 +1,8 @@
 import winston from 'winston';
-import { env } from './env';
 import fs from 'fs';
+
+// Use process.env directly to avoid circular dependency issues
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 /**
  * Custom log format for development - includes colors and readable formatting
@@ -33,11 +35,11 @@ const productionFormat = winston.format.combine(
  * Create Winston logger instance with environment-specific configuration
  */
 const logger = winston.createLogger({
-  level: env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: env.NODE_ENV === 'production' ? productionFormat : developmentFormat,
+  level: NODE_ENV === 'production' ? 'info' : 'debug',
+  format: NODE_ENV === 'production' ? productionFormat : developmentFormat,
   defaultMeta: {
     service: 'family-planner-api',
-    environment: env.NODE_ENV
+    environment: NODE_ENV
   },
   transports: [
     // Console transport for all environments
@@ -48,7 +50,7 @@ const logger = winston.createLogger({
 });
 
 // Add file transports in production
-if (env.NODE_ENV === 'production') {
+if (NODE_ENV === 'production') {
   logger.add(
     new winston.transports.File({
       filename: 'logs/error.log',
@@ -70,7 +72,7 @@ if (env.NODE_ENV === 'production') {
 /**
  * Create logs directory if it doesn't exist (production)
  */
-if (env.NODE_ENV === 'production') {
+if (NODE_ENV === 'production') {
   const logsDir = 'logs';
 
   if (!fs.existsSync(logsDir)) {

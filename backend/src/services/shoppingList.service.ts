@@ -81,6 +81,8 @@ function roundQuantity(quantity: number, unit: string): number {
  * @throws AppError if weekly plan not found
  */
 export async function generateShoppingList(weeklyPlanId: string) {
+  const startTime = Date.now();
+
   // Fetch full plan data with all related entities
   const plan = await prisma.weeklyPlan.findUnique({
     where: { id: weeklyPlanId },
@@ -275,6 +277,15 @@ export async function generateShoppingList(weeklyPlanId: string) {
         orderBy: { order: 'asc' }
       }
     }
+  });
+
+  const duration = Date.now() - startTime;
+  log.info('Shopping list generated', {
+    weeklyPlanId,
+    duration,
+    mealCount: plan.meals.length,
+    itemCount: shoppingList.items.length,
+    inventoryItemsChecked: plan.family.inventory?.length || 0
   });
 
   return shoppingList;
