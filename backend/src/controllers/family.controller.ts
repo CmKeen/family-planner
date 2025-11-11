@@ -3,6 +3,7 @@ import { z } from 'zod';
 import prisma from '../lib/prisma';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
+import { updateMemberSchema } from '../validators/family.validators';
 
 const createFamilySchema = z.object({
   name: z.string().min(1),
@@ -261,11 +262,13 @@ export const addMember = asyncHandler(
 export const updateMember = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { memberId } = req.params;
-    const { name, role, age, portionFactor, aversions, favorites } = req.body;
+
+    // Validate and sanitize input - only allowed fields will be processed
+    const validatedData = updateMemberSchema.parse(req.body);
 
     const member = await prisma.familyMember.update({
       where: { id: memberId },
-      data: { name, role, age, portionFactor, aversions, favorites }
+      data: validatedData
     });
 
     res.json({

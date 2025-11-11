@@ -7,6 +7,7 @@ import { logChange } from '../utils/auditLogger';
 import { notificationService } from '../services/notification.service';
 import { generateShoppingList as generateShoppingListService } from '../services/shoppingList.service';
 import { log } from '../config/logger';
+import { updateMealSchema } from '../validators/weeklyPlan.validators';
 
 // Type aliases for Prisma enums
 type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
@@ -733,8 +734,10 @@ export const generateExpressPlan = asyncHandler(
 export const updateMeal = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { mealId } = req.params;
-    const { recipeId, portions } = req.body;
     const userId = req.user!.id;
+
+    // Validate and sanitize input - only allowed fields will be processed
+    const validatedData = updateMealSchema.parse(req.body);
 
     // Fetch old meal data for audit logging
     const oldMeal = await prisma.meal.findUnique({
@@ -760,29 +763,29 @@ export const updateMeal = asyncHandler(
 
     const meal = await prisma.meal.update({
       where: { id: mealId },
-      data: { recipeId, portions },
+      data: validatedData,
       include: {
         recipe: true
       }
     });
 
     // Log portion change
-    if (portions && oldMeal.portions !== portions) {
+    if (validatedData.portions && oldMeal.portions !== validatedData.portions) {
       await logChange({
         weeklyPlanId: oldMeal.weeklyPlanId,
         mealId: meal.id,
         changeType: 'PORTIONS_CHANGED',
         memberId: member.id,
         oldValue: oldMeal.portions.toString(),
-        newValue: portions.toString(),
-        description: `Portions changed from ${oldMeal.portions} to ${portions}`,
-        descriptionEn: `Portions changed from ${oldMeal.portions} to ${portions}`,
-        descriptionNl: `Porties gewijzigd van ${oldMeal.portions} naar ${portions}`
+        newValue: validatedData.portions.toString(),
+        description: `Portions changed from ${oldMeal.portions} to ${validatedData.portions}`,
+        descriptionEn: `Portions changed from ${oldMeal.portions} to ${validatedData.portions}`,
+        descriptionNl: `Porties gewijzigd van ${oldMeal.portions} naar ${validatedData.portions}`
       });
     }
 
     // Log recipe change
-    if (recipeId && oldMeal.recipeId !== recipeId) {
+    if (validatedData.recipeId && oldMeal.recipeId !== validatedData.recipeId) {
       await logChange({
         weeklyPlanId: oldMeal.weeklyPlanId,
         mealId: meal.id,

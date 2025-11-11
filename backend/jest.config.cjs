@@ -10,8 +10,8 @@ module.exports = {
 
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    // Strip .js extensions for module resolution
-    '(.*)\\.js$': '$1'
+    // Strip .js extensions for module resolution (but not for package names)
+    '^(\\.{1,2}/.*)\\.js$': '$1'
   },
 
   collectCoverageFrom: [
