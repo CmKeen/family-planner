@@ -225,10 +225,16 @@ describe('FamilySettingsPage - Template Management', () => {
     it('should show Set as default button for non-default system templates', async () => {
       renderPage();
 
+      // First wait for the templates to be loaded
+      await waitFor(() => {
+        expect(screen.getAllByText('Weekday Dinners')[0]).toBeInTheDocument();
+      });
+
+      // Then check for the Set as default button
       await waitFor(() => {
         const setDefaultButtons = screen.getAllByRole('button', { name: 'Set as default' });
         expect(setDefaultButtons.length).toBeGreaterThan(0);
-      });
+      }, { timeout: 3000 });
     });
 
     it('should not show Set as default button for current default template', async () => {
