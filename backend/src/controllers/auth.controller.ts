@@ -5,10 +5,11 @@ import { hashPassword, comparePassword, generateToken } from '../utils/auth.util
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 import { log } from '../config/logger';
+import { passwordSchema, emailSchema } from '../utils/validation';
 
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: emailSchema,
+  password: passwordSchema,
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   language: z.enum(['fr', 'en', 'nl']).optional()
