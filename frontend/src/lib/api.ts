@@ -5,18 +5,35 @@ const API_URL = env.VITE_API_URL;
 
 export const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
+  withCredentials: true, // Send cookies with requests
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Add auth token to requests
+/**
+ * Get CSRF token from cookie (set by backend on login/register)
+ * Cookie name: XSRF-TOKEN (readable by JS, not httpOnly)
+ */
+const getCsrfTokenFromCookie = (): string | null => {
+  const cookie = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('XSRF-TOKEN='));
+  return cookie ? cookie.split('=')[1] : null;
+};
+
+// Add CSRF token to state-changing requests (OBU-80)
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  // Only add CSRF token for non-safe methods
+  const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
+  if (config.method && !safeMethods.includes(config.method.toUpperCase())) {
+    const csrfToken = getCsrfTokenFromCookie();
+    if (csrfToken) {
+      config.headers['X-CSRF-Token'] = csrfToken;
+    }
   }
+  // Note: JWT token is now sent automatically via HTTP-only cookie (OBU-79)
+  // No need to manually add Authorization header
   return config;
 });
 
@@ -25,7 +42,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
+      // Clear any stale state and redirect to login
+      window.location.href = '/login';
+    }
+    // Handle CSRF token mismatch - refresh token and retry
+    if (error.response?.status === 403 && error.response?.data?.message?.includes('CSRF')) {
+      // CSRF token expired or invalid - user should re-login
       window.location.href = '/login';
     }
     return Promise.reject(error);
