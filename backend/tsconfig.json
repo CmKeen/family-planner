@@ -19,8 +19,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
-    "jsx": "react",
-    "types": ["vitest/globals"]
+    "jsx": "react"
   },
   "include": ["src/**/*"],
   "exclude": [

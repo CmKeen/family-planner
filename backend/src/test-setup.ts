@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 import { vi } from 'vitest';
 
 // Mock environment variables for testing
