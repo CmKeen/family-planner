@@ -27,6 +27,7 @@
     "dist",
     "src/**/__tests__/**",
     "src/**/*.test.ts",
-    "src/scripts/**"
+    "src/scripts/**",
+    "src/test-setup.ts"
   ]
 }

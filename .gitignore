@@ -43,3 +43,4 @@ build/
 
 # Windows specific
 nul
+.linear-api-key

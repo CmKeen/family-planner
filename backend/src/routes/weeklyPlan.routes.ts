@@ -31,6 +31,7 @@ import {
   getMealAuditLog
 } from '../controllers/auditLog.controller';
 import { authenticate } from '../middleware/auth';
+import { ensureFamilyMember, requireRole } from '../middleware/familyAuth';
 import { intensiveOperationLimiter } from '../middleware/rateLimiter';
 import mealCommentRoutes from './mealComment.routes.js';
 
@@ -39,33 +40,40 @@ const router = Router();
 router.use(authenticate);
 
 router.post('/', createWeeklyPlan);
-router.get('/family/:familyId', getWeeklyPlans);
+router.get('/family/:familyId', ensureFamilyMember, getWeeklyPlans);
 router.get('/:id', getWeeklyPlan);
-// Rate limit intensive operations (plan generation)
-router.post('/:familyId/generate', intensiveOperationLimiter, generateAutoPlan);
-router.post('/:familyId/generate-express', intensiveOperationLimiter, generateExpressPlan);
-router.put('/:planId/meals/:mealId', updateMeal);
-router.post('/:planId/meals/:mealId/adjust-portions', adjustMealPortions);
-router.post('/:planId/meals/:mealId/swap', swapMeal);
-router.post('/:planId/meals/:mealId/lock', lockMeal);
-router.post('/:planId/meals/:mealId/attendance', addAttendance);
-router.post('/:planId/meals/:mealId/guests', addGuests);
-router.post('/:planId/meals/:mealId/vote', addVote);
-router.post('/:planId/wishes', addWish);
-router.post('/:planId/validate', validatePlan);
 
-// Meal component operations (component-based meals)
-router.post('/:planId/meals/:mealId/components', addComponentToMeal); // Add component to meal
-router.put('/:planId/meals/:mealId/components/:componentId/swap', swapMealComponent); // Swap component
-router.patch('/:planId/meals/:mealId/components/:componentId', updateMealComponent); // Update component
-router.delete('/:planId/meals/:mealId/components/:componentId', removeMealComponent); // Remove component
-router.post('/:planId/meals/:mealId/save-as-recipe', saveComponentMealAsRecipe); // Save component meal as recipe
+// Rate limit intensive operations (plan generation) - All members can generate
+router.post('/:familyId/generate', ensureFamilyMember, intensiveOperationLimiter, generateAutoPlan);
+router.post('/:familyId/generate-express', ensureFamilyMember, intensiveOperationLimiter, generateExpressPlan);
 
-// Meal schedule template operations for draft plans
-router.post('/:planId/meals', addMeal); // Add single meal
-router.delete('/:planId/meals/:mealId', removeMeal); // Skip meal (mark as skipped)
-router.post('/:planId/meals/:mealId/restore', restoreMeal); // Restore skipped meal to empty state
-router.put('/:planId/template', switchTemplate); // Switch to different template
+// Meal operations - ADMIN/PARENT only for modifications
+router.put('/:planId/meals/:mealId', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), updateMeal);
+router.post('/:planId/meals/:mealId/adjust-portions', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), adjustMealPortions);
+router.post('/:planId/meals/:mealId/swap', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), swapMeal);
+router.post('/:planId/meals/:mealId/lock', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), lockMeal);
+
+// All members can add attendance/guests/votes/wishes
+router.post('/:planId/meals/:mealId/attendance', ensureFamilyMember, addAttendance);
+router.post('/:planId/meals/:mealId/guests', ensureFamilyMember, addGuests);
+router.post('/:planId/meals/:mealId/vote', ensureFamilyMember, addVote);
+router.post('/:planId/wishes', ensureFamilyMember, addWish);
+
+// Only ADMIN/PARENT can validate plan
+router.post('/:planId/validate', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), validatePlan);
+
+// Meal component operations (component-based meals) - ADMIN/PARENT only
+router.post('/:planId/meals/:mealId/components', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), addComponentToMeal);
+router.put('/:planId/meals/:mealId/components/:componentId/swap', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), swapMealComponent);
+router.patch('/:planId/meals/:mealId/components/:componentId', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), updateMealComponent);
+router.delete('/:planId/meals/:mealId/components/:componentId', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), removeMealComponent);
+router.post('/:planId/meals/:mealId/save-as-recipe', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), saveComponentMealAsRecipe);
+
+// Meal schedule template operations for draft plans - ADMIN/PARENT only
+router.post('/:planId/meals', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), addMeal);
+router.delete('/:planId/meals/:mealId', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), removeMeal);
+router.post('/:planId/meals/:mealId/restore', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), restoreMeal);
+router.put('/:planId/template', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), switchTemplate);
 
 // Meal comments (nested routes)
 router.use('/:planId/meals/:mealId/comments', mealCommentRoutes);
@@ -133,7 +141,7 @@ router.use('/:planId/meals/:mealId/comments', mealCommentRoutes);
  *       403:
  *         description: Not authorized to view audit log
  */
-router.get('/:planId/audit-log', getPlanAuditLog);
+router.get('/:planId/audit-log', ensureFamilyMember, getPlanAuditLog);
 
 /**
  * @swagger
@@ -199,6 +207,6 @@ router.get('/:planId/audit-log', getPlanAuditLog);
  *                     total:
  *                       type: integer
  */
-router.get('/:planId/meals/:mealId/audit-log', getMealAuditLog);
+router.get('/:planId/meals/:mealId/audit-log', ensureFamilyMember, getMealAuditLog);
 
 export default router;

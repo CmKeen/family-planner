@@ -20,6 +20,7 @@ import {
 } from '../controllers/invitation.controller';
 import { createCustomComponent } from '../controllers/foodComponent.controller';
 import { authenticate } from '../middleware/auth';
+import { ensureFamilyMember, requireRole } from '../middleware/familyAuth';
 
 const router = Router();
 
@@ -32,25 +33,25 @@ router.get('/', getFamilies);
 // Invitations - received by current user (global route)
 router.get('/invitations/received', getReceivedInvitations);
 
-router.get('/:id', getFamily);
-router.put('/:id', updateFamily);
-router.delete('/:id', deleteFamily);
+router.get('/:id', ensureFamilyMember, getFamily);
+router.put('/:id', ensureFamilyMember, requireRole('ADMIN'), updateFamily);
+router.delete('/:id', ensureFamilyMember, requireRole('ADMIN'), deleteFamily);
 
-// Members
-router.post('/:id/members', addMember);
-router.put('/:familyId/members/:memberId', updateMember);
-router.delete('/:familyId/members/:memberId', removeMember);
+// Members - All require family membership verification
+router.post('/:id/members', ensureFamilyMember, addMember);
+router.put('/:familyId/members/:memberId', ensureFamilyMember, updateMember);
+router.delete('/:familyId/members/:memberId', ensureFamilyMember, removeMember);
 
 // Diet profile
-router.put('/:id/diet-profile', updateDietProfile);
+router.put('/:id/diet-profile', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), updateDietProfile);
 
 // Custom food components
-router.post('/:familyId/components', createCustomComponent);
+router.post('/:familyId/components', ensureFamilyMember, createCustomComponent);
 
 // Invitations - family-specific routes
-router.post('/:id/invitations', sendInvitation);
-router.get('/:id/invitations/sent', getSentInvitations);
-router.delete('/:familyId/invitations/:invitationId', cancelInvitation);
+router.post('/:id/invitations', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), sendInvitation);
+router.get('/:id/invitations/sent', ensureFamilyMember, getSentInvitations);
+router.delete('/:familyId/invitations/:invitationId', ensureFamilyMember, requireRole('ADMIN', 'PARENT'), cancelInvitation);
 
 // Invitation actions (accept/decline)
 router.post('/invitations/:id/accept', acceptInvitation);
