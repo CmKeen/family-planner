@@ -27,6 +27,7 @@ import {
 } from './middleware/security.js';
 import { getEnvironmentLimiter } from './middleware/rateLimiter.js';
 import { skipHealthCheck } from './middleware/requestLogger.js';
+import { csrfProtection, getCsrfTokenHandler } from './middleware/csrf.js';
 
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -90,6 +91,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request sanitization
 app.use(sanitizeRequest);
+
+// CSRF token endpoint (must be before CSRF protection middleware)
+app.get('/api/csrf-token', getCsrfTokenHandler);
+
+// CSRF protection for state-changing operations (OBU-80)
+// Skips safe methods (GET, HEAD, OPTIONS) automatically
+app.use('/api', csrfProtection);
 
 // Admin API routes (protected by admin authentication)
 app.use('/api/admin', adminApiRoutes);
