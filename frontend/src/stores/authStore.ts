@@ -11,9 +11,9 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean; // Whether initial auth check has completed
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
@@ -22,20 +22,22 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  // Auth state is now determined by cookie presence (checked via checkAuth)
+  // Not by localStorage token (OBU-79: prevents XSS token theft)
+  isAuthenticated: false,
   isLoading: false,
+  isInitialized: false, // Will be true after first checkAuth completes
 
   login: async (email: string, password: string) => {
     set({ isLoading: true });
     try {
       const response = await authAPI.login({ email, password });
-      const { user, token } = response.data.data;
+      // Token is now set in HTTP-only cookie by backend (OBU-79)
+      // CSRF token is set in readable cookie by backend (OBU-80)
+      const { user } = response.data.data;
 
-      localStorage.setItem('token', token);
       set({
         user,
-        token,
         isAuthenticated: true,
         isLoading: false
       });
@@ -49,12 +51,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const response = await authAPI.register(data);
-      const { user, token } = response.data.data;
+      // Token is now set in HTTP-only cookie by backend (OBU-79)
+      // CSRF token is set in readable cookie by backend (OBU-80)
+      const { user } = response.data.data;
 
-      localStorage.setItem('token', token);
       set({
         user,
-        token,
         isAuthenticated: true,
         isLoading: false
       });
@@ -67,37 +69,33 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     try {
       await authAPI.logout();
+      // Backend clears both auth cookie and CSRF cookie
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('token');
       set({
         user: null,
-        token: null,
         isAuthenticated: false
       });
     }
   },
 
   checkAuth: async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      set({ isAuthenticated: false, user: null });
-      return;
-    }
-
+    // Check auth by attempting to fetch user profile
+    // Cookie is sent automatically with request
     try {
       const response = await authAPI.getMe();
       set({
         user: response.data.data.user,
-        isAuthenticated: true
+        isAuthenticated: true,
+        isInitialized: true
       });
     } catch (error) {
-      localStorage.removeItem('token');
+      // Auth cookie is invalid or expired
       set({
         user: null,
-        token: null,
-        isAuthenticated: false
+        isAuthenticated: false,
+        isInitialized: true
       });
     }
   }

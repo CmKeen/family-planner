@@ -6,6 +6,7 @@ import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { AuthRequest } from '../middleware/auth';
 import { log } from '../config/logger';
 import { passwordSchema, emailSchema } from '../utils/validation';
+import { setCsrfToken, clearCsrfToken } from '../middleware/csrf';
 
 const registerSchema = z.object({
   email: emailSchema,
@@ -72,11 +73,14 @@ export const register = asyncHandler(
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
+    // Set CSRF token for double-submit cookie pattern (OBU-80)
+    setCsrfToken(res);
+
+    // Do NOT include token in response body to prevent XSS attacks (OBU-79)
     res.status(201).json({
       status: 'success',
       data: {
-        user,
-        token
+        user
       }
     });
   }
@@ -123,6 +127,10 @@ export const login = asyncHandler(
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
+    // Set CSRF token for double-submit cookie pattern (OBU-80)
+    setCsrfToken(res);
+
+    // Do NOT include token in response body to prevent XSS attacks (OBU-79)
     res.json({
       status: 'success',
       data: {
@@ -132,8 +140,7 @@ export const login = asyncHandler(
           firstName: user.firstName,
           lastName: user.lastName,
           language: user.language
-        },
-        token
+        }
       }
     });
   }
@@ -142,6 +149,8 @@ export const login = asyncHandler(
 export const logout = asyncHandler(
   async (req: Request, res: Response) => {
     res.clearCookie('token');
+    // Clear CSRF token on logout (OBU-80)
+    clearCsrfToken(res);
     res.json({
       status: 'success',
       message: 'Logged out successfully'
