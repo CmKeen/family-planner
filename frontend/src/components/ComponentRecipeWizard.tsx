@@ -63,7 +63,7 @@ export default function ComponentRecipeWizard({ familyId, recipe, onSuccess }: C
         nameEn: recipe.titleEn || '',
         description: recipe.description || '',
         servings: recipe.servings || 4,
-        mealTypes: recipe.mealType || [],
+        mealTypes: (recipe.mealType || []).map((mt: string) => mt.toUpperCase()),
         components: [] // Will be populated after components are loaded
       };
     }
@@ -113,7 +113,7 @@ export default function ComponentRecipeWizard({ familyId, recipe, onSuccess }: C
         nameEn: data.nameEn,
         description: data.description,
         servings: data.servings,
-        mealTypes: data.mealTypes,
+        mealTypes: data.mealTypes.map(mt => mt.toLowerCase()),
         components: data.components.map(c => ({
           componentId: c.componentId,
           quantity: c.quantity,
