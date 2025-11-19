@@ -198,6 +198,10 @@
         "nameRequired": "Recipe name is required",
         "mealTypesRequired": "Select at least one meal type",
         "componentsRequired": "Add at least one component"
+      },
+      "edit": {
+        "title": "Edit Recipe",
+        "updateRecipe": "Update Recipe"
       }
     },
     "categories": {

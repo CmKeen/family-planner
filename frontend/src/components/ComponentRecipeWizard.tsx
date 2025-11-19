@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { recipeAPI } from '@/lib/api';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { recipeAPI, foodComponentAPI } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -31,46 +31,110 @@ export interface RecipeFormData {
 
 interface ComponentRecipeWizardProps {
   familyId: string;
+  recipe?: any; // If provided, wizard is in edit mode
   onSuccess?: () => void;
 }
 
-export default function ComponentRecipeWizard({ familyId, onSuccess }: ComponentRecipeWizardProps) {
+export default function ComponentRecipeWizard({ familyId, recipe, onSuccess }: ComponentRecipeWizardProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const isEditMode = !!recipe;
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<RecipeFormData>({
-    name: '',
-    nameEn: '',
-    nameNl: '',
-    description: '',
-    servings: 4,
-    mealTypes: [],
-    components: []
+
+  // Track if we've initialized components (to avoid re-running useEffect)
+  const [componentsInitialized, setComponentsInitialized] = useState(false);
+
+  // Fetch all components to map ingredient names back to component IDs (for edit mode)
+  const { data: componentsData } = useQuery({
+    queryKey: ['components', familyId],
+    queryFn: async () => {
+      const response = await foodComponentAPI.getAll({ familyId });
+      return response.data; // API returns array directly
+    },
+    enabled: isEditMode // Only fetch when in edit mode
   });
+
+  // Initialize form data - pre-fill if editing
+  const [formData, setFormData] = useState<RecipeFormData>(() => {
+    if (recipe) {
+      // Pre-fill form with existing recipe data
+      return {
+        name: recipe.title || '',
+        nameEn: recipe.titleEn || '',
+        description: recipe.description || '',
+        servings: recipe.servings || 4,
+        mealTypes: (recipe.mealType || []).map((mt: string) => mt.toUpperCase()),
+        components: [] // Will be populated after components are loaded
+      };
+    }
+    return {
+      name: '',
+      nameEn: '',
+      description: '',
+      servings: 4,
+      mealTypes: [],
+      components: []
+    };
+  });
+
+  // Update components once they're loaded (for edit mode)
+  useEffect(() => {
+    if (isEditMode && recipe && componentsData && !componentsInitialized) {
+      const mappedComponents = recipe.ingredients?.map((ing: any) => {
+        // Find the component by matching name
+        const component = componentsData.find((c: any) =>
+          c.name.toLowerCase() === ing.name.toLowerCase()
+        );
+
+        return {
+          componentId: component?.id || '', // Use component ID if found
+          componentName: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit || component?.unit || 'g', // Use ingredient unit, fallback to component unit, then 'g'
+          category: ing.category || component?.shoppingCategory
+        };
+      }) || [];
+
+      setFormData(prev => ({ ...prev, components: mappedComponents }));
+      setComponentsInitialized(true);
+    }
+  }, [isEditMode, recipe, componentsData, componentsInitialized]);
+
   const [createdRecipe, setCreatedRecipe] = useState<any>(null);
 
   const totalSteps = 3;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
-  // Create recipe mutation
-  const createRecipeMutation = useMutation({
-    mutationFn: (data: RecipeFormData) => recipeAPI.createComponentBased({
-      familyId,
-      name: data.name,
-      nameEn: data.nameEn,
-      nameNl: data.nameNl,
-      description: data.description,
-      servings: data.servings,
-      mealTypes: data.mealTypes,
-      components: data.components.map(c => ({
-        componentId: c.componentId,
-        quantity: c.quantity,
-        unit: c.unit
-      }))
-    }),
+  // Create or update recipe mutation
+  const saveRecipeMutation = useMutation({
+    mutationFn: (data: RecipeFormData) => {
+      const payload = {
+        name: data.name,
+        nameEn: data.nameEn,
+        description: data.description,
+        servings: data.servings,
+        mealTypes: data.mealTypes.map(mt => mt.toLowerCase()),
+        components: data.components.map(c => ({
+          componentId: c.componentId,
+          quantity: c.quantity,
+          unit: c.unit
+        }))
+      };
+
+      if (isEditMode && recipe) {
+        // Update existing recipe
+        return recipeAPI.updateComponentBased(recipe.id, payload);
+      } else {
+        // Create new recipe
+        return recipeAPI.createComponentBased({
+          ...payload,
+          familyId
+        });
+      }
+    },
     onSuccess: (response) => {
-      const recipe = response.data.data.recipe;
-      setCreatedRecipe(recipe);
+      const updatedRecipe = response.data.data.recipe;
+      setCreatedRecipe(updatedRecipe);
       setCurrentStep(4); // Success screen
       queryClient.invalidateQueries({ queryKey: ['recipes'] });
       onSuccess?.();
@@ -82,7 +146,7 @@ export default function ComponentRecipeWizard({ familyId, onSuccess }: Component
       setCurrentStep(currentStep + 1);
     } else if (currentStep === totalSteps) {
       // Submit the form
-      createRecipeMutation.mutate(formData);
+      saveRecipeMutation.mutate(formData);
     }
   };
 
@@ -134,7 +198,9 @@ export default function ComponentRecipeWizard({ familyId, onSuccess }: Component
       {/* Progress Bar */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="text-xl font-bold">{t('recipes.create.title')}</h2>
+          <h2 className="text-xl font-bold">
+            {isEditMode ? t('recipes.edit.title') : t('recipes.create.title')}
+          </h2>
           <span className="text-sm text-muted-foreground">
             {t('recipes.create.steps.step')} {currentStep} {t('recipes.create.steps.of')} {totalSteps}
           </span>
@@ -182,11 +248,11 @@ export default function ComponentRecipeWizard({ familyId, onSuccess }: Component
         </Button>
         <Button
           onClick={handleNext}
-          disabled={!canProceed() || createRecipeMutation.isPending}
+          disabled={!canProceed() || saveRecipeMutation.isPending}
         >
           {currentStep === totalSteps ? (
             <>
-              {createRecipeMutation.isPending ? t('common.saving') : t('recipes.create.saveRecipe')}
+              {saveRecipeMutation.isPending ? t('common.saving') : (isEditMode ? t('recipes.edit.updateRecipe') : t('recipes.create.saveRecipe'))}
             </>
           ) : (
             <>
@@ -198,10 +264,10 @@ export default function ComponentRecipeWizard({ familyId, onSuccess }: Component
       </div>
 
       {/* Error Display */}
-      {createRecipeMutation.isError && (
+      {saveRecipeMutation.isError && (
         <div className="mt-4 p-4 bg-destructive/10 border border-destructive rounded-md">
           <p className="text-sm text-destructive">
-            {t('common.error')}: {(createRecipeMutation.error as any)?.response?.data?.message || t('common.errorOccurred')}
+            {t('common.error')}: {(saveRecipeMutation.error as any)?.response?.data?.message || t('common.errorOccurred')}
           </p>
         </div>
       )}

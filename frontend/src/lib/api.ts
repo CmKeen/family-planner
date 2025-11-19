@@ -83,6 +83,7 @@ export const recipeAPI = {
   getCatalog: (familyId: string) => api.get(`/recipes/catalog/${familyId}`),
   create: (data: any) => api.post('/recipes', data),
   createComponentBased: (data: any) => api.post('/recipes/component-based', data),
+  updateComponentBased: (id: string, data: any) => api.put(`/recipes/${id}/component-based`, data),
   update: (id: string, data: any) => api.put(`/recipes/${id}`, data),
   delete: (id: string) => api.delete(`/recipes/${id}`),
   toggleFavorite: (id: string) => api.post(`/recipes/${id}/favorite`),

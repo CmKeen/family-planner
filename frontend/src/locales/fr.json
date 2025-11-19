@@ -200,6 +200,10 @@
         "componentsRequired": "Ajoutez au moins un composant"
       }
     },
+    "edit": {
+      "title": "Modifier une recette",
+      "updateRecipe": "Mettre à jour la recette"
+    },
     "categories": {
       "all": "Toutes",
       "meats": "Viandes",

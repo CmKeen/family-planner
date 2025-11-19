@@ -233,6 +233,148 @@ export const createComponentBasedRecipe = asyncHandler(
   }
 );
 
+/**
+ * Update a component-based recipe
+ * OBU-109: Add the possibility to edit recipes based on components
+ */
+export const updateComponentBasedRecipe = asyncHandler(
+  async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+
+    // Validate request data (reuse create schema without familyId requirement)
+    const updateSchema = createComponentBasedRecipeSchema.omit({ familyId: true });
+    const data = updateSchema.parse(req.body);
+
+    // Fetch existing recipe
+    const existingRecipe = await prisma.recipe.findUnique({
+      where: { id }
+    });
+
+    if (!existingRecipe) {
+      throw new AppError('Recipe not found', 404);
+    }
+
+    if (!existingRecipe.isComponentBased) {
+      throw new AppError('This recipe is not component-based and cannot be updated with this endpoint', 400);
+    }
+
+    // Fetch components to validate they exist and get their properties
+    const componentIds = data.components.map(c => c.componentId);
+    const components = await prisma.foodComponent.findMany({
+      where: { id: { in: componentIds } }
+    });
+
+    // Verify all component IDs were found
+    if (components.length !== componentIds.length) {
+      const foundIds = components.map(c => c.id);
+      const missingIds = componentIds.filter(id => !foundIds.includes(id));
+      throw new AppError(
+        `Component IDs not found: ${missingIds.join(', ')}`,
+        400
+      );
+    }
+
+    // Auto-detect dietary properties
+    const isVegetarian = components.every(c => c.vegetarian);
+    const isVegan = components.every(c => c.vegan);
+    const isPescatarian = components.every(c => c.pescatarian || c.vegetarian);
+    const isGlutenFree = components.every(c => c.glutenFree);
+    const isLactoseFree = components.every(c => c.lactoseFree);
+    const isHalalFriendly = components.every(c => c.halalFriendly);
+
+    // Determine kosher category
+    const hasKosher = components.every(c => c.kosherCategory !== null);
+    let kosherCategory: string | null = null;
+    if (hasKosher) {
+      const hasMeat = components.some(c => c.kosherCategory === 'meat');
+      const hasDairy = components.some(c => c.kosherCategory === 'dairy');
+      if (hasMeat && hasDairy) {
+        kosherCategory = null; // Not kosher
+      } else if (hasMeat) {
+        kosherCategory = 'meat';
+      } else if (hasDairy) {
+        kosherCategory = 'dairy';
+      } else {
+        kosherCategory = 'parve';
+      }
+    }
+
+    // Update recipe and ingredients in a transaction
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Update the recipe
+      const recipe = await tx.recipe.update({
+        where: { id },
+        data: {
+          title: data.name,
+          titleEn: data.nameEn || data.name,
+          description: data.description,
+          servings: data.servings || existingRecipe.servings,
+          mealType: data.mealTypes.map(mt => mt.toLowerCase()),
+          // Auto-detected dietary properties
+          vegetarian: isVegetarian,
+          vegan: isVegan,
+          pescatarian: isPescatarian,
+          glutenFree: isGlutenFree,
+          lactoseFree: isLactoseFree,
+          halalFriendly: isHalalFriendly,
+          kosherCategory: kosherCategory as any
+        }
+      });
+
+      // Delete all existing ingredients
+      await tx.ingredient.deleteMany({
+        where: { recipeId: id }
+      });
+
+      // Create map of components for quick lookup
+      const componentMap = new Map(components.map(c => [c.id, c]));
+
+      // Create new ingredients from components
+      const ingredientsData = data.components.map((compData, index) => {
+        const component = componentMap.get(compData.componentId);
+        if (!component) {
+          throw new AppError(`Component ${compData.componentId} not found in map`, 500);
+        }
+
+        return {
+          recipeId: recipe.id,
+          name: component.name,
+          nameEn: component.nameEn || component.name,
+          quantity: compData.quantity,
+          unit: compData.unit || component.unit,
+          category: component.shoppingCategory,
+          order: index,
+          allergens: component.allergens || [],
+          containsGluten: !component.glutenFree,
+          containsLactose: !component.lactoseFree
+        };
+      });
+
+      await tx.ingredient.createMany({
+        data: ingredientsData
+      });
+
+      return recipe;
+    });
+
+    // Fetch complete recipe with ingredients
+    const completeRecipe = await prisma.recipe.findUnique({
+      where: { id: result.id },
+      include: {
+        ingredients: {
+          orderBy: { order: 'asc' }
+        }
+      }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Component-based recipe updated successfully',
+      data: { recipe: completeRecipe }
+    });
+  }
+);
+
 export const getRecipes = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const {
