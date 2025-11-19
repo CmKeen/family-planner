@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { recipeAPI } from '@/lib/api';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { recipeAPI, familyAPI } from '@/lib/api';
 import { Heart, Clock, Users, Search, Filter, ArrowLeft, Utensils } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import ComponentRecipeWizard from '@/components/ComponentRecipeWizard';
 
 interface Ingredient {
   id: string;
@@ -55,6 +56,7 @@ export default function RecipesPage() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('browse');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -67,6 +69,17 @@ export default function RecipesPage() {
     kosher: false,
     halal: false
   });
+
+  // Fetch families to get familyId
+  const { data: families } = useQuery({
+    queryKey: ['families'],
+    queryFn: async () => {
+      const response = await familyAPI.getAll();
+      return response.data.data.families;
+    }
+  });
+
+  const selectedFamily = families?.[0];
 
   // Helper function to get text in the current language
   // Works with any language by looking for field with language suffix
@@ -195,6 +208,15 @@ export default function RecipesPage() {
 
       {/* Main Content */}
       <main className="container mx-auto p-4 pb-20">
+        {/* Top-level Browse/Create Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="browse">{t('recipes.tabs.browse')}</TabsTrigger>
+            <TabsTrigger value="create">{t('recipes.tabs.create')}</TabsTrigger>
+          </TabsList>
+
+          {/* Browse Tab */}
+          <TabsContent value="browse">
       <div className="mb-6">
 
         {/* Search Bar */}
@@ -426,6 +448,25 @@ export default function RecipesPage() {
           ))}
         </div>
       )}
+          </TabsContent>
+
+          {/* Create Tab */}
+          <TabsContent value="create">
+            {selectedFamily ? (
+              <ComponentRecipeWizard
+                familyId={selectedFamily.id}
+                onSuccess={() => {
+                  setActiveTab('browse');
+                  queryClient.invalidateQueries({ queryKey: ['recipes'] });
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <p className="text-muted-foreground">{t('common.loading')}</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
       {/* Recipe Detail Dialog */}
       <Dialog open={!!selectedRecipe} onOpenChange={() => setSelectedRecipe(null)}>

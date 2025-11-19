@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createRecipe,
+  createComponentBasedRecipe,
   getRecipes,
   getRecipe,
   updateRecipe,
@@ -16,6 +17,7 @@ const router = Router();
 router.use(authenticate);
 
 router.post('/', createRecipe);
+router.post('/component-based', createComponentBasedRecipe);
 router.get('/', getRecipes);
 router.get('/catalog/:familyId', getWeeklyCatalog);
 router.get('/:id', getRecipe);

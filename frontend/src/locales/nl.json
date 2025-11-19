@@ -3,16 +3,19 @@
     "loading": "Laden...",
     "error": "Fout",
     "save": "Opslaan",
+    "saving": "Opslaan...",
     "cancel": "Annuleren",
     "delete": "Verwijderen",
     "edit": "Bewerken",
     "back": "Terug",
+    "previous": "Vorige",
     "confirm": "Bevestigen",
     "close": "Sluiten",
     "search": "Zoeken",
     "filter": "Filteren",
     "reset": "Resetten",
-    "print": "Afdrukken"
+    "print": "Afdrukken",
+    "errorOccurred": "Er is een fout opgetreden"
   },
   "days": {
     "monday": "Maandag",
@@ -140,6 +143,63 @@
     "searchPlaceholder": "Zoek een recept...",
     "loading": "Recepten laden...",
     "noResults": "Geen recepten gevonden",
+    "tabs": {
+      "browse": "Bladeren",
+      "create": "Maken"
+    },
+    "create": {
+      "title": "Recept maken",
+      "chooseType": "Kies recepttype",
+      "traditional": {
+        "title": "Traditioneel recept",
+        "description": "Schrijf uw eigen ingrediënten en instructies"
+      },
+      "component": {
+        "title": "Componentrecept",
+        "description": "Bouw snel vanuit voedselcomponenten"
+      },
+      "recommended": "Aanbevolen",
+      "comingSoon": "Binnenkort beschikbaar",
+      "steps": {
+        "step": "Stap",
+        "of": "van",
+        "basicInfo": "Basisinformatie",
+        "components": "Componenten",
+        "review": "Controleren"
+      },
+      "reviewHelp": "Controleer alles voordat u opslaat",
+      "form": {
+        "nameLabel": "Receptnaam",
+        "nameHelp": "Geef uw recept een naam. U kunt vertalingen in andere talen toevoegen.",
+        "namePlaceholder": "bijv., Gegrilde kip met rijst",
+        "namePlaceholderEn": "e.g., Grilled Chicken with Rice",
+        "namePlaceholderNl": "bijv., Gegrilde kip met rijst",
+        "descriptionLabel": "Beschrijving",
+        "descriptionPlaceholder": "Beschrijf uw recept (optioneel)",
+        "servingsLabel": "Aantal porties",
+        "mealTypesLabel": "Wanneer kan dit worden geserveerd?",
+        "autoTimingInfo": "Bereidings- en kooktijd worden automatisch berekend (15 min voorbereiding + 25 min koken)."
+      },
+      "selectedComponents": "Geselecteerde componenten",
+      "noComponentsYet": "Nog geen componenten toegevoegd",
+      "clickAddBelow": "Klik op 'Component toevoegen' hieronder",
+      "noComponentsFound": "Geen componenten gevonden",
+      "suggestedComponents": "Suggesties",
+      "nextStep": "Volgende stap",
+      "saveRecipe": "Recept opslaan",
+      "success": {
+        "title": "Recept succesvol aangemaakt!",
+        "saved": "is opgeslagen in uw bibliotheek",
+        "viewRecipe": "Recept bekijken",
+        "createAnother": "Nog een maken",
+        "backToBrowse": "Terug naar bibliotheek"
+      },
+      "validation": {
+        "nameRequired": "Receptnaam is verplicht",
+        "mealTypesRequired": "Selecteer ten minste één maaltijdtype",
+        "componentsRequired": "Voeg ten minste één component toe"
+      }
+    },
     "categories": {
       "all": "Alle",
       "meats": "Vlees",
@@ -147,7 +207,7 @@
       "pasta": "Pasta",
       "vegetables": "Groenten",
       "soups": "Soepen",
-      "salads": "Salades"
+      "salades": "Salades"
     },
     "filters": {
       "show": "Filters tonen",
@@ -174,7 +234,8 @@
       "cookTime": "Koken: {{time}} min",
       "servings": "Porties",
       "ingredients": "Ingrediënten",
-      "instructions": "Instructies"
+      "instructions": "Instructies",
+      "components": "Componenten"
     },
     "kosherCategory": "Koosjer {{category}}"
   },
