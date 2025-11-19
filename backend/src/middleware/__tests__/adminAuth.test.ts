@@ -1,47 +1,48 @@
+import { vi } from 'vitest';
 // Mock logger
-jest.mock('../../config/logger', () => ({
+vi.mock('../../config/logger', () => ({
   log: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    auth: jest.fn(),
-    debug: jest.fn()
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    auth: vi.fn(),
+    debug: vi.fn()
   }
 }));
 
-// Mock prisma
-const mockPrismaUser = {
-  findUnique: jest.fn()
-};
-
-jest.mock('../../config/admin', () => ({
+// Mock prisma - use factory function to avoid hoisting issues
+vi.mock('../../config/admin', () => ({
   prisma: {
-    user: mockPrismaUser
+    user: {
+      findUnique: vi.fn()
+    }
   }
 }));
 
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
-    user: mockPrismaUser
+    user: {
+      findUnique: vi.fn()
+    }
   }
 }));
 
 // Mock bcrypt
-jest.mock('bcryptjs', () => ({
-  compare: jest.fn()
+vi.mock('bcryptjs', () => ({
+  default: {
+    compare: vi.fn()
+  },
+  compare: vi.fn()
 }));
 
 import { adminAuthProvider } from '../adminAuth';
 import bcrypt from 'bcryptjs';
-
-const prisma = {
-  user: mockPrismaUser
-};
+import { prisma } from '../../config/admin';
 
 describe('AdminJS Authentication Provider', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('authenticate', () => {
@@ -55,8 +56,8 @@ describe('AdminJS Authentication Provider', () => {
         isAdmin: true
       };
 
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+      (bcrypt.compare as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
       const result = await adminAuthProvider.authenticate('admin@example.com', 'correct-password');
 
@@ -74,7 +75,7 @@ describe('AdminJS Authentication Provider', () => {
     });
 
     it('should return null for non-existent user', async () => {
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
       const result = await adminAuthProvider.authenticate('nonexistent@example.com', 'password');
 
@@ -92,8 +93,8 @@ describe('AdminJS Authentication Provider', () => {
         isAdmin: true
       };
 
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+      (bcrypt.compare as ReturnType<typeof vi.fn>).mockResolvedValue(false);
 
       const result = await adminAuthProvider.authenticate('admin@example.com', 'wrong-password');
 
@@ -111,8 +112,8 @@ describe('AdminJS Authentication Provider', () => {
         isAdmin: false
       };
 
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+      (bcrypt.compare as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
       const result = await adminAuthProvider.authenticate('user@example.com', 'correct-password');
 
@@ -120,7 +121,7 @@ describe('AdminJS Authentication Provider', () => {
     });
 
     it('should return null if database query fails', async () => {
-      (prisma.user.findUnique as jest.Mock).mockRejectedValue(new Error('Database error'));
+      (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Database error'));
 
       const result = await adminAuthProvider.authenticate('admin@example.com', 'password');
 
@@ -137,8 +138,8 @@ describe('AdminJS Authentication Provider', () => {
         isAdmin: true
       };
 
-      (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockRejectedValue(new Error('Comparison error'));
+      (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(mockUser);
+      (bcrypt.compare as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Comparison error'));
 
       const result = await adminAuthProvider.authenticate('admin@example.com', 'password');
 

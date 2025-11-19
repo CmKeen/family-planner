@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 
 import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
@@ -10,26 +11,26 @@ import {
 import prisma from '../../lib/prisma';
 
 // Mock logger
-jest.mock('../../config/logger', () => ({
+vi.mock('../../config/logger', () => ({
   log: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn()
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn()
   }
 }));
 
 // Mock prisma
-jest.mock('../../lib/prisma', () => {
+vi.mock('../../lib/prisma', () => {
   const mockPrisma = {
     mealComment: {
-      findMany: jest.fn(),
-      create: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn()
+      findMany: vi.fn(),
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn()
     },
     meal: {
-      findFirst: jest.fn()
+      findFirst: vi.fn()
     }
   };
 
@@ -41,9 +42,9 @@ jest.mock('../../lib/prisma', () => {
 });
 
 // Mock audit logger
-jest.mock('../../utils/auditLogger', () => ({
-  logChange: jest.fn().mockResolvedValue(undefined),
-  generateChangeDescription: jest.fn().mockReturnValue({
+vi.mock('../../utils/auditLogger', () => ({
+  logChange: vi.fn().mockResolvedValue(undefined),
+  generateChangeDescription: vi.fn().mockReturnValue({
     description: 'Test change',
     descriptionEn: 'Test change',
     descriptionNl: 'Test wijziging'
@@ -51,8 +52,8 @@ jest.mock('../../utils/auditLogger', () => ({
 }));
 
 // Mock permissions
-jest.mock('../../utils/permissions', () => ({
-  canDeleteComment: jest.fn()
+vi.mock('../../utils/permissions', () => ({
+  canDeleteComment: vi.fn()
 }));
 
 // Helper to wait for async operations
@@ -83,14 +84,14 @@ describe('MealComment Controller', () => {
     } as unknown as AuthRequest;
 
     mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis()
     };
 
-    mockNext = jest.fn();
+    mockNext = vi.fn();
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getComments', () => {

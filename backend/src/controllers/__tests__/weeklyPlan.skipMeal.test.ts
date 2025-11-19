@@ -1,5 +1,5 @@
+import { vi } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express, { Express } from 'express';
 import prisma from '../../lib/prisma';
@@ -7,32 +7,32 @@ import { removeMeal, restoreMeal, validatePlan } from '../weeklyPlan.controller'
 import { errorHandler } from '../../middleware/errorHandler';
 
 // Mock modules
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     meal: {
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn()
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn()
     },
     familyMember: {
-      findFirst: jest.fn()
+      findFirst: vi.fn()
     },
     weeklyPlan: {
-      findUnique: jest.fn(),
-      update: jest.fn()
+      findUnique: vi.fn(),
+      update: vi.fn()
     }
   }
 }));
 
-jest.mock('../../utils/auditLogger', () => ({
-  logChange: (jest.fn() as any).mockResolvedValue(null)
+vi.mock('../../utils/auditLogger', () => ({
+  logChange: (vi.fn() as any).mockResolvedValue(null)
 }));
 
-jest.mock('../../services/shoppingList.service', () => ({
-  generateShoppingList: (jest.fn() as any).mockResolvedValue(null)
+vi.mock('../../services/shoppingList.service', () => ({
+  generateShoppingList: (vi.fn() as any).mockResolvedValue(null)
 }));
 
 describe('Weekly Plan - Skip/Restore Meal Functionality (OBU-110)', () => {
@@ -70,11 +70,11 @@ describe('Weekly Plan - Skip/Restore Meal Functionality (OBU-110)', () => {
     app.use(errorHandler);
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('removeMeal (skip meal)', () => {

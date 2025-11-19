@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import {
@@ -9,28 +10,28 @@ import {
 import prisma from '../../lib/prisma';
 
 // Mock logger
-jest.mock('../../config/logger', () => ({
+vi.mock('../../config/logger', () => ({
   log: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn()
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn()
   }
 }));
 
 // Mock prisma
-jest.mock('../../lib/prisma', () => {
+vi.mock('../../lib/prisma', () => {
   const mockPrisma = {
     shoppingItem: {
-      findUnique: jest.fn(),
-      update: jest.fn()
+      findUnique: vi.fn(),
+      update: vi.fn()
     },
     shoppingList: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn()
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn()
     },
     weeklyPlan: {
-      findUnique: jest.fn()
+      findUnique: vi.fn()
     }
   };
 
@@ -42,8 +43,8 @@ jest.mock('../../lib/prisma', () => {
 });
 
 // Mock shopping list service
-jest.mock('../../services/shoppingList.service', () => ({
-  generateShoppingList: jest.fn()
+vi.mock('../../services/shoppingList.service', () => ({
+  generateShoppingList: vi.fn()
 }));
 
 // Helper to wait for async operations
@@ -75,14 +76,14 @@ describe('ShoppingList Controller', () => {
     } as unknown as AuthRequest;
 
     mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis()
     };
 
-    mockNext = jest.fn();
+    mockNext = vi.fn();
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('toggleItemChecked', () => {

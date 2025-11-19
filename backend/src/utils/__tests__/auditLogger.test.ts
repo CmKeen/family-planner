@@ -1,21 +1,22 @@
+import { vi } from 'vitest';
 
 import { logChange, generateChangeDescription } from '../auditLogger';
 import { ChangeType } from '@prisma/client';
 import prisma from '../../lib/prisma';
 
 // Mock prisma
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     planChangeLog: {
-      create: jest.fn()
+      create: vi.fn()
     }
   }
 }));
 
 describe('Audit Logger', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('logChange', () => {

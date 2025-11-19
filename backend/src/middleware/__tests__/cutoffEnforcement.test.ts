@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { AuthRequest } from '../auth';
 
 import { Request, Response, NextFunction } from 'express';
@@ -5,19 +6,19 @@ import { enforceCutoff } from '../cutoffEnforcement';
 import prisma from '../../lib/prisma';
 
 // Mock logger
-jest.mock('../../config/logger', () => ({
+vi.mock('../../config/logger', () => ({
   log: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn()
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn()
   }
 }));
 
 // Mock prisma
-jest.mock('../../lib/prisma', () => {
+vi.mock('../../lib/prisma', () => {
   const mockPrisma = {
     weeklyPlan: {
-      findUnique: jest.fn()
+      findUnique: vi.fn()
     }
   };
 
@@ -29,9 +30,9 @@ jest.mock('../../lib/prisma', () => {
 });
 
 // Mock permissions
-jest.mock('../../utils/permissions', () => ({
-  isAfterCutoff: jest.fn(),
-  canEditAfterCutoff: jest.fn()
+vi.mock('../../utils/permissions', () => ({
+  isAfterCutoff: vi.fn(),
+  canEditAfterCutoff: vi.fn()
 }));
 
 import { isAfterCutoff, canEditAfterCutoff } from '../../utils/permissions';
@@ -62,14 +63,14 @@ describe('Cutoff Enforcement Middleware', () => {
     } as unknown as AuthRequest;
 
     mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis()
     };
 
-    mockNext = jest.fn();
+    mockNext = vi.fn();
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('enforceCutoff without allowComments option', () => {

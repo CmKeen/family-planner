@@ -1,51 +1,52 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock logger before importing the service
-const mockLog = {
-  info: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  debug: jest.fn()
-};
-
-jest.mock('../../config/logger', () => ({
-  log: mockLog
+vi.mock('../../config/logger', () => ({
+  log: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn()
+  }
 }));
 
 // Mock nodemailer before importing the service
-const mockSendMail: any = jest.fn();
-const mockCreateTransport: any = jest.fn();
-
-jest.mock('nodemailer', () => ({
+vi.mock('nodemailer', () => ({
   default: {
-    createTransport: mockCreateTransport
+    createTransport: vi.fn()
   },
-  createTransport: mockCreateTransport
+  createTransport: vi.fn()
 }));
 
 // Now import after mocking
 import { EmailService } from '../email.service';
 import { DraftPlanCreatedData } from '../../types/notification.types';
+import { log } from '../../config/logger';
+import nodemailer from 'nodemailer';
+
+// Create mock functions after imports
+const mockSendMail: any = vi.fn();
+const mockCreateTransport: any = vi.mocked(nodemailer.createTransport);
 
 describe('EmailService', () => {
   let emailService: EmailService;
-  let consoleLogSpy: jest.SpiedFunction<typeof console.log>;
-  let consoleWarnSpy: jest.SpiedFunction<typeof console.warn>;
-  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     // Spy on console methods (for backward compatibility)
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     // Reset logger mocks
-    mockLog.info.mockClear();
-    mockLog.error.mockClear();
-    mockLog.warn.mockClear();
-    mockLog.debug.mockClear();
+    log.info.mockClear();
+    log.error.mockClear();
+    log.warn.mockClear();
+    log.debug.mockClear();
 
     // Mock environment variables
     process.env.SMTP_HOST = 'smtp.test.com';
@@ -87,7 +88,7 @@ describe('EmailService', () => {
     });
 
     it('should log when email service is enabled', () => {
-      expect(mockLog.info).toHaveBeenCalledWith(
+      expect(log.info).toHaveBeenCalledWith(
         'Email service enabled',
         expect.objectContaining({
           fromAddress: expect.any(String),
@@ -98,10 +99,10 @@ describe('EmailService', () => {
 
     it('should warn when SMTP configuration is missing', () => {
       delete process.env.SMTP_HOST;
-      mockLog.warn.mockClear(); // Clear previous calls
+      log.warn.mockClear(); // Clear previous calls
       const service = new EmailService();
 
-      expect(mockLog.warn).toHaveBeenCalledWith(
+      expect(log.warn).toHaveBeenCalledWith(
         'Email service disabled - SMTP configuration not found',
         expect.objectContaining({
           message: expect.stringContaining('Emails will be logged only')
@@ -212,7 +213,7 @@ describe('EmailService', () => {
         emailService.sendDraftPlanCreatedNotification(notificationData)
       ).resolves.not.toThrow();
 
-      expect(mockLog.error).toHaveBeenCalled();
+      expect(log.error).toHaveBeenCalled();
     });
   });
 
@@ -263,7 +264,7 @@ describe('EmailService', () => {
         'Text'
       );
 
-      expect(mockLog.error).toHaveBeenCalledWith(
+      expect(log.error).toHaveBeenCalledWith(
         'Failed to send email',
         expect.objectContaining({
           to: 'test@example.com',
@@ -275,7 +276,7 @@ describe('EmailService', () => {
     it('should log when SMTP is not configured', async () => {
       // Create service without SMTP config
       delete process.env.SMTP_HOST;
-      mockLog.info.mockClear(); // Clear previous calls
+      log.info.mockClear(); // Clear previous calls
       const noSmtpService = new EmailService();
 
       await noSmtpService.sendEmail(
@@ -285,7 +286,7 @@ describe('EmailService', () => {
         'Text content'
       );
 
-      expect(mockLog.info).toHaveBeenCalledWith(
+      expect(log.info).toHaveBeenCalledWith(
         'Email simulated (SMTP not configured)',
         expect.objectContaining({
           to: 'test@example.com',

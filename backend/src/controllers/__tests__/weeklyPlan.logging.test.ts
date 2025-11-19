@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 /**
  * Logging Tests for weeklyPlan.controller
  *
@@ -7,23 +8,23 @@
 import { log } from '../../config/logger';
 
 // Mock the logger
-jest.mock('../../config/logger', () => ({
+vi.mock('../../config/logger', () => ({
   log: {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    auth: jest.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    auth: vi.fn(),
   },
 }));
 
 describe('WeeklyPlan Controller - Logging', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('should use Winston logger instead of console.log', () => {
@@ -109,9 +110,9 @@ describe('WeeklyPlan Controller - Logging', () => {
 
   it('should not call console.log, console.error, or console.warn', () => {
     // Spy on console methods
-    const consoleLogSpy = jest.spyOn(console, 'log');
-    const consoleErrorSpy = jest.spyOn(console, 'error');
-    const consoleWarnSpy = jest.spyOn(console, 'warn');
+    const consoleLogSpy = vi.spyOn(console, 'log');
+    const consoleErrorSpy = vi.spyOn(console, 'error');
+    const consoleWarnSpy = vi.spyOn(console, 'warn');
 
     // Use logger methods
     log.debug('Debug message', { key: 'value' });

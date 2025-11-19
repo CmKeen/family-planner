@@ -1,34 +1,34 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { Request, Response } from 'express';
 
 // Mock Prisma client
 const mockMeal = {
-  findUnique: jest.fn() as any,
-  update: jest.fn() as any
+  findUnique: vi.fn() as any,
+  update: vi.fn() as any
 };
 
 const mockMealComponentModel = {
-  create: jest.fn() as any,
-  findUnique: jest.fn() as any,
-  update: jest.fn() as any,
-  delete: jest.fn() as any,
-  findMany: jest.fn() as any
+  create: vi.fn() as any,
+  findUnique: vi.fn() as any,
+  update: vi.fn() as any,
+  delete: vi.fn() as any,
+  findMany: vi.fn() as any
 };
 
 const mockFoodComponent = {
-  findUnique: jest.fn() as any,
-  findMany: jest.fn() as any
+  findUnique: vi.fn() as any,
+  findMany: vi.fn() as any
 };
 
 const mockFamilyMember = {
-  findFirst: jest.fn() as any
+  findFirst: vi.fn() as any
 };
 
 const mockWeeklyPlan = {
-  findUnique: jest.fn() as any
+  findUnique: vi.fn() as any
 };
 
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     meal: mockMeal,
@@ -63,7 +63,7 @@ describe('Meal Component Controller', () => {
   let nextFunction: jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockRequest = {
       params: {},
@@ -75,11 +75,11 @@ describe('Meal Component Controller', () => {
     } as any;
 
     mockResponse = {
-      status: jest.fn().mockReturnThis() as any,
-      json: jest.fn().mockReturnThis() as any
+      status: vi.fn().mockReturnThis() as any,
+      json: vi.fn().mockReturnThis() as any
     };
 
-    nextFunction = jest.fn();
+    nextFunction = vi.fn();
   });
 
   describe('addComponentToMeal', () => {

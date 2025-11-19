@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Mock Prisma client
-const mockPrismaTransaction = jest.fn() as jest.MockedFunction<any>;
-const mockRecipeCreate = jest.fn() as jest.MockedFunction<any>;
-const mockIngredientCreate = jest.fn() as jest.MockedFunction<any>;
-const mockMealFindUnique = jest.fn() as jest.MockedFunction<any>;
+const mockPrismaTransaction = vi.fn() as jest.MockedFunction<any>;
+const mockRecipeCreate = vi.fn() as jest.MockedFunction<any>;
+const mockIngredientCreate = vi.fn() as jest.MockedFunction<any>;
+const mockMealFindUnique = vi.fn() as jest.MockedFunction<any>;
 
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     meal: {
@@ -24,7 +24,7 @@ jest.mock('../../lib/prisma', () => ({
 
 describe('Save Component Combo as Recipe', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('saveComponentMealAsRecipe', () => {

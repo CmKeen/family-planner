@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 
 import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth';
@@ -5,26 +6,26 @@ import { getPlanAuditLog, getMealAuditLog } from '../auditLog.controller';
 import prisma from '../../lib/prisma';
 
 // Mock logger
-jest.mock('../../config/logger', () => ({
+vi.mock('../../config/logger', () => ({
   log: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn()
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn()
   }
 }));
 
 // Mock prisma
-jest.mock('../../lib/prisma', () => {
+vi.mock('../../lib/prisma', () => {
   const mockPrisma = {
     planChangeLog: {
-      findMany: jest.fn(),
-      count: jest.fn()
+      findMany: vi.fn(),
+      count: vi.fn()
     },
     weeklyPlan: {
-      findUnique: jest.fn()
+      findUnique: vi.fn()
     },
     meal: {
-      findFirst: jest.fn()
+      findFirst: vi.fn()
     }
   };
 
@@ -36,8 +37,8 @@ jest.mock('../../lib/prisma', () => {
 });
 
 // Mock permissions
-jest.mock('../../utils/permissions', () => ({
-  canViewAuditLog: jest.fn()
+vi.mock('../../utils/permissions', () => ({
+  canViewAuditLog: vi.fn()
 }));
 
 // Helper to wait for async operations
@@ -68,14 +69,14 @@ describe('AuditLog Controller', () => {
     } as unknown as AuthRequest;
 
     mockRes = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis()
     };
 
-    mockNext = jest.fn();
+    mockNext = vi.fn();
 
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('getPlanAuditLog', () => {

@@ -1,4 +1,3 @@
-import { describe, it, expect } from '@jest/globals';
 
 describe('Shopping List Algorithm', () => {
   describe('roundQuantity', () => {

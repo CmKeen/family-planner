@@ -1,40 +1,40 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 // Type aliases for Prisma enums
 type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 type MealType = 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
 
 // Mock Prisma client
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     weeklyPlan: {
-      create: jest.fn(),
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      update: jest.fn()
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      update: vi.fn()
     },
     meal: {
-      createMany: jest.fn(),
-      update: jest.fn()
+      createMany: vi.fn(),
+      update: vi.fn()
     },
     recipe: {
-      findMany: jest.fn()
+      findMany: vi.fn()
     },
     schoolMenu: {
-      findMany: jest.fn()
+      findMany: vi.fn()
     },
     attendance: {
-      upsert: jest.fn()
+      upsert: vi.fn()
     },
     guest: {
-      create: jest.fn()
+      create: vi.fn()
     },
     vote: {
-      upsert: jest.fn()
+      upsert: vi.fn()
     },
     wish: {
-      create: jest.fn()
+      create: vi.fn()
     }
   }
 }));

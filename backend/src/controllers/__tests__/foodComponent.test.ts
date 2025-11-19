@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { vi } from 'vitest';
 import { Request, Response } from 'express';
 
 // Type aliases for Prisma enums
@@ -6,18 +6,18 @@ type ComponentCategory = 'PROTEIN' | 'VEGETABLE' | 'CARB' | 'FRUIT' | 'SAUCE' | 
 
 // Mock Prisma client with proper typing
 const mockFoodComponent = {
-  findMany: jest.fn() as any,
-  findUnique: jest.fn() as any,
-  create: jest.fn() as any,
-  update: jest.fn() as any,
-  delete: jest.fn() as any
+  findMany: vi.fn() as any,
+  findUnique: vi.fn() as any,
+  create: vi.fn() as any,
+  update: vi.fn() as any,
+  delete: vi.fn() as any
 };
 
 const mockFamilyMember = {
-  findFirst: jest.fn() as any
+  findFirst: vi.fn() as any
 };
 
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     foodComponent: mockFoodComponent,
@@ -43,7 +43,7 @@ describe('Food Component Controller', () => {
   let nextFunction: jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockRequest = {
       params: {},
@@ -56,11 +56,11 @@ describe('Food Component Controller', () => {
     } as any;
 
     mockResponse = {
-      status: jest.fn().mockReturnThis() as any,
-      json: jest.fn().mockReturnThis() as any
+      status: vi.fn().mockReturnThis() as any,
+      json: vi.fn().mockReturnThis() as any
     };
 
-    nextFunction = jest.fn();
+    nextFunction = vi.fn();
   });
 
   describe('getAllComponents', () => {

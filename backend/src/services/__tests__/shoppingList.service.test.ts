@@ -1,24 +1,25 @@
+import { vi } from 'vitest';
 import { generateShoppingList, regenerateShoppingList } from '../shoppingList.service';
 import prisma from '../../lib/prisma';
 
 // Mock Prisma
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     weeklyPlan: {
-      findUnique: jest.fn()
+      findUnique: vi.fn()
     },
     shoppingList: {
-      findFirst: jest.fn(),
-      delete: jest.fn(),
-      create: jest.fn()
+      findFirst: vi.fn(),
+      delete: vi.fn(),
+      create: vi.fn()
     }
   }
 }));
 
 describe('ShoppingList Service', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('generateShoppingList', () => {

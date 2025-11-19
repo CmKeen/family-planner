@@ -1,5 +1,5 @@
+import { vi } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express, { Express } from 'express';
 import prisma from '../../lib/prisma';
@@ -9,45 +9,48 @@ import { errorHandler } from '../../middleware/errorHandler';
 import jwt from 'jsonwebtoken';
 
 // Mock modules
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     meal: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      create: jest.fn(),
-      delete: jest.fn(),
-      count: jest.fn(),
-      findFirst: jest.fn()
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      count: vi.fn(),
+      findFirst: vi.fn()
     },
     familyMember: {
-      findFirst: jest.fn()
+      findFirst: vi.fn()
     },
     weeklyPlan: {
-      findUnique: jest.fn()
+      findUnique: vi.fn()
     },
     auditLog: {
-      create: jest.fn()
+      create: vi.fn()
     }
   }
 }));
 
-jest.mock('../../utils/auditLogger', () => ({
-  logChange: (jest.fn() as any).mockResolvedValue(null)
+vi.mock('../../utils/auditLogger', () => ({
+  logChange: (vi.fn() as any).mockResolvedValue(null)
 }));
 
-jest.mock('../../services/notification.service', () => ({
+vi.mock('../../services/notification.service', () => ({
   notificationService: {
-    notifyMealAdded: (jest.fn() as any).mockResolvedValue(null),
-    notifyMealRemoved: (jest.fn() as any).mockResolvedValue(null)
+    notifyMealAdded: (vi.fn() as any).mockResolvedValue(null),
+    notifyMealRemoved: (vi.fn() as any).mockResolvedValue(null)
   }
 }));
 
-jest.mock('../../services/shoppingList.service', () => ({
-  generateShoppingList: (jest.fn() as any).mockResolvedValue(null)
+vi.mock('../../services/shoppingList.service', () => ({
+  generateShoppingList: (vi.fn() as any).mockResolvedValue(null)
 }));
 
-jest.mock('jsonwebtoken');
+vi.mock('jsonwebtoken');
+
+// Import mocked modules after vi.mock calls
+import { logChange } from '../../utils/auditLogger';
 
 describe('Weekly Plan Authorization Tests (OBU-93)', () => {
   let app: Express;
@@ -84,11 +87,11 @@ describe('Weekly Plan Authorization Tests (OBU-93)', () => {
     app.use(errorHandler);
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('lockMeal - Member Authorization', () => {
@@ -440,7 +443,6 @@ describe('Weekly Plan Authorization Tests (OBU-93)', () => {
   describe('Audit Logging with Member ID', () => {
     it('should log meal lock action with validated member ID', async () => {
       // Arrange
-      const { logChange } = require('../../utils/auditLogger');
 
       const mockMeal = {
         id: mockMealId,

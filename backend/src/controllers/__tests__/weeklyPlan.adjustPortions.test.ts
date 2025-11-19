@@ -1,5 +1,5 @@
+import { vi } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import request from 'supertest';
 import express, { Express } from 'express';
 import prisma from '../../lib/prisma';
@@ -7,29 +7,33 @@ import { adjustMealPortions } from '../weeklyPlan.controller';
 import { errorHandler } from '../../middleware/errorHandler';
 
 // Mock modules
-jest.mock('../../lib/prisma', () => ({
+vi.mock('../../lib/prisma', () => ({
   __esModule: true,
   default: {
     meal: {
-      findUnique: jest.fn(),
-      update: jest.fn()
+      findUnique: vi.fn(),
+      update: vi.fn()
     },
     familyMember: {
-      findFirst: jest.fn()
+      findFirst: vi.fn()
     },
     weeklyPlan: {
-      findUnique: jest.fn()
+      findUnique: vi.fn()
     }
   }
 }));
 
-jest.mock('../../utils/auditLogger', () => ({
-  logChange: (jest.fn() as any).mockResolvedValue(null)
+vi.mock('../../utils/auditLogger', () => ({
+  logChange: (vi.fn() as any).mockResolvedValue(null)
 }));
 
-jest.mock('../../services/shoppingList.service', () => ({
-  generateShoppingList: (jest.fn() as any).mockResolvedValue(null)
+vi.mock('../../services/shoppingList.service', () => ({
+  generateShoppingList: (vi.fn() as any).mockResolvedValue(null)
 }));
+
+// Import mocked modules after vi.mock calls
+import { logChange } from '../../utils/auditLogger';
+import { generateShoppingList } from '../../services/shoppingList.service';
 
 describe('Weekly Plan - Adjust Meal Portions (OBU-94)', () => {
   let app: Express;
@@ -65,11 +69,11 @@ describe('Weekly Plan - Adjust Meal Portions (OBU-94)', () => {
     app.use(errorHandler);
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Successful portion adjustment', () => {
@@ -306,7 +310,6 @@ describe('Weekly Plan - Adjust Meal Portions (OBU-94)', () => {
   describe('Audit logging', () => {
     it('should log portion changes to audit trail', async () => {
       // Import the mocked logChange
-      const { logChange } = require('../../utils/auditLogger');
 
       // Arrange
       const oldMeal = {
@@ -353,7 +356,6 @@ describe('Weekly Plan - Adjust Meal Portions (OBU-94)', () => {
   describe('Shopping list synchronization', () => {
     it('should regenerate shopping list after portion adjustment', async () => {
       // Import the mocked service
-      const { generateShoppingList } = require('../../services/shoppingList.service');
 
       // Arrange
       const oldMeal = {
@@ -388,7 +390,6 @@ describe('Weekly Plan - Adjust Meal Portions (OBU-94)', () => {
 
     it('should not fail if shopping list regeneration fails', async () => {
       // Import the mocked service
-      const { generateShoppingList } = require('../../services/shoppingList.service');
       (generateShoppingList as any).mockRejectedValueOnce(new Error('Shopping list error'));
 
       // Arrange
