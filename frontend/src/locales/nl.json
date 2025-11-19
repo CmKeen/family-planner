@@ -198,6 +198,10 @@
         "nameRequired": "Receptnaam is verplicht",
         "mealTypesRequired": "Selecteer ten minste één maaltijdtype",
         "componentsRequired": "Voeg ten minste één component toe"
+      },
+      "edit": {
+        "title": "Recept bewerken",
+        "updateRecipe": "Recept bijwerken"
       }
     },
     "categories": {

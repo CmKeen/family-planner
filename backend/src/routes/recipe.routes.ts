@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createRecipe,
   createComponentBasedRecipe,
+  updateComponentBasedRecipe,
   getRecipes,
   getRecipe,
   updateRecipe,
@@ -21,6 +22,7 @@ router.post('/component-based', createComponentBasedRecipe);
 router.get('/', getRecipes);
 router.get('/catalog/:familyId', getWeeklyCatalog);
 router.get('/:id', getRecipe);
+router.put('/:id/component-based', updateComponentBasedRecipe); // Must come before /:id
 router.put('/:id', updateRecipe);
 router.delete('/:id', deleteRecipe);
 router.post('/:id/favorite', toggleFavorite);

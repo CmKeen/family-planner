@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { recipeAPI, familyAPI } from '@/lib/api';
-import { Heart, Clock, Users, Search, Filter, ArrowLeft, Utensils } from 'lucide-react';
+import { Heart, Clock, Users, Search, Filter, ArrowLeft, Utensils, Pencil } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import ComponentRecipeWizard from '@/components/ComponentRecipeWizard';
 
@@ -41,6 +41,7 @@ interface Recipe {
   category: string;
   mealType: string[];
   isFavorite: boolean;
+  isComponentBased?: boolean;
   kosherCategory?: string;
   vegetarian: boolean;
   vegan: boolean;
@@ -60,6 +61,7 @@ export default function RecipesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     maxTime: '',
@@ -164,6 +166,12 @@ export default function RecipesPage() {
 
   const handleRecipeClick = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
+  };
+
+  const handleEditRecipe = (recipe: Recipe) => {
+    setEditingRecipe(recipe);
+    setSelectedRecipe(null); // Close detail dialog
+    setActiveTab('create'); // Switch to create tab (which will show wizard in edit mode)
   };
 
   const handleToggleFavorite = (e: React.MouseEvent, recipeId: string) => {
@@ -455,8 +463,10 @@ export default function RecipesPage() {
             {selectedFamily ? (
               <ComponentRecipeWizard
                 familyId={selectedFamily.id}
+                recipe={editingRecipe || undefined}
                 onSuccess={() => {
                   setActiveTab('browse');
+                  setEditingRecipe(null); // Clear editing state
                   queryClient.invalidateQueries({ queryKey: ['recipes'] });
                 }}
               />
@@ -476,19 +486,31 @@ export default function RecipesPage() {
               <DialogHeader>
                 <div className="flex items-start justify-between">
                   <DialogTitle className="text-2xl pr-8">{getLocalizedField(recipeDetails, 'title')}</DialogTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => handleToggleFavorite(e, recipeDetails.id)}
-                  >
-                    <Heart
-                      className={`h-6 w-6 ${
-                        recipeDetails.isFavorite
-                          ? 'fill-red-500 text-red-500'
-                          : 'text-muted-foreground'
-                      }`}
-                    />
-                  </Button>
+                  <div className="flex gap-2">
+                    {/* Edit button - only show for component-based recipes */}
+                    {recipeDetails.isComponentBased && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditRecipe(recipeDetails)}
+                      >
+                        <Pencil className="h-5 w-5 text-muted-foreground" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleToggleFavorite(e, recipeDetails.id)}
+                    >
+                      <Heart
+                        className={`h-6 w-6 ${
+                          recipeDetails.isFavorite
+                            ? 'fill-red-500 text-red-500'
+                            : 'text-muted-foreground'
+                        }`}
+                      />
+                    </Button>
+                  </div>
                 </div>
               </DialogHeader>
 
