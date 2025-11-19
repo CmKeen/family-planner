@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { recipeAPI } from '@/lib/api';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { recipeAPI, foodComponentAPI } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -41,6 +41,19 @@ export default function ComponentRecipeWizard({ familyId, recipe, onSuccess }: C
   const isEditMode = !!recipe;
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Track if we've initialized components (to avoid re-running useEffect)
+  const [componentsInitialized, setComponentsInitialized] = useState(false);
+
+  // Fetch all components to map ingredient names back to component IDs (for edit mode)
+  const { data: componentsData } = useQuery({
+    queryKey: ['components', familyId],
+    queryFn: async () => {
+      const response = await foodComponentAPI.getAll({ familyId });
+      return response.data; // API returns array directly
+    },
+    enabled: isEditMode // Only fetch when in edit mode
+  });
+
   // Initialize form data - pre-fill if editing
   const [formData, setFormData] = useState<RecipeFormData>(() => {
     if (recipe) {
@@ -51,13 +64,7 @@ export default function ComponentRecipeWizard({ familyId, recipe, onSuccess }: C
         description: recipe.description || '',
         servings: recipe.servings || 4,
         mealTypes: recipe.mealType || [],
-        components: recipe.ingredients?.map((ing: any) => ({
-          componentId: ing.id, // Note: This will need to be mapped from ingredient back to component
-          componentName: ing.name,
-          quantity: ing.quantity,
-          unit: ing.unit,
-          category: ing.category
-        })) || []
+        components: [] // Will be populated after components are loaded
       };
     }
     return {
@@ -69,6 +76,29 @@ export default function ComponentRecipeWizard({ familyId, recipe, onSuccess }: C
       components: []
     };
   });
+
+  // Update components once they're loaded (for edit mode)
+  useEffect(() => {
+    if (isEditMode && recipe && componentsData && !componentsInitialized) {
+      const mappedComponents = recipe.ingredients?.map((ing: any) => {
+        // Find the component by matching name
+        const component = componentsData.find((c: any) =>
+          c.name.toLowerCase() === ing.name.toLowerCase()
+        );
+
+        return {
+          componentId: component?.id || '', // Use component ID if found
+          componentName: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit || component?.unit || 'g', // Use ingredient unit, fallback to component unit, then 'g'
+          category: ing.category || component?.shoppingCategory
+        };
+      }) || [];
+
+      setFormData(prev => ({ ...prev, components: mappedComponents }));
+      setComponentsInitialized(true);
+    }
+  }, [isEditMode, recipe, componentsData, componentsInitialized]);
 
   const [createdRecipe, setCreatedRecipe] = useState<any>(null);
 
