@@ -3,16 +3,19 @@
     "loading": "Chargement...",
     "error": "Erreur",
     "save": "Enregistrer",
+    "saving": "Enregistrement...",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "edit": "Modifier",
     "back": "Retour",
+    "previous": "Précédent",
     "confirm": "Confirmer",
     "close": "Fermer",
     "search": "Rechercher",
     "filter": "Filtrer",
     "reset": "Réinitialiser",
-    "print": "Imprimer"
+    "print": "Imprimer",
+    "errorOccurred": "Une erreur s'est produite"
   },
   "days": {
     "monday": "Lundi",
@@ -140,6 +143,63 @@
     "searchPlaceholder": "Rechercher une recette...",
     "loading": "Chargement des recettes...",
     "noResults": "Aucune recette trouvée",
+    "tabs": {
+      "browse": "Parcourir",
+      "create": "Créer"
+    },
+    "create": {
+      "title": "Créer une recette",
+      "chooseType": "Choisissez le type de recette",
+      "traditional": {
+        "title": "Recette traditionnelle",
+        "description": "Rédigez vos propres ingrédients et instructions"
+      },
+      "component": {
+        "title": "Recette par composants",
+        "description": "Créez rapidement à partir de composants alimentaires"
+      },
+      "recommended": "Recommandé",
+      "comingSoon": "Bientôt disponible",
+      "steps": {
+        "step": "Étape",
+        "of": "sur",
+        "basicInfo": "Informations",
+        "components": "Composants",
+        "review": "Révision"
+      },
+      "reviewHelp": "Vérifiez que tout est correct avant de sauvegarder",
+      "form": {
+        "nameLabel": "Nom de la recette",
+        "nameHelp": "Donnez un nom à votre recette. Vous pouvez ajouter des traductions dans d'autres langues.",
+        "namePlaceholder": "Ex: Poulet grillé avec riz",
+        "namePlaceholderEn": "Ex: Grilled Chicken with Rice",
+        "namePlaceholderNl": "bijv: Gegrilde kip met rijst",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Décrivez votre recette (facultatif)",
+        "servingsLabel": "Nombre de portions",
+        "mealTypesLabel": "Quand servir ce plat ?",
+        "autoTimingInfo": "Le temps de préparation et de cuisson sera calculé automatiquement (15 min prep + 25 min cuisson)."
+      },
+      "selectedComponents": "Composants sélectionnés",
+      "noComponentsYet": "Aucun composant ajouté",
+      "clickAddBelow": "Cliquez sur 'Ajouter un composant' ci-dessous",
+      "suggestedComponents": "Suggestions",
+      "noComponentsFound": "Aucun composant trouvé",
+      "nextStep": "Étape suivante",
+      "saveRecipe": "Enregistrer la recette",
+      "success": {
+        "title": "Recette créée avec succès !",
+        "saved": "a été enregistrée dans votre bibliothèque",
+        "viewRecipe": "Voir la recette",
+        "createAnother": "Créer une autre",
+        "backToBrowse": "Retour à la bibliothèque"
+      },
+      "validation": {
+        "nameRequired": "Le nom de la recette est obligatoire",
+        "mealTypesRequired": "Sélectionnez au moins un type de repas",
+        "componentsRequired": "Ajoutez au moins un composant"
+      }
+    },
     "categories": {
       "all": "Toutes",
       "meats": "Viandes",
@@ -174,7 +234,8 @@
       "cookTime": "Cuisson: {{time}} min",
       "servings": "Portions",
       "ingredients": "Ingrédients",
-      "instructions": "Instructions"
+      "instructions": "Instructions",
+      "components": "Composants"
     },
     "kosherCategory": "Casher {{category}}"
   },

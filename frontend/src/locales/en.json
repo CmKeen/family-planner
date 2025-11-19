@@ -3,16 +3,19 @@
     "loading": "Loading...",
     "error": "Error",
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
     "back": "Back",
+    "previous": "Previous",
     "confirm": "Confirm",
     "close": "Close",
     "search": "Search",
     "filter": "Filter",
     "reset": "Reset",
-    "print": "Print"
+    "print": "Print",
+    "errorOccurred": "An error occurred"
   },
   "days": {
     "monday": "Monday",
@@ -140,6 +143,63 @@
     "searchPlaceholder": "Search for a recipe...",
     "loading": "Loading recipes...",
     "noResults": "No recipes found",
+    "tabs": {
+      "browse": "Browse",
+      "create": "Create"
+    },
+    "create": {
+      "title": "Create Recipe",
+      "chooseType": "Choose Recipe Type",
+      "traditional": {
+        "title": "Traditional Recipe",
+        "description": "Write your own ingredients and instructions"
+      },
+      "component": {
+        "title": "Component Recipe",
+        "description": "Build quickly from food components"
+      },
+      "recommended": "Recommended",
+      "comingSoon": "Coming Soon",
+      "steps": {
+        "step": "Step",
+        "of": "of",
+        "basicInfo": "Basic Info",
+        "components": "Components",
+        "review": "Review"
+      },
+      "reviewHelp": "Review everything before saving",
+      "form": {
+        "nameLabel": "Recipe Name",
+        "nameHelp": "Give your recipe a name. You can add translations in other languages.",
+        "namePlaceholder": "e.g., Grilled Chicken with Rice",
+        "namePlaceholderEn": "e.g., Grilled Chicken with Rice",
+        "namePlaceholderNl": "e.g., Gegrilde kip met rijst",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Describe your recipe (optional)",
+        "servingsLabel": "Number of Servings",
+        "mealTypesLabel": "When can this be served?",
+        "autoTimingInfo": "Preparation and cooking time will be calculated automatically (15 min prep + 25 min cook)."
+      },
+      "selectedComponents": "Selected Components",
+      "noComponentsYet": "No components added yet",
+      "clickAddBelow": "Click 'Add Component' below",
+      "noComponentsFound": "No components found",
+      "suggestedComponents": "Suggestions",
+      "nextStep": "Next Step",
+      "saveRecipe": "Save Recipe",
+      "success": {
+        "title": "Recipe Created Successfully!",
+        "saved": "has been saved to your library",
+        "viewRecipe": "View Recipe",
+        "createAnother": "Create Another",
+        "backToBrowse": "Back to Library"
+      },
+      "validation": {
+        "nameRequired": "Recipe name is required",
+        "mealTypesRequired": "Select at least one meal type",
+        "componentsRequired": "Add at least one component"
+      }
+    },
     "categories": {
       "all": "All",
       "meats": "Meats",
@@ -174,7 +234,8 @@
       "cookTime": "Cook: {{time}} min",
       "servings": "Servings",
       "ingredients": "Ingredients",
-      "instructions": "Instructions"
+      "instructions": "Instructions",
+      "components": "Components"
     },
     "kosherCategory": "Kosher {{category}}"
   },
