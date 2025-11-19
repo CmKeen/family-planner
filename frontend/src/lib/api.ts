@@ -41,7 +41,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Don't redirect on 401 for /auth/me - let the checkAuth() handle it gracefully
+    const isAuthCheck = error.config?.url?.includes('/auth/me');
+
+    if (error.response?.status === 401 && !isAuthCheck) {
       // Clear any stale state and redirect to login
       window.location.href = '/login';
     }

@@ -122,7 +122,7 @@ export const getCorsOptions = (allowedOrigin: string) => ({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   exposedHeaders: ['Set-Cookie'],
   maxAge: 86400, // 24 hours
 });

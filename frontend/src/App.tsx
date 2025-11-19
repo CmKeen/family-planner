@@ -44,7 +44,20 @@ function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
 
   useEffect(() => {
-    checkAuth();
+    // Fetch CSRF token first, then check auth
+    const initialize = async () => {
+      try {
+        // Get CSRF token (sets XSRF-TOKEN cookie)
+        await fetch(`${import.meta.env.VITE_API_URL}/csrf-token`, {
+          credentials: 'include'
+        });
+      } catch (error) {
+        console.error('Failed to fetch CSRF token:', error);
+      }
+      // Then check if user is authenticated
+      await checkAuth();
+    };
+    initialize();
   }, [checkAuth]);
 
   return (
