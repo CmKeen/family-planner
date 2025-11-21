@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { shoppingListAPI } from '@/lib/api';
-import { Check, ShoppingCart, Printer } from 'lucide-react';
+import { ShoppingCart, Printer } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface ShoppingItem {
   id: string;
@@ -244,16 +245,11 @@ export default function ShoppingListView({ planId, showPrintButton = true }: Sho
                 <ul className="space-y-3">
                   {itemsByCategory[category].map(item => (
                     <li key={item.id} className="flex items-start gap-3">
-                      <button
-                        onClick={() => handleToggleItem(item.id, item.checked)}
-                        className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors print:hidden ${
-                          item.checked
-                            ? 'bg-primary border-primary'
-                            : 'border-muted-foreground'
-                        }`}
-                      >
-                        {item.checked && <Check className="h-4 w-4 text-primary-foreground" />}
-                      </button>
+                      <Checkbox
+                        checked={item.checked}
+                        onCheckedChange={() => handleToggleItem(item.id, item.checked)}
+                        className="print:hidden"
+                      />
                       <div className="flex-1">
                         <div className={`font-medium ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
                           {item.quantity} {item.unit} {item.name}
@@ -292,16 +288,11 @@ export default function ShoppingListView({ planId, showPrintButton = true }: Sho
                 <ul className="space-y-3">
                   {items.map(item => (
                     <li key={item.id} className="flex items-start gap-3">
-                      <button
-                        onClick={() => handleToggleItem(item.id, item.checked)}
-                        className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors print:hidden ${
-                          item.checked
-                            ? 'bg-primary border-primary'
-                            : 'border-muted-foreground'
-                        }`}
-                      >
-                        {item.checked && <Check className="h-4 w-4 text-primary-foreground" />}
-                      </button>
+                      <Checkbox
+                        checked={item.checked}
+                        onCheckedChange={() => handleToggleItem(item.id, item.checked)}
+                        className="print:hidden"
+                      />
                       <div className="flex-1">
                         <div className={`font-medium ${item.checked ? 'line-through text-muted-foreground' : ''}`}>
                           {item.quantity} {item.unit} {item.name}

@@ -253,31 +253,34 @@ export async function generateShoppingList(weeklyPlanId: string) {
     };
   });
 
-  // Delete old shopping list if exists
-  const existingList = await prisma.shoppingList.findFirst({
-    where: { weeklyPlanId }
-  });
-
-  if (existingList) {
-    await prisma.shoppingList.delete({
-      where: { id: existingList.id }
+  // Create new shopping list in a transaction
+  const shoppingList = await prisma.$transaction(async (tx) => {
+    // Delete old shopping list if exists
+    const existingList = await tx.shoppingList.findFirst({
+      where: { weeklyPlanId }
     });
-  }
 
-  // Create new shopping list
-  const shoppingList = await prisma.shoppingList.create({
-    data: {
-      familyId: plan.familyId,
-      weeklyPlanId,
-      items: {
-        create: finalItems
-      }
-    },
-    include: {
-      items: {
-        orderBy: { order: 'asc' }
-      }
+    if (existingList) {
+      await tx.shoppingList.delete({
+        where: { id: existingList.id }
+      });
     }
+
+    // Create new shopping list
+    return await tx.shoppingList.create({
+      data: {
+        familyId: plan.familyId,
+        weeklyPlanId,
+        items: {
+          create: finalItems
+        }
+      },
+      include: {
+        items: {
+          orderBy: { order: 'asc' }
+        }
+      }
+    });
   });
 
   const duration = Date.now() - startTime;

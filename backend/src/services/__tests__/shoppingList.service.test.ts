@@ -1,21 +1,33 @@
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
 import { generateShoppingList, regenerateShoppingList } from '../shoppingList.service';
 import prisma from '../../lib/prisma';
 
 // Mock Prisma
-vi.mock('../../lib/prisma', () => ({
-  __esModule: true,
-  default: {
-    weeklyPlan: {
-      findUnique: vi.fn()
-    },
-    shoppingList: {
-      findFirst: vi.fn(),
-      delete: vi.fn(),
-      create: vi.fn()
+vi.mock('../../lib/prisma', () => {
+  const mockWeeklyPlan = {
+    findUnique: vi.fn()
+  };
+
+  const mockShoppingList = {
+    findFirst: vi.fn(),
+    delete: vi.fn(),
+    create: vi.fn()
+  };
+
+  const mockTx = {
+    weeklyPlan: mockWeeklyPlan,
+    shoppingList: mockShoppingList
+  };
+
+  return {
+    __esModule: true,
+    default: {
+      $transaction: vi.fn(async (callback) => callback(mockTx)),
+      weeklyPlan: mockWeeklyPlan,
+      shoppingList: mockShoppingList
     }
-  }
-}));
+  };
+});
 
 describe('ShoppingList Service', () => {
   beforeEach(() => {
@@ -24,7 +36,7 @@ describe('ShoppingList Service', () => {
 
   describe('generateShoppingList', () => {
     it('should throw error if weekly plan not found', async () => {
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(null);
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(null);
 
       await expect(generateShoppingList('nonexistent-plan-id')).rejects.toThrow(
         'Weekly plan not found'
@@ -83,9 +95,9 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         familyId: 'family-1',
         weeklyPlanId: 'plan-1',
@@ -185,16 +197,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       expect(createCall.data.items.create).toHaveLength(0);
     });
 
@@ -259,16 +271,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       expect(createCall.data.items.create).toHaveLength(1);
       expect(createCall.data.items.create[0]).toMatchObject({
         name: 'Pâtes',
@@ -320,16 +332,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       const pastaItem = createCall.data.items.create[0];
 
       // servingFactor = 6/4 = 1.5
@@ -378,16 +390,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       const pastaItem = createCall.data.items.create[0];
 
       expect(pastaItem.alternatives).toContain('Version sans gluten');
@@ -432,16 +444,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       const creamItem = createCall.data.items.create[0];
 
       expect(creamItem.alternatives).toContain('Version sans lactose (lait végétal, crème soja)');
@@ -490,16 +502,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       const pastaItem = createCall.data.items.create[0];
 
       // Should deduct 200g from 400g = 200g
@@ -550,16 +562,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       const pastaItem = createCall.data.items.create[0];
 
       expect(pastaItem.quantity).toBe(0);
@@ -585,10 +597,10 @@ describe('ShoppingList Service', () => {
         weeklyPlanId: 'plan-1'
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(existingList);
-      (prisma.shoppingList.delete as jest.Mock).mockResolvedValue(existingList);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(existingList);
+      (prisma.shoppingList.delete as Mock).mockResolvedValue(existingList);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
@@ -638,16 +650,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       expect(createCall.data.items.create).toHaveLength(1);
       expect(createCall.data.items.create[0]).toMatchObject({
         name: 'Baguette',
@@ -698,16 +710,16 @@ describe('ShoppingList Service', () => {
         ]
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });
 
       await generateShoppingList('plan-1');
 
-      const createCall = (prisma.shoppingList.create as jest.Mock).mock.calls[0][0];
+      const createCall = (prisma.shoppingList.create as Mock).mock.calls[0][0];
       // Should only have 1 item (Pâtes from meal-1), not 2
       expect(createCall.data.items.create).toHaveLength(1);
       expect(createCall.data.items.create[0].name).toBe('Pâtes');
@@ -731,13 +743,13 @@ describe('ShoppingList Service', () => {
         meals: []
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue({
         id: 'existing-list',
         weeklyPlanId: 'plan-1'
       });
-      (prisma.shoppingList.delete as jest.Mock).mockResolvedValue({});
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.shoppingList.delete as Mock).mockResolvedValue({});
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'new-list',
         items: []
       });
@@ -762,9 +774,9 @@ describe('ShoppingList Service', () => {
         meals: []
       };
 
-      (prisma.weeklyPlan.findUnique as jest.Mock).mockResolvedValue(mockPlan);
-      (prisma.shoppingList.findFirst as jest.Mock).mockResolvedValue(null);
-      (prisma.shoppingList.create as jest.Mock).mockResolvedValue({
+      (prisma.weeklyPlan.findUnique as Mock).mockResolvedValue(mockPlan);
+      (prisma.shoppingList.findFirst as Mock).mockResolvedValue(null);
+      (prisma.shoppingList.create as Mock).mockResolvedValue({
         id: 'list-1',
         items: []
       });

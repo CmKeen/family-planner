@@ -380,106 +380,132 @@ export const generateAutoPlan = asyncHandler(
     const weekNumber = getWeekNumber(date);
     const year = date.getFullYear();
 
-    const weeklyPlan = await prisma.weeklyPlan.create({
-      data: {
-        familyId,
-        weekStartDate: date,
-        weekNumber,
-        year,
-        status: 'DRAFT',
-        templateId: template.id
-      }
-    });
+    // Create weekly plan and meals in a transaction
+    const completePlan = await prisma.$transaction(async (tx) => {
+      const weeklyPlan = await tx.weeklyPlan.create({
+        data: {
+          familyId,
+          weekStartDate: date,
+          weekNumber,
+          year,
+          status: 'DRAFT',
+          templateId: template.id
+        }
+      });
 
-    // Store plan ID for shopping list generation
-    createdPlanId = weeklyPlan.id;
+      // Store plan ID for shopping list generation
+      createdPlanId = weeklyPlan.id;
 
-    // Generate meals based on template schedule
-    const meals = [];
-    const mealComponentsToCreate: any[] = [];
-    let favoriteIndex = 0;
-    let noveltyIndex = 0;
-    let otherIndex = 0;
-    let noveltyCount = 0;
-    let mealIndex = 0;
-    const recentProteins: string[] = [];
+      // Generate meals based on template schedule
+      const meals = [];
+      const mealComponentsToCreate: any[] = [];
+      let favoriteIndex = 0;
+      let noveltyIndex = 0;
+      let otherIndex = 0;
+      let noveltyCount = 0;
+      let mealIndex = 0;
+      const recentProteins: string[] = [];
 
-    for (const scheduleItem of scheduleData) {
-      const day = scheduleItem.dayOfWeek as DayOfWeek;
-      const dayIndex = DAYS.indexOf(day);
-      const dayDate = new Date(weekStart);
-      dayDate.setDate(dayDate.getDate() + dayIndex);
+      for (const scheduleItem of scheduleData) {
+        const day = scheduleItem.dayOfWeek as DayOfWeek;
+        const dayIndex = DAYS.indexOf(day);
+        const dayDate = new Date(weekStart);
+        dayDate.setDate(dayDate.getDate() + dayIndex);
 
-      // Check for school menu for this day
-      const schoolMenu = schoolMenus.find((sm: any) =>
-        sm.date.toDateString() === dayDate.toDateString() && sm.mealType === 'LUNCH'
-      );
+        // Check for school menu for this day
+        const schoolMenu = schoolMenus.find((sm: any) =>
+          sm.date.toDateString() === dayDate.toDateString() && sm.mealType === 'LUNCH'
+        );
 
-      // Generate each meal type specified in the schedule
-      for (const mealType of scheduleItem.mealTypes) {
-        // If it's lunch and there's a school menu, create school meal instead
-        if (mealType === 'LUNCH' && schoolMenu) {
-          meals.push({
-            weeklyPlanId: weeklyPlan.id,
-            dayOfWeek: day,
-            mealType: mealType as MealType,
-            isSchoolMeal: true,
-            portions: family.members.length
-          });
-        } else {
-          // Decide if this meal should be component-based (~30% chance)
-          const shouldBeComponentBased = Math.random() < 0.3 &&
-            proteins.length > 0 && vegetables.length > 0 && carbs.length > 0;
+        // Generate each meal type specified in the schedule
+        for (const mealType of scheduleItem.mealTypes) {
+          // If it's lunch and there's a school menu, create school meal instead
+          if (mealType === 'LUNCH' && schoolMenu) {
+            meals.push({
+              weeklyPlanId: weeklyPlan.id,
+              dayOfWeek: day,
+              mealType: mealType as MealType,
+              isSchoolMeal: true,
+              portions: family.members.length
+            });
+          } else {
+            // Decide if this meal should be component-based (~30% chance)
+            const shouldBeComponentBased = Math.random() < 0.3 &&
+              proteins.length > 0 && vegetables.length > 0 && carbs.length > 0;
 
-          log.debug('Evaluating meal composition strategy', {
-            day,
-            mealType,
-            shouldBeComponentBased,
-            availableComponents: {
-              proteins: proteins.length,
-              vegetables: vegetables.length,
-              carbs: carbs.length
-            }
-          });
-
-          if (shouldBeComponentBased) {
-            log.debug('Creating component-based meal', { day, mealType });
-            // Create component-based meal
-            try {
-              const selectedComponents = selectMealComponents(
-                proteins,
-                vegetables,
-                carbs,
-                recentProteins
-              );
-
-              // Track recent proteins (keep last 2)
-              const proteinComponent = selectedComponents.find(c => c.category === 'PROTEIN');
-              if (proteinComponent) {
-                recentProteins.push(proteinComponent.id);
-                if (recentProteins.length > 2) {
-                  recentProteins.shift();
-                }
+            log.debug('Evaluating meal composition strategy', {
+              day,
+              mealType,
+              shouldBeComponentBased,
+              availableComponents: {
+                proteins: proteins.length,
+                vegetables: vegetables.length,
+                carbs: carbs.length
               }
+            });
 
-              meals.push({
-                weeklyPlanId: weeklyPlan.id,
-                dayOfWeek: day,
-                mealType: mealType as MealType,
-                recipeId: null,
-                portions: family.members.length,
-                mealIndex // Temporary index to match with components
-              });
+            if (shouldBeComponentBased) {
+              log.debug('Creating component-based meal', { day, mealType });
+              // Create component-based meal
+              try {
+                const selectedComponents = selectMealComponents(
+                  proteins,
+                  vegetables,
+                  carbs,
+                  recentProteins
+                );
 
-              // Store components to create after meals are created
-              mealComponentsToCreate.push({
-                mealIndex,
-                components: selectedComponents
-              });
+                // Track recent proteins (keep last 2)
+                const proteinComponent = selectedComponents.find(c => c.category === 'PROTEIN');
+                if (proteinComponent) {
+                  recentProteins.push(proteinComponent.id);
+                  if (recentProteins.length > 2) {
+                    recentProteins.shift();
+                  }
+                }
 
-              mealIndex++;
-            } catch (error) {
-              // Fall back to recipe-based if component selection fails
+                meals.push({
+                  weeklyPlanId: weeklyPlan.id,
+                  dayOfWeek: day,
+                  mealType: mealType as MealType,
+                  recipeId: null,
+                  portions: family.members.length,
+                  mealIndex // Temporary index to match with components
+                });
+
+                // Store components to create after meals are created
+                mealComponentsToCreate.push({
+                  mealIndex,
+                  components: selectedComponents
+                });
+
+                mealIndex++;
+              } catch (error) {
+                // Fall back to recipe-based if component selection fails
+                const recipe = selectRecipe(favorites, novelties, others, {
+                  favoriteIndex,
+                  noveltyIndex,
+                  otherIndex,
+                  noveltyCount,
+                  maxNovelties: noveltyMeals,
+                  favoriteRatio: dietProfile.favoriteRatio,
+                  avoidCategory: (mealType === 'DINNER' && schoolMenu?.category) ? schoolMenu.category : undefined
+                });
+
+                if (recipe.from === 'favorites') favoriteIndex++;
+                if (recipe.from === 'novelties') { noveltyIndex++; noveltyCount++; }
+                if (recipe.from === 'others') otherIndex++;
+
+                meals.push({
+                  weeklyPlanId: weeklyPlan.id,
+                  dayOfWeek: day,
+                  mealType: mealType as MealType,
+                  recipeId: recipe.recipe.id,
+                  portions: family.members.length
+                });
+              }
+            } else {
+              // Create recipe-based meal
               const recipe = selectRecipe(favorites, novelties, others, {
                 favoriteIndex,
                 noveltyIndex,
@@ -502,83 +528,60 @@ export const generateAutoPlan = asyncHandler(
                 portions: family.members.length
               });
             }
-          } else {
-            // Create recipe-based meal
-            const recipe = selectRecipe(favorites, novelties, others, {
-              favoriteIndex,
-              noveltyIndex,
-              otherIndex,
-              noveltyCount,
-              maxNovelties: noveltyMeals,
-              favoriteRatio: dietProfile.favoriteRatio,
-              avoidCategory: (mealType === 'DINNER' && schoolMenu?.category) ? schoolMenu.category : undefined
-            });
-
-            if (recipe.from === 'favorites') favoriteIndex++;
-            if (recipe.from === 'novelties') { noveltyIndex++; noveltyCount++; }
-            if (recipe.from === 'others') otherIndex++;
-
-            meals.push({
-              weeklyPlanId: weeklyPlan.id,
-              dayOfWeek: day,
-              mealType: mealType as MealType,
-              recipeId: recipe.recipe.id,
-              portions: family.members.length
-            });
           }
         }
       }
-    }
 
-    // Create all meals first
-    const createdMeals = await prisma.$transaction(
-      meals.map((meal: any) => {
-        const { mealIndex: _, ...mealData } = meal;
-        return prisma.meal.create({ data: mealData });
-      })
-    );
+      // Create all meals first
+      const createdMeals = await Promise.all(
+        meals.map((meal: any) => {
+          const { mealIndex: _, ...mealData } = meal;
+          return tx.meal.create({ data: mealData });
+        })
+      );
 
-    // Create meal components for component-based meals
-    if (mealComponentsToCreate.length > 0) {
-      const componentData: any[] = [];
+      // Create meal components for component-based meals
+      if (mealComponentsToCreate.length > 0) {
+        const componentData: any[] = [];
 
-      mealComponentsToCreate.forEach(({ mealIndex: idx, components }) => {
-        const meal = createdMeals[idx];
-        components.forEach((comp: any, order: number) => {
-          componentData.push({
-            mealId: meal.id,
-            componentId: comp.id,
-            quantity: comp.defaultQuantity,
-            unit: comp.unit,
-            order
+        mealComponentsToCreate.forEach(({ mealIndex: idx, components }) => {
+          const meal = createdMeals[idx];
+          components.forEach((comp: any, order: number) => {
+            componentData.push({
+              mealId: meal.id,
+              componentId: comp.id,
+              quantity: comp.defaultQuantity,
+              unit: comp.unit,
+              order
+            });
           });
         });
-      });
 
-      if (componentData.length > 0) {
-        await prisma.mealComponent.createMany({ data: componentData });
+        if (componentData.length > 0) {
+          await tx.mealComponent.createMany({ data: componentData });
+        }
       }
-    }
 
-    // Fetch complete plan
-    const completePlan = await prisma.weeklyPlan.findUnique({
-      where: { id: weeklyPlan.id },
-      include: {
-        meals: {
-          include: {
-            recipe: true,
-            mealComponents: {
-              include: {
-                component: true
+      // Fetch complete plan
+      return await tx.weeklyPlan.findUnique({
+        where: { id: weeklyPlan.id },
+        include: {
+          meals: {
+            include: {
+              recipe: true,
+              mealComponents: {
+                include: {
+                  component: true
+                }
               }
             }
           }
         }
-      }
+      });
     });
 
     // Send notification to family members
-    if (req.user) {
+    if (req.user && completePlan) {
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
         select: { firstName: true, lastName: true }
@@ -586,7 +589,7 @@ export const generateAutoPlan = asyncHandler(
       const createdByName = user ? `${user.firstName} ${user.lastName}` : 'Unknown';
       await notificationService.notifyDraftPlanCreated(
         familyId,
-        weeklyPlan.id,
+        completePlan.id,
         date,
         createdByName
       );
@@ -595,10 +598,12 @@ export const generateAutoPlan = asyncHandler(
     // Auto-generate shopping list on plan creation (OBU-7)
     // Shopping list is available immediately for DRAFT plans
     try {
-      await generateShoppingListService(createdPlanId);
+      if (completePlan) {
+        await generateShoppingListService(completePlan.id);
+      }
     } catch (error) {
       log.error('Failed to auto-generate shopping list for new plan', {
-        weeklyPlanId: createdPlanId,
+        weeklyPlanId: completePlan?.id,
         familyId,
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
@@ -642,62 +647,65 @@ export const generateExpressPlan = asyncHandler(
     const weekNumber = getWeekNumber(date);
     const year = date.getFullYear();
 
-    const weeklyPlan = await prisma.weeklyPlan.create({
-      data: {
-        familyId,
-        weekStartDate: date,
-        weekNumber,
-        year,
-        status: 'DRAFT'
+    // Create weekly plan and meals in a transaction
+    const completePlan = await prisma.$transaction(async (tx) => {
+      const weeklyPlan = await tx.weeklyPlan.create({
+        data: {
+          familyId,
+          weekStartDate: date,
+          weekNumber,
+          year,
+          status: 'DRAFT'
+        }
+      });
+
+      const meals = [];
+      let favoriteIndex = 0;
+
+      for (const day of DAYS) {
+        // Lunch: favorite
+        meals.push({
+          weeklyPlanId: weeklyPlan.id,
+          dayOfWeek: day,
+          mealType: 'LUNCH' as MealType,
+          recipeId: favorites[favoriteIndex % favorites.length].id,
+          portions: family.members.length
+        });
+        favoriteIndex++;
+
+        // Dinner: favorite
+        meals.push({
+          weeklyPlanId: weeklyPlan.id,
+          dayOfWeek: day,
+          mealType: 'DINNER' as MealType,
+          recipeId: favorites[favoriteIndex % favorites.length].id,
+          portions: family.members.length
+        });
+        favoriteIndex++;
       }
-    });
 
-    const meals = [];
-    let favoriteIndex = 0;
+      // Add 1 novelty randomly
+      if (novelties.length > 0 && meals.length > 0) {
+        const randomMealIndex = Math.floor(Math.random() * meals.length);
+        meals[randomMealIndex].recipeId = novelties[0].id;
+      }
 
-    for (const day of DAYS) {
-      // Lunch: favorite
-      meals.push({
-        weeklyPlanId: weeklyPlan.id,
-        dayOfWeek: day,
-        mealType: 'LUNCH' as MealType,
-        recipeId: favorites[favoriteIndex % favorites.length].id,
-        portions: family.members.length
-      });
-      favoriteIndex++;
+      await tx.meal.createMany({ data: meals });
 
-      // Dinner: favorite
-      meals.push({
-        weeklyPlanId: weeklyPlan.id,
-        dayOfWeek: day,
-        mealType: 'DINNER' as MealType,
-        recipeId: favorites[favoriteIndex % favorites.length].id,
-        portions: family.members.length
-      });
-      favoriteIndex++;
-    }
-
-    // Add 1 novelty randomly
-    if (novelties.length > 0 && meals.length > 0) {
-      const randomMealIndex = Math.floor(Math.random() * meals.length);
-      meals[randomMealIndex].recipeId = novelties[0].id;
-    }
-
-    await prisma.meal.createMany({ data: meals });
-
-    const completePlan = await prisma.weeklyPlan.findUnique({
-      where: { id: weeklyPlan.id },
-      include: {
-        meals: {
-          include: {
-            recipe: true
+      return await tx.weeklyPlan.findUnique({
+        where: { id: weeklyPlan.id },
+        include: {
+          meals: {
+            include: {
+              recipe: true
+            }
           }
         }
-      }
+      });
     });
 
     // Send notification to family members
-    if (req.user) {
+    if (req.user && completePlan) {
       const user = await prisma.user.findUnique({
         where: { id: req.user.id },
         select: { firstName: true, lastName: true }
@@ -705,7 +713,7 @@ export const generateExpressPlan = asyncHandler(
       const createdByName = user ? `${user.firstName} ${user.lastName}` : 'Unknown';
       await notificationService.notifyDraftPlanCreated(
         familyId,
-        weeklyPlan.id,
+        completePlan.id,
         date,
         createdByName
       );
@@ -713,10 +721,12 @@ export const generateExpressPlan = asyncHandler(
 
     // Auto-generate shopping list on plan creation (OBU-7 FIX)
     try {
-      await generateShoppingListService(weeklyPlan.id);
+      if (completePlan) {
+        await generateShoppingListService(completePlan.id);
+      }
     } catch (error) {
       log.error('Failed to auto-generate shopping list for express plan', {
-        weeklyPlanId: weeklyPlan.id,
+        weeklyPlanId: completePlan?.id,
         familyId,
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined
@@ -1149,32 +1159,37 @@ export const validatePlan = asyncHandler(
 
     // Auto-skip all empty meals before validating (removes ambiguity)
     // Only affects truly empty meals (no recipe, no components, not already skipped)
-    await prisma.meal.updateMany({
-      where: {
-        weeklyPlanId: planId,
-        recipeId: null,
-        isSkipped: false,
-        mealComponents: { none: {} }
-      },
-      data: {
-        isSkipped: true,
-        skipReason: null // Auto-skipped meals have no reason
-      }
-    });
+    // Auto-skip all empty meals before validating (removes ambiguity)
+    // Only affects truly empty meals (no recipe, no components, not already skipped)
+    console.log('validatePlan: calling transaction', !!prisma.$transaction);
+    const plan = await prisma.$transaction(async (tx) => {
+      await tx.meal.updateMany({
+        where: {
+          weeklyPlanId: planId,
+          recipeId: null,
+          isSkipped: false,
+          mealComponents: { none: {} }
+        },
+        data: {
+          isSkipped: true,
+          skipReason: null // Auto-skipped meals have no reason
+        }
+      });
 
-    const plan = await prisma.weeklyPlan.update({
-      where: { id: planId },
-      data: {
-        status: 'VALIDATED',
-        validatedAt: new Date()
-      },
-      include: {
-        meals: {
-          include: {
-            recipe: true
+      return await tx.weeklyPlan.update({
+        where: { id: planId },
+        data: {
+          status: 'VALIDATED',
+          validatedAt: new Date()
+        },
+        include: {
+          meals: {
+            include: {
+              recipe: true
+            }
           }
         }
-      }
+      });
     });
 
     // Log plan validation
