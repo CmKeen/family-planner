@@ -15,7 +15,52 @@
     "filter": "Filter",
     "reset": "Reset",
     "print": "Print",
-    "errorOccurred": "An error occurred"
+    "errorOccurred": "An error occurred",
+    "retry": "Retry",
+    "undo": "Undo"
+  },
+  "toast": {
+    "error": {
+      "title": "Error",
+      "network": "Unable to connect to server",
+      "unauthorized": "You need to log in again",
+      "forbidden": "You don't have permission to perform this action",
+      "notFound": "The requested resource was not found",
+      "serverError": "A server error occurred",
+      "validationError": "The provided data is invalid",
+      "unknown": "An unexpected error occurred"
+    },
+    "success": {
+      "title": "Success",
+      "saved": "Saved successfully",
+      "deleted": "Deleted successfully",
+      "updated": "Updated successfully",
+      "created": "Created successfully",
+      "mealAdded": "Meal added successfully",
+      "mealRemoved": "Meal removed successfully",
+      "mealUpdated": "Meal updated successfully",
+      "planValidated": "Plan validated successfully",
+      "planGenerated": "Plan generated successfully",
+      "recipeCreated": "Recipe created successfully",
+      "recipeUpdated": "Recipe updated successfully",
+      "recipeFavorited": "Recipe added to favorites",
+      "recipeUnfavorited": "Recipe removed from favorites",
+      "shoppingListGenerated": "Shopping list generated successfully",
+      "invitationSent": "Invitation sent successfully",
+      "invitationAccepted": "Invitation accepted successfully",
+      "memberAdded": "Member added successfully",
+      "settingsSaved": "Settings saved successfully"
+    },
+    "info": {
+      "title": "Information",
+      "planGenerating": "Generating plan...",
+      "syncInProgress": "Sync in progress..."
+    },
+    "warning": {
+      "title": "Warning",
+      "unsavedChanges": "You have unsaved changes",
+      "sessionExpiring": "Your session will expire soon"
+    }
   },
   "days": {
     "monday": "Monday",

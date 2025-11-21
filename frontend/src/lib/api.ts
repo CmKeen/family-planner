@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { env } from '@/config/env';
+import { getErrorMessage, getErrorDetails } from './toast';
+import { toast } from 'sonner';
+import i18n from './i18n';
 
 const API_URL = env.VITE_API_URL;
 
@@ -37,22 +40,41 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
+// Handle errors and show toast notifications
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     // Don't redirect on 401 for /auth/me - let the checkAuth() handle it gracefully
     const isAuthCheck = error.config?.url?.includes('/auth/me');
 
+    // Don't show toasts for auth check failures (silent background checks)
+    const shouldShowToast = !isAuthCheck;
+
+    if (shouldShowToast) {
+      // Get translated error message
+      const message = getErrorMessage(error, i18n.t.bind(i18n));
+      const details = getErrorDetails(error);
+
+      // Show error toast
+      toast.error(message, {
+        description: details,
+        duration: 5000,
+        closeButton: true,
+      });
+    }
+
+    // Handle 401 unauthorized - redirect to login
     if (error.response?.status === 401 && !isAuthCheck) {
       // Clear any stale state and redirect to login
       window.location.href = '/login';
     }
+
     // Handle CSRF token mismatch - refresh token and retry
     if (error.response?.status === 403 && error.response?.data?.message?.includes('CSRF')) {
       // CSRF token expired or invalid - user should re-login
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );

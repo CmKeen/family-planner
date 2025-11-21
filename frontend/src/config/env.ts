@@ -35,7 +35,7 @@ function validateEnv(): Env {
   // Validate format
   try {
     new URL(finalApiUrl);
-  } catch (error) {
+  } catch {
     throw new Error(
       `Invalid API URL format: "${finalApiUrl}"\n` +
       'Must be a valid URL (e.g., http://localhost:3001/api)'

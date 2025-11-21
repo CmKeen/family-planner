@@ -15,7 +15,52 @@
     "filter": "Filtrer",
     "reset": "Réinitialiser",
     "print": "Imprimer",
-    "errorOccurred": "Une erreur s'est produite"
+    "errorOccurred": "Une erreur s'est produite",
+    "retry": "Réessayer",
+    "undo": "Annuler"
+  },
+  "toast": {
+    "error": {
+      "title": "Erreur",
+      "network": "Impossible de se connecter au serveur",
+      "unauthorized": "Vous devez vous reconnecter",
+      "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
+      "notFound": "La ressource demandée est introuvable",
+      "serverError": "Une erreur serveur s'est produite",
+      "validationError": "Les données fournies sont invalides",
+      "unknown": "Une erreur inattendue s'est produite"
+    },
+    "success": {
+      "title": "Succès",
+      "saved": "Enregistré avec succès",
+      "deleted": "Supprimé avec succès",
+      "updated": "Mis à jour avec succès",
+      "created": "Créé avec succès",
+      "mealAdded": "Repas ajouté avec succès",
+      "mealRemoved": "Repas supprimé avec succès",
+      "mealUpdated": "Repas mis à jour avec succès",
+      "planValidated": "Plan validé avec succès",
+      "planGenerated": "Plan généré avec succès",
+      "recipeCreated": "Recette créée avec succès",
+      "recipeUpdated": "Recette mise à jour avec succès",
+      "recipeFavorited": "Recette ajoutée aux favoris",
+      "recipeUnfavorited": "Recette retirée des favoris",
+      "shoppingListGenerated": "Liste de courses générée avec succès",
+      "invitationSent": "Invitation envoyée avec succès",
+      "invitationAccepted": "Invitation acceptée avec succès",
+      "memberAdded": "Membre ajouté avec succès",
+      "settingsSaved": "Paramètres enregistrés avec succès"
+    },
+    "info": {
+      "title": "Information",
+      "planGenerating": "Génération du plan en cours...",
+      "syncInProgress": "Synchronisation en cours..."
+    },
+    "warning": {
+      "title": "Attention",
+      "unsavedChanges": "Vous avez des modifications non enregistrées",
+      "sessionExpiring": "Votre session va bientôt expirer"
+    }
   },
   "days": {
     "monday": "Lundi",
