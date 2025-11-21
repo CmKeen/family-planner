@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './stores/authStore';
 import { useEffect } from 'react';
+import { Toaster } from 'sonner';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -126,6 +127,20 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
+        duration={5000}
+        toastOptions={{
+          classNames: {
+            error: 'border-red-500',
+            success: 'border-green-500',
+            warning: 'border-yellow-500',
+            info: 'border-blue-500',
+          },
+        }}
+      />
     </QueryClientProvider>
   );
 }

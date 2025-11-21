@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -191,6 +192,7 @@ export default function WeeklyPlanPage() {
       setSwapDialogOpen(false);
       setSelectedMeal(null);
       setSelectedRecipeId('');
+      toast.success(t('toast.success.mealUpdated'));
     }
   });
 
@@ -202,6 +204,7 @@ export default function WeeklyPlanPage() {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
       setPortionDialogOpen(false);
       setSelectedMeal(null);
+      toast.success(t('toast.success.mealUpdated'));
     }
   });
 
@@ -219,6 +222,7 @@ export default function WeeklyPlanPage() {
     mutationFn: () => weeklyPlanAPI.validate(planId!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
+      toast.success(t('toast.success.planValidated'));
     }
   });
 
@@ -230,6 +234,7 @@ export default function WeeklyPlanPage() {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
       setSwitchTemplateDialogOpen(false);
       setSelectedTemplate(null);
+      toast.success(t('toast.success.planGenerated'));
     }
   });
 
@@ -240,6 +245,7 @@ export default function WeeklyPlanPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
       setAddMealDialogOpen(false);
+      toast.success(t('toast.success.mealAdded'));
     }
   });
 
@@ -249,6 +255,7 @@ export default function WeeklyPlanPage() {
       weeklyPlanAPI.removeMeal(planId!, mealId, skipReason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
+      toast.success(t('toast.success.mealRemoved'));
     }
   });
 
@@ -257,6 +264,7 @@ export default function WeeklyPlanPage() {
     mutationFn: (mealId: string) => weeklyPlanAPI.restoreMeal(planId!, mealId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlan', planId] });
+      toast.success(t('toast.success.mealAdded'));
     }
   });
 
@@ -270,6 +278,7 @@ export default function WeeklyPlanPage() {
       setSelectedMeal(null);
       setRecipeName('');
       setRecipeNameEn('');
+      toast.success(t('toast.success.recipeCreated'));
     }
   });
 

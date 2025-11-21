@@ -15,7 +15,52 @@
     "filter": "Filteren",
     "reset": "Resetten",
     "print": "Afdrukken",
-    "errorOccurred": "Er is een fout opgetreden"
+    "errorOccurred": "Er is een fout opgetreden",
+    "retry": "Opnieuw proberen",
+    "undo": "Ongedaan maken"
+  },
+  "toast": {
+    "error": {
+      "title": "Fout",
+      "network": "Kan geen verbinding maken met de server",
+      "unauthorized": "U moet opnieuw inloggen",
+      "forbidden": "U heeft geen toestemming om deze actie uit te voeren",
+      "notFound": "De gevraagde resource is niet gevonden",
+      "serverError": "Er is een serverfout opgetreden",
+      "validationError": "De opgegeven gegevens zijn ongeldig",
+      "unknown": "Er is een onverwachte fout opgetreden"
+    },
+    "success": {
+      "title": "Succes",
+      "saved": "Succesvol opgeslagen",
+      "deleted": "Succesvol verwijderd",
+      "updated": "Succesvol bijgewerkt",
+      "created": "Succesvol aangemaakt",
+      "mealAdded": "Maaltijd succesvol toegevoegd",
+      "mealRemoved": "Maaltijd succesvol verwijderd",
+      "mealUpdated": "Maaltijd succesvol bijgewerkt",
+      "planValidated": "Plan succesvol gevalideerd",
+      "planGenerated": "Plan succesvol gegenereerd",
+      "recipeCreated": "Recept succesvol aangemaakt",
+      "recipeUpdated": "Recept succesvol bijgewerkt",
+      "recipeFavorited": "Recept toegevoegd aan favorieten",
+      "recipeUnfavorited": "Recept verwijderd uit favorieten",
+      "shoppingListGenerated": "Boodschappenlijst succesvol gegenereerd",
+      "invitationSent": "Uitnodiging succesvol verzonden",
+      "invitationAccepted": "Uitnodiging succesvol geaccepteerd",
+      "memberAdded": "Lid succesvol toegevoegd",
+      "settingsSaved": "Instellingen succesvol opgeslagen"
+    },
+    "info": {
+      "title": "Informatie",
+      "planGenerating": "Plan genereren...",
+      "syncInProgress": "Synchronisatie bezig..."
+    },
+    "warning": {
+      "title": "Waarschuwing",
+      "unsavedChanges": "U heeft niet-opgeslagen wijzigingen",
+      "sessionExpiring": "Uw sessie verloopt binnenkort"
+    }
   },
   "days": {
     "monday": "Maandag",
