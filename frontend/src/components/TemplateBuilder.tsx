@@ -34,6 +34,7 @@ export default function TemplateBuilder({ familyId, template, onClose }: Templat
   const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
 
   // Initialize form with template data if editing
+   
   useEffect(() => {
     if (template) {
       setName(template.name || '');

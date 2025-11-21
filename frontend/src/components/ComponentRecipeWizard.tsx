@@ -95,6 +95,7 @@ export default function ComponentRecipeWizard({ familyId, recipe, onSuccess }: C
         };
       }) || [];
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(prev => ({ ...prev, components: mappedComponents }));
       setComponentsInitialized(true);
     }

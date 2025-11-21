@@ -103,6 +103,7 @@ export default function WeeklyPlanPage() {
   const [activeTab, setActiveTab] = useState<'plan' | 'shopping' | 'activity'>('plan');
 
   // Set initial tab from URL query parameter
+   
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam === 'shopping' || tabParam === 'activity') {
